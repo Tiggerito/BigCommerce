@@ -1,0 +1,77 @@
+        {{!--
+        Facebook, Pinterest and Twitter tags for the Home, Category, Brand and Blog pages
+        *********************************************************************************
+
+        This code should be placed in the templates/layout/base.html file of your Stencil theme, somewhere in the <head> element. 
+
+        All XXXXXXXXXXs should be replaced by valid values, or the line removed.
+
+        --}}
+        {{!-- ****** Remove or comment out lines with no value. Do not blank them as that crashes the website! ****** --}}
+        {{assignVar "homepage:og:description" "XXXXXXXXXX"}} {{!-- Short description about the site --}}
+        {{assignVar "twitter:site"            "XXXXXXXXXX"}} {{!-- @username for the website used in the card footer --}}
+        {{assignVar "twitter:creator"         "XXXXXXXXXX"}} {{!-- @username for the content creator / author. --}}
+        {{assignVar "fb:app_id"               "XXXXXXXXXX"}} {{!-- In order to use Facebook Insights you must add the app ID to your page. Find the app ID in your App Dashboard. --}}
+        {{!--
+        Home page
+        --}}
+        {{#if settings.request.absolute_path '===' '/'}}
+        <meta property="og:url" content="{{settings.base_url}}{{settings.request.absolute_path}}" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="{{head.title}}" />
+        {{#if (getVar "homepage:og:description")}}<meta property="og:description" content="{{getVar "homepage:og:description"}}" />{{/if}}
+        {{#if settings.store_logo.image}}<meta property="og:image" content="{{settings.store_logo.image}}" />{{/if}}
+        <meta property="og:site_name" content="{{settings.store_name}}" />
+        {{#if (getVar "fb:app_id")}}<meta property="fb:app_id" content="{{getVar "fb:app_id"}}" />{{/if}}
+        <meta name="twitter:card" content="summary" />
+        {{#if (getVar "twitter:site")}}<meta name="twitter:site" content="{{getVar "twitter:site"}}" />{{/if}}
+        {{#if (getVar "twitter:creator")}}<meta name="twitter:creator" content="{{getVar "twitter:creator"}}" />{{/if}}
+        {{/if}}
+        {{!--
+            Category pages
+        --}}
+        {{#if page_type '===' 'category'}}
+        <meta property="og:url" content="{{category.url}}" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="{{category.name}}" />
+        <meta property="og:description" content="{{category.description}}" />
+        {{#if category.image}}<meta property="og:image" content="{{getImage category.image}}" />{{/if}}
+        <meta property="og:site_name" content="{{settings.store_name}}" />
+        {{#if (getVar "fb:app_id")}}<meta property="fb:app_id" content="{{getVar "fb:app_id"}}" />{{/if}}
+        <meta name="twitter:card" content="summary" />
+        {{#if (getVar "twitter:site")}}<meta name="twitter:site" content="{{getVar "twitter:site"}}" />{{/if}}
+        {{#if (getVar "twitter:creator")}}<meta name="twitter:creator" content="{{getVar "twitter:creator"}}" />{{/if}}
+        {{/if}}
+        {{!--
+            Brand pages
+        --}}
+        {{#if page_type '===' 'brand'}}
+        <meta property="og:url" content="{{brand.url}}" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="{{brand.name}}" />
+        {{#if brand.image}}<meta property="og:image" content="{{getImage brand.image}}" />{{/if}}
+        <meta property="og:site_name" content="{{settings.store_name}}" />
+        {{#if (getVar "fb:app_id")}}<meta property="fb:app_id" content="{{getVar "fb:app_id"}}" />{{/if}}
+        <meta name="twitter:card" content="summary" />
+        {{#if (getVar "twitter:site")}}<meta name="twitter:site" content="{{getVar "twitter:site"}}" />{{/if}}
+        {{#if (getVar "twitter:creator")}}<meta name="twitter:creator" content="{{getVar "twitter:creator"}}" />{{/if}}
+        {{!-- no og:description --}}
+        {{/if}}
+        {{!--
+        Blog pages
+        --}}
+        {{#if page_type '===' 'blog_post'}}
+        <meta property="og:url" content="{{blog.post.url}}" />
+        <meta property="og:type" content="article" />
+        <meta property="og:title" content="{{blog.post.title}}" />
+        {{#if blog.post.thumbnail}}<meta property="og:image" content="{{getImage blog.post.thumbnail}}" />{{/if}}
+        <meta property="og:site_name" content="{{settings.store_name}}" />
+        {{#if (getVar "fb:app_id")}}<meta property="fb:app_id" content="{{getVar "fb:app_id"}}" />{{/if}}
+        <meta name="twitter:card" content="summary" />
+        {{#if (getVar "twitter:site")}}<meta name="twitter:site" content="{{getVar "twitter:site"}}" />{{/if}}
+        {{#if (getVar "twitter:creator")}}<meta name="twitter:creator" content="{{getVar "twitter:creator"}}" />{{/if}}
+        {{#if blog.post.author}}<meta property="article:author" content="{{blog.post.author}}" />{{/if}}
+        <meta property="article:published_time" content="{{blog.post.date_published}}" /> {{!-- Wrong format! --}}
+        {{!-- no og:description --}}
+        {{/if}}
+        {{!-- END ************************************* --}} 
