@@ -1,13 +1,14 @@
         {{!--
         Facebook, Pinterest and Twitter tags for the Home, Category, Brand and Blog pages
         *********************************************************************************
+        Source: https://github.com/Tiggerito/BigCommerce/blob/main/social-tags.html
 
         This code should be placed in the templates/layout/base.html file of your Stencil theme, somewhere in the <head> element. 
 
         All XXXXXXXXXXs should be replaced by valid values, or the line removed.
 
+        ****** Remove or comment out the assignVar lines with no real value. Do not blank them as that crashes the website! ****** 
         --}}
-        {{!-- ****** Remove or comment out lines with no value. Do not blank them as that crashes the website! ****** --}}
         {{assignVar "homepage:og:description" "XXXXXXXXXX"}} {{!-- Short description about the site --}}
         {{assignVar "twitter:site"            "XXXXXXXXXX"}} {{!-- @username for the website used in the card footer --}}
         {{assignVar "twitter:creator"         "XXXXXXXXXX"}} {{!-- @username for the content creator / author. --}}
@@ -20,7 +21,7 @@
         <meta property="og:type" content="website" />
         <meta property="og:title" content="{{head.title}}" />
         {{#if (getVar "homepage:og:description")}}<meta property="og:description" content="{{getVar "homepage:og:description"}}" />{{/if}}
-        {{#if settings.store_logo.image}}<meta property="og:image" content="{{settings.store_logo.image}}" />{{/if}}
+        {{#if settings.store_logo.image}}<meta property="og:image" content="{{getImage settings.store_logo.image}}" />{{/if}}
         <meta property="og:site_name" content="{{settings.store_name}}" />
         {{#if (getVar "fb:app_id")}}<meta property="fb:app_id" content="{{getVar "fb:app_id"}}" />{{/if}}
         <meta name="twitter:card" content="summary" />
