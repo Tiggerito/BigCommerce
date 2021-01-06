@@ -17,6 +17,7 @@
         {{assignVar "twitter:site"            "CHANGE_ME"}} {{!-- @username for the website used in the card footer --}}
         {{assignVar "twitter:creator"         "CHANGE_ME"}} {{!-- @username for the content creator / author. --}}
         {{assignVar "fb:app_id"               "CHANGE_ME"}} {{!-- In order to use Facebook Insights you must add the app ID to your page. Find the app ID in your App Dashboard. --}}
+        {{assignVar "fb:pages"                "CHANGE_ME"}} {{!-- The id for your Facebook page https://business.facebook.com/settings/pages/ --}}
   {{!-- =================================================== --}}
         <meta name="twitter:card" content="summary" />
         {{#if settings.request.absolute_path '===' '/'}} {{!-- Home page --}}
@@ -52,15 +53,18 @@
         {{~else if page_type '===' 'product'}}      
         {{#if product.brand.name}}<meta property="og:brand" content="{{product.brand.name}}" />{{/if}}
         <meta property="og:availability" content="{{~#if product.pre_order}}available for order{{~else if product.out_of_stock '===' true}}out of stock{{~else if product.out_of_stock_message}}out of stock{{~else if product.can_purchase '===' false}}out of stock{{~else}}in stock{{~/if}}">
+        <meta property="product:availability" content="{{~#if product.pre_order}}available for order{{~else if product.out_of_stock '===' true}}out of stock{{~else if product.out_of_stock_message}}out of stock{{~else if product.can_purchase '===' false}}out of stock{{~else}}in stock{{~/if}}">
         <meta property="product:condition" content="{{#if product.condition}}{{lowercase product.condition}}{{else}}new{{/if}}">
         <meta property="product:price:amount" content="{{~#if product.price.with_tax.value}}{{product.price.with_tax.value}}{{~else}}{{product.price.without_tax.value}}{{~/if}}">
         {{#or product.price.rrp_with_tax.value product.price.rrp_without_tax.value}}<meta property="og:price:standard_amount" content="{{~#if product.price.rrp_with_tax.value}}{{product.price.rrp_with_tax.value}}{{~else}}{{product.price.rrp_without_tax.value}}{{~/if}}">{{/or}}
         <meta property="product:price:currency" content="{{currency_selector.active_currency_code}}">
-        <meta property="product:retailer_item_id" content="{{product.id}}"> {{!-- this needs to match the product id you use in other places like a Facebook Catalogue --}}
+        <meta property="product:retailer_item_id" content="P{{product.id}}"> {{!-- this needs to match the product id you use in other places like the BigCommerce Facebook Catalogue (which uses P for product and V for variant). --}}
+        <meta property="product:item_group_id" content="{{product.id}}"> {{!-- If retailer_item_id is a variant then this would identify the Product. The BigCommerce Facebook app always sets this to the product id --}}
         {{~else}} 
         <meta property="og:type" content="article" />
         {{/if}}
         {{#if (getVar "fb:app_id") '!==' 'CHANGE_ME'}}<meta property="fb:app_id" content="{{getVar "fb:app_id"}}" />{{/if}}
+        {{#if (getVar "fb:pages") '!==' 'CHANGE_ME'}}<meta property="fb:pages" content="{{getVar "fb:pages"}}" />{{/if}}
         {{#if (getVar "twitter:site" '!==' 'CHANGE_ME')}}<meta name="twitter:site" content="{{getVar "twitter:site"}}" />{{/if}}
         {{#if (getVar "twitter:creator" '!==' 'CHANGE_ME')}}<meta name="twitter:creator" content="{{getVar "twitter:creator"}}" />{{/if}}
         {{!-- END ************************************* --}} 
