@@ -1,71 +1,51 @@
-        {{!--
-        Facebook, Pinterest and Twitter meta tags
-        *********************************************************************************
-        Source: https://github.com/Tiggerito/BigCommerce/blob/main/social-tags.html
-        About Us: https://bigcommerce.websiteadvantage.com.au/ - we also offer apps for Google Rich Snippets and Tag management
+<!-- 
+Web Site Advantage: Advanced Social Meta Tags [v2.0] 
+https://bigcommerce.websiteadvantage.com.au/advanced-social-meta-tags-for-bigcommerce/
+Copyright (C) 2020 Web Site Advantage
+-->
+{{~!-- Variable Definitions Start --}}
 
-        This code should be placed in the templates/layout/base.html file of your Stencil theme, somewhere in the <head> element. 
-
-        switch off Pinterest in Store Settings->Share=>more options as it gets product:price:amount and availability wrong.
-
-        When off it adds pinterest:richpins disabled. This seems to mean nothing.
-
-        All CHANGE_ME values in this first section can be replaced by valid values.
-
-        ****** Do not blank the values as that crashes the website! Leave them as CHANGE_ME and they will be ignored ****** 
-        --}}
-        {{assignVar "homepage:og:description" "CHANGE_ME"}} {{!-- Short description about the site --}}
-        {{assignVar "twitter:site"            "CHANGE_ME"}} {{!-- @username for the website used in the card footer --}}
-        {{assignVar "twitter:creator"         "CHANGE_ME"}} {{!-- @username for the content creator / author. --}}
-        {{assignVar "fb:app_id"               "CHANGE_ME"}} {{!-- In order to use Facebook Insights you must add the app ID to your page. Find the app ID in your App Dashboard. --}}
-        {{assignVar "fb:pages"                "CHANGE_ME"}} {{!-- The id for your Facebook page https://business.facebook.com/settings/pages/ --}}
-{{!-- =================================================== --}}
-        <meta name="twitter:card" content="summary" />
-        {{#if settings.request.absolute_path '===' '/'}} {{!-- Home page --}}
-        <meta property="og:url" content="{{settings.base_url}}{{settings.request.absolute_path}}" />
-        <meta property="og:type" content="website" />
-        <meta property="og:title" content="{{head.title}}" />
-        {{#if (getVar "homepage:og:description") '!==' 'CHANGE_ME'}}<meta property="og:description" content="{{getVar "homepage:og:description"}}" />{{/if}}
-        {{#if settings.store_logo.image}}<meta property="og:image" content="{{getImage settings.store_logo.image}}" />{{/if}}
-        <meta property="og:site_name" content="{{settings.store_name}}" />
-        {{~else if page_type '===' 'category'}}
-        <meta property="og:url" content="{{category.url}}" />
-        <meta property="og:type" content="website" />
-        <meta property="og:title" content="{{category.name}}" />
-        <meta property="og:description" content="{{category.description}}" />
-        {{#if category.image}}<meta property="og:image" content="{{getImage category.image}}" />{{/if}}
-        <meta property="og:site_name" content="{{settings.store_name}}" />
-        {{~else if page_type '===' 'brand'}}
-        <meta property="og:url" content="{{brand.url}}" />
-        <meta property="og:type" content="website" />
-        <meta property="og:title" content="{{brand.name}}" />
-        {{#if brand.image}}<meta property="og:image" content="{{getImage brand.image}}" />{{/if}}
-        <meta property="og:site_name" content="{{settings.store_name}}" />
-        {{!-- no og:description --}}
-        {{~else if page_type '===' 'blog_post'}}
-        <meta property="og:url" content="{{blog.post.url}}" />
-        <meta property="og:type" content="article" />
-        <meta property="og:title" content="{{blog.post.title}}" />
-        {{#if blog.post.thumbnail}}<meta property="og:image" content="{{getImage blog.post.thumbnail}}" />{{/if}}
-        <meta property="og:site_name" content="{{settings.store_name}}" />
-        {{#if blog.post.author}}<meta property="article:author" content="{{blog.post.author}}" />{{/if}}
-        <meta property="article:published_time" content="{{blog.post.date_published}}" /> {{!-- Wrong format! --}}
-        {{!-- no og:description --}}
-        {{~else if page_type '===' 'product'}}      
-        {{#if product.brand.name}}<meta property="og:brand" content="{{product.brand.name}}" />{{/if}}
-        <meta property="og:availability" content="{{~#if product.pre_order}}available for order{{~else if product.out_of_stock '===' true}}out of stock{{~else if product.out_of_stock_message}}out of stock{{~else if product.can_purchase '===' false}}out of stock{{~else}}in stock{{~/if}}">
-        <meta property="product:availability" content="{{~#if product.pre_order}}available for order{{~else if product.out_of_stock '===' true}}out of stock{{~else if product.out_of_stock_message}}out of stock{{~else if product.can_purchase '===' false}}out of stock{{~else}}in stock{{~/if}}">
-        <meta property="product:condition" content="{{#if product.condition}}{{lowercase product.condition}}{{else}}new{{/if}}">
-        <meta property="product:price:amount" content="{{~#if product.price.with_tax.value}}{{product.price.with_tax.value}}{{~else}}{{product.price.without_tax.value}}{{~/if}}">
-        {{#or product.price.rrp_with_tax.value product.price.rrp_without_tax.value}}<meta property="og:price:standard_amount" content="{{~#if product.price.rrp_with_tax.value}}{{product.price.rrp_with_tax.value}}{{~else}}{{product.price.rrp_without_tax.value}}{{~/if}}">{{/or}}
-        <meta property="product:price:currency" content="{{currency_selector.active_currency_code}}">
-        <meta property="product:retailer_item_id" content="P{{product.id}}"> {{!-- this needs to match the product id you use in other places like the BigCommerce Facebook Catalogue (which uses P for product and V for variant). --}}
-        <meta property="product:item_group_id" content="{{product.id}}"> {{!-- The BigCommerce Facebook app always sets this to the product id --}}
-        {{~else}} 
-        <meta property="og:type" content="article" />
-        {{/if}}
-        {{#if (getVar "fb:app_id") '!==' 'CHANGE_ME'}}<meta property="fb:app_id" content="{{getVar "fb:app_id"}}" />{{/if}}
-        {{#if (getVar "fb:pages") '!==' 'CHANGE_ME'}}<meta property="fb:pages" content="{{getVar "fb:pages"}}" />{{/if}}
-        {{#if (getVar "twitter:site" '!==' 'CHANGE_ME')}}<meta name="twitter:site" content="{{getVar "twitter:site"}}" />{{/if}}
-        {{#if (getVar "twitter:creator" '!==' 'CHANGE_ME')}}<meta name="twitter:creator" content="{{getVar "twitter:creator"}}" />{{/if}}
-{{!-- END ************************************* --}} 
+{{!-- Variable Definitions End --}}
+{{~#if settings.request.absolute_path '===' '/'}}
+<meta property="og:url" content="{{settings.base_url}}{{settings.request.absolute_path}}">
+<meta property="og:type" content="website">
+<meta property="og:title" content={{{json head.title}}}>
+{{~#if (getVar "homepage:og:description")}}<meta property="og:description" content={{#replace "\r\n" (json (ellipsis (sanitize (getVar "homepage:og:description"))))}} {{else}}{{{json (ellipsis (sanitize (getVar "homepage:og:description")))}}}{{/replace}}>{{~/if}}
+{{~#if settings.store_logo.image}}<meta property="og:image" content="{{getImage settings.store_logo.image}}">{{~/if}}
+{{~else if page_type '===' 'category'}}
+<meta property="og:url" content="{{category.url}}">
+<meta property="og:type" content="website">
+<meta property="og:title" content={{{json category.name}}}>
+<meta property="og:description" content={{#replace "\r\n" (json (ellipsis (sanitize category.description)))}} {{else}}{{{json (ellipsis (sanitize category.description))}}}{{/replace}}>
+{{~#if category.image}}<meta property="og:image" content="{{getImage category.image}}">{{~/if}}
+{{~else if page_type '===' 'brand'}}
+<meta property="og:url" content="{{brand.url}}">
+<meta property="og:type" content="website">
+<meta property="og:title" content={{{json brand.name}}}>
+{{~#if brand.image}}<meta property="og:image" content="{{getImage brand.image}}">{{~/if}}
+{{~else if page_type '===' 'blog_post'}}
+<meta property="og:url" content="{{blog.post.url}}">
+<meta property="og:type" content="article">
+<meta property="og:title" content={{{json blog.post.title}}}>
+{{~#if blog.post.thumbnail}}<meta property="og:image" content="{{getImage blog.post.thumbnail}}">{{~/if}}
+{{~#if blog.post.author}}<meta property="article:author" content={{{json blog.post.author}}}>{{~/if}}
+<meta property="article:published_time" content="{{~#if (moment blog.post.date_published format="YYYY-MM-DD") '===' 'Invalid date'}}{{blog.post.date_published}}{{else}}{{moment blog.post.date_published format="YYYY-MM-DD"}}{{~/if}}">
+{{~else if page_type '===' 'product'}}
+{{~#if product.brand.name}}<meta property="og:brand" content={{{json product.brand.name}}}/>{{~/if}}
+<meta property="og:availability" content="{{~#if product.pre_order}}available for order{{~else if product.out_of_stock '===' true}}out of stock{{~else if product.out_of_stock_message}}out of stock{{~else if product.can_purchase '===' false}}out of stock{{~else}}in stock{{~/if}}">
+<meta property="product:availability" content="{{~#if product.pre_order}}available for order{{~else if product.out_of_stock '===' true}}out of stock{{~else if product.out_of_stock_message}}out of stock{{~else if product.can_purchase '===' false}}out of stock{{~else}}in stock{{~/if}}">
+<meta property="product:condition" content="{{#if product.condition}}{{lowercase product.condition}}{{else}}new{{/if}}">
+<meta property="product:price:amount" content="{{~#if product.price.with_tax.value}}{{product.price.with_tax.value}}{{~else}}{{product.price.without_tax.value}}{{~/if}}">
+{{~#or product.price.rrp_with_tax.value product.price.rrp_without_tax.value}}<meta property="og:price:standard_amount" content="{{~#if product.price.rrp_with_tax.value}}{{product.price.rrp_with_tax.value}}{{~else}}{{product.price.rrp_without_tax.value}}{{~/if}}">{{~/or}}
+<meta property="product:price:currency" content="{{currency_selector.active_currency_code}}">
+{{~#if (getVar "product:retailer_item_id")}}<meta property="product:retailer_item_id" content={{{json (getVar "product:retailer_item_id")}}}>{{~/if}}
+{{~#if (getVar "product:item_group_id")}}<meta property="product:item_group_id" content={{{json (getVar "product:item_group_id")}}}>{{~/if}}
+{{~else}}
+<meta property="og:type" content="article" />
+{{~/if}}
+{{~#if page_type '!==' 'product'}}<meta property="og:site_name" content={{{json settings.store_name}}}>{{~/if}}
+{{~#if (getVar "fb:pages")}}<meta property="fb:pages" content="{{getVar "fb:pages"}}"/>{{~/if}}
+<meta name="twitter:card" content="summary" />
+{{~#if (getVar "twitter:site")}}<meta name="twitter:site" content="{{getVar "twitter:site"}}">{{~/if}}
+{{~#if (getVar "twitter:creator")}}<meta name="twitter:creator" content="{{getVar "twitter:creator"}}">{{~/if}}
+<!-- Advanced Social Meta Tags - END -->
