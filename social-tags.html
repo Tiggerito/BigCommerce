@@ -1,6 +1,6 @@
 <!-- 
 Web Site Advantage: Advanced Social Meta Tags [v2.0] 
-https://bigcommerce.websiteadvantage.com.au/advanced-social-meta-tags-for-bigcommerce/
+https://bigcommerce.websiteadvantage.com.au/rich-snippets/articles/advanced-social-meta-tags-for-bigcommerce/
 Copyright (C) 2020 Web Site Advantage
 -->
 {{~!-- Variable Definitions Start --}}
@@ -10,13 +10,13 @@ Copyright (C) 2020 Web Site Advantage
 <meta property="og:url" content="{{settings.base_url}}{{settings.request.absolute_path}}">
 <meta property="og:type" content="website">
 <meta property="og:title" content={{{json head.title}}}>
-{{~#if (getVar "homepage:og:description")}}<meta property="og:description" content={{#replace "\r\n" (json (ellipsis (sanitize (getVar "homepage:og:description"))))}} {{else}}{{{json (ellipsis (sanitize (getVar "homepage:og:description")))}}}{{/replace}}>{{~/if}}
+{{~#if (getVar "homepage:og:description")}}<meta property="og:description" content={{#replace "\r\n" (json (ellipsis (sanitize (getVar "homepage:og:description")) 255))}} {{else}}{{{json (ellipsis (sanitize (getVar "homepage:og:description")) 255)}}}{{/replace}}>{{~/if}}
 {{~#if settings.store_logo.image}}<meta property="og:image" content="{{getImage settings.store_logo.image}}">{{~/if}}
 {{~else if page_type '===' 'category'}}
 <meta property="og:url" content="{{category.url}}">
 <meta property="og:type" content="website">
 <meta property="og:title" content={{{json category.name}}}>
-<meta property="og:description" content={{#replace "\r\n" (json (ellipsis (sanitize category.description)))}} {{else}}{{{json (ellipsis (sanitize category.description))}}}{{/replace}}>
+<meta property="og:description" content={{#replace "\r\n" (json (ellipsis (sanitize category.description) 255))}} {{else}}{{{json (ellipsis (sanitize category.description) 255)}}}{{/replace}}>
 {{~#if category.image}}<meta property="og:image" content="{{getImage category.image}}">{{~/if}}
 {{~else if page_type '===' 'brand'}}
 <meta property="og:url" content="{{brand.url}}">
