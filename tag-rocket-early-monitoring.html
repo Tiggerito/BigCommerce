@@ -1,0 +1,92 @@
+<!-- 
+{{! This needs to be placed right at the top of the head section }}    
+Web Site Advantage: Tag Rocket Early Monitoring [v1.0] 
+https://bigcommerce.websiteadvantage.com.au/tag-rocket/
+Copyright (C) 2021 Web Site Advantage
+-->
+<script data-cfasync="false">
+!function(w,t,c,x){
+    w[t]={};
+    var T=w[t],i,s,o,f,e=function(e,n,f,o){
+        if(e.addEventListener){
+            e.addEventListener(n,f,o)
+        }else if(w.attachEvent){
+            e.attachEvent('on'+n,f)
+        }
+    };
+
+   // errors
+    if(!T.ef){
+        T.eq=T.eq||[];
+        T.ef=function(){
+            T.eq.push(arguments)
+        };
+        if(typeof w.onerror=='object')e(w,'error',function(){
+            T.ef.apply(T,arguments)
+        },{passive:true,capture:true});
+
+    }
+
+    // console errors
+    if(!T.cf){
+        T.cq=T.cq||[];   
+        T.cf=function(){
+            T.cq.push(arguments)
+        };
+        i=c.error;
+        c.error=function(){
+            i.apply(c,arguments);
+            T.cf.apply(T,arguments)
+        }
+    }
+
+    // XMLHttpRequest
+    if(!T.xf&&x){
+        T.xq=T.xq||[];
+        T.xf=function(r){           
+            T.xq.push(r);
+        };
+
+        o=x.open;
+        if(o){
+            x.open=function(m,u){
+                this.rurl=u;
+                return o.apply(this,arguments);
+            }
+        }
+
+        s=x.send;
+        if (s&&s.apply){
+            x.send=function(){
+                var t=this;
+                
+                e(t,'readystatechange',function(){
+                    if(t.readyState==4&&(t.status>399||t.status==0))T.xf(t)
+                });
+
+                return s.apply(t,arguments)
+            }
+        }   
+    }
+
+    // fetch
+    if(!T.ff){
+        T.fq=T.fq||[];
+        T.ff=function(r){T.fq.push(r)};
+        f=w.fetch;
+        if(f&&f.apply){
+            w.fetch=function(u){
+                return f.apply(this,arguments).then(function(r){
+                    if(r.status>399){
+                        T.ff({url:r.url,message:r.status});
+                    }
+                    return r
+                }).catch(function(e){
+                    T.ff({url:u.url||u,message:e.stack||e.message||e});
+                    throw e
+                })
+            }
+        }
+    }
+}(window,"TagRocket",console,XMLHttpRequest.prototype)
+</script>

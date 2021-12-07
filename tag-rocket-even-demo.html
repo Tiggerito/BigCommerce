@@ -1,0 +1,21 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Tag Rocket Event Demo [v1.1] 
+    A demo to show how you can tap into the Tag Rocket event API
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/
+    Copyright (C) 2021 Web Site Advantage
+*/
+!function(w,t){
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+    
+    T.init(function() {
+        console.log("Tag Rocket is initialized");
+        
+        console.log("Consent",T.consent);
+        
+        T.on('.*',function(data, eventName){
+            console.log('OnEvent '+eventName, data);
+        });
+    })
+}(window,"TagRocket")
+</script>
