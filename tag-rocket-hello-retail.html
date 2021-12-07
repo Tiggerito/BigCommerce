@@ -32,7 +32,7 @@
 
                     addDetails(data.cart, cartData);
 
-                    console.log('ADDWISH_PARTNER_NS.api.cart.setCart', cartData)
+                    // console.log('ADDWISH_PARTNER_NS.api.cart.setCart', cartData)
                     _awev.push(["bind_once", "context_ready", function() {                        
                         ADDWISH_PARTNER_NS.api.cart.setCart(cartData);
                     }]);
@@ -41,7 +41,7 @@
                     // *******************************************
                     if (data.change > 0) {
                         var productData = {productNumber: ''+data.productId};
-                        console.log('ADDWISH_PARTNER_NS.api.cart.addProduct', productData)
+                        // console.log('ADDWISH_PARTNER_NS.api.cart.addProduct', productData)
                         _awev.push(["bind_once", "context_ready", function() { 
                             ADDWISH_PARTNER_NS.api.cart.addProduct(productData);
                         }]);
@@ -57,7 +57,7 @@
 
                     addDetails(data, cartData);
 
-                    console.log('ADDWISH_PARTNER_NS.api.conversion.track_sale', cartData)
+                    // console.log('ADDWISH_PARTNER_NS.api.conversion.track_sale', cartData)
                     _awev.push(["bind_once", "context_ready", function() {                        
                         ADDWISH_PARTNER_NS.api.conversion.track_sale(cartData);
                     }]);
