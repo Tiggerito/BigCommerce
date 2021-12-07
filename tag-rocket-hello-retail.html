@@ -1,0 +1,90 @@
+<script data-cfasync="false"> 
+/*
+    Web Site Advantage: Tag Rocket Hello Retail [v1.0] 
+    Hello Retail API support
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/
+    Copyright (C) 2021 Web Site Advantage
+*/
+!function(w,t){
+    var feedId = 'productId'; // url, productId, productSku
+
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+
+    // Tracking Script
+    // T.loadScript('????'); // need an example of a tracking script to work this out 
+
+    _awev=w._awev||[];
+
+    T.init(function(){       
+        T.on('.*',function(data, eventName){
+
+            // https://apidocs.helloretail.com/register-email-on-tracking-user ??
+
+            switch(eventName) {
+                case "CartItemChanged": 
+
+                    // https://apidocs.helloretail.com/cart-tracking/tracking-a-complete-cart
+                    // *******************************************
+                    var cartData = {
+                        total: data.cart.cartAmount,
+                        url: '{{settings.base_url}}{{urls.cart}}'
+                    };
+
+                    addDetails(data.cart, cartData);
+
+                    console.log('ADDWISH_PARTNER_NS.api.cart.setCart', cartData)
+                    _awev.push(["bind_once", "context_ready", function() {                        
+                        ADDWISH_PARTNER_NS.api.cart.setCart(cartData);
+                    }]);
+
+                    // https://apidocs.helloretail.com/cart-tracking/tracking-when-a-visitor-adds-a-product-to-cart
+                    // *******************************************
+                    if (data.change > 0) {
+                        var productData = {productNumber: ''+data.productId};
+                        console.log('ADDWISH_PARTNER_NS.api.cart.addProduct', productData)
+                        _awev.push(["bind_once", "context_ready", function() { 
+                            ADDWISH_PARTNER_NS.api.cart.addProduct(productData);
+                        }]);
+                    }
+                    break;
+                case "CheckoutStep5OrderCompleted":
+                    // https://apidocs.helloretail.com/conversion-tracking
+                    // *******************************************
+                    var cartData = {
+                        total: data.orderAmount,
+                        orderNumber: data.orderId
+                    };
+
+                    addDetails(data, cartData);
+
+                    console.log('ADDWISH_PARTNER_NS.api.conversion.track_sale', cartData)
+                    _awev.push(["bind_once", "context_ready", function() {                        
+                        ADDWISH_PARTNER_NS.api.conversion.track_sale(cartData);
+                    }]);
+                    break;
+            }                    
+        });
+    })
+
+    function addDetails(cart, cartData) {
+        if (feedId == 'url') {
+            cartData.urls = [];
+
+            for(var i=0; i < cart.items.length; i++) {
+                cartData.urls.push(cart.items[i].url);
+            };
+        }
+        else {
+            cartData.productNumbers = [];
+
+            for(var i=0; i < cart.items.length; i++) {
+                cartData.productNumbers.push(''+cart.items[i][feedId]);
+            };
+        }
+
+        {{#if customer.email}}
+        cartData.email = '{{customer.email}}';
+        {{/if}}
+    }
+}(window,"TagRocket")
+</script>
