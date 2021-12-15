@@ -1,0 +1,120 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Tag Rocket TikTok [v1.0] 
+    TikTok pixel
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2021 Web Site Advantage
+*/
+!function(w,t){
+    var tikTokPixelId = 'REPLACE_WITH_YOUR_ID'; // https://ads.tiktok.com/ -> Assets -> Events -> Website Pixel Manage -> Create Pixel -> Manually Install -> Developer Mode -> Confirm. Copy the ID here.
+    var productIdentifier = function(product) {return ''+product.productId}; // productId, productSku
+
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+    
+    T.init(function(){
+
+        if (T.consent.targetingAdvertising) {
+
+// https://ads.tiktok.com/marketing_api/docs?rid=yqyw52eh4of&id=1701890973258754
+!function (w,d,t) {
+w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};T.loadScript("https://analytics.tiktok.com/i18n/pixel/events.js?sdkid="+e+"&lib="+t)};
+    
+ttq.load(tikTokPixelId);
+ttq.page();
+}(w,document,'ttq');
+
+            var buildItem = function(itemData) {
+                var item = {
+                    content_id: productIdentifier(itemData),
+                    content_type: 'product_group',
+                    content_name: itemData.name,
+                    content_category: itemData.category.name,
+                    price: itemData.price
+                };
+                if (itemData.quantity) {
+                    item.quantity = itemData.quantity;
+                }
+                if (itemData.change) { 
+                    item.quantity = itemData.change;
+                    item.value = item.quantity * item.price;
+                    item.currency = itemData.currency;
+                }
+                return item;
+            };
+            var send = function(name) {
+                // console.log("TikTok "+name, arguments);
+                ttq.track.apply(ttq, arguments);
+            }
+       
+            T.on('.*',function(data, eventName){
+                switch(eventName) {
+                    case "CheckoutStep5OrderCompleted":
+                        send('AddPaymentInfo');
+                        send('CompletePayment');
+                        send('PlaceAnOrder', {
+                            value: data.orderAmount,
+                            currency: data.currency.code,
+                            contents: data.items.map(function(item) {return buildItem(item)})
+                        });
+                        break;
+                    case "CartItemChanged": 
+                        if (data.change > 0) send('AddToCart', buildItem(data));
+                        break;
+                    case "AddToWishList":
+                        send('AddToWishlist', buildItem(data));
+                        break;
+                    case "AccountCreated":
+                        send('CompleteRegistration') 
+                        break;
+                    case "ContactSuccess":
+                        send('Contact');
+                        break;
+                    case "CheckoutStep1CustomerStarted":
+                        send('InitiateCheckout', {
+                            value: data.cartAmount,
+                            currency: data.currency.code,
+                            contents: data.items.map(function(item) {return buildItem(item)})
+                        });
+                        break;
+                    case "SubscribeSuccess":
+                        send('Subscribe');
+                        break;
+                    case "ProductPage":
+                        send('ViewContent', buildItem(data));
+                        break;
+                    case "ProductsVisible":
+                        if(data.search) {
+                            send('Search', {
+                                query: data.search,
+                                content_name: data.list.listName,
+                                contents: data.list.items.map(function(item) {return buildItem(item)})
+                            })   
+                        }
+                        else {
+                            send('ViewContent', {
+                                content_name: data.list.listName,
+                                contents: data.list.items.map(function(item) {return buildItem(item)})
+                            }) 
+                        }                    
+                        break;
+                    case "LinkClick":
+                        send('ClickButton', {
+                            content_id: data.href,
+                            content_name: data.label,
+                            content_category: data.category,
+                            value: data.value
+                        });
+                        break;
+                    case "PromotionClicked":
+                        send('ClickButton', {
+                            content_id: 'banner-'+data.id,
+                            content_name: data.name,
+                            content_category: 'Banner '+data.location
+                        });
+                        break;
+                }                    
+            });
+        }
+    })
+}(window,"TagRocket")
+</script>

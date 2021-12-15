@@ -1,13 +1,13 @@
 <script data-cfasync="false">   
 /*
-    Web Site Advantage: Tag Rocket Criteo [v1.0] 
+    Web Site Advantage: Tag Rocket Criteo [v1.1] 
     Criteo tags
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2021 Web Site Advantage
 */
 !function(w,t){
     var CRTO_PartnerID = 'REPLACE_WITH_YOUR_PARTNER_ID';
-    var productIdentifier = "productId"; // url, productId, productSku
+    var productIdentifier = function(product) {return ''+product.productId}; // productId, productSku
     
     // https://support.criteo.com/s/article?article=All-Criteo-OneTag-events-and-parameters&language=en_US
     // need to review documentation for more data to send
@@ -31,6 +31,7 @@
 
             var send = function(event) {
                 event.ecpplugin = "BigCommerce-TagRocket";
+                // console.log("Criteo "+event.event, event);
                 window.criteo_q.push(event);
             }
 
@@ -47,10 +48,10 @@
             T.on('.*',function(data, eventName){
                 switch(eventName) {
                     case "ProductPage":
-                        send({event: "viewItem", item: data[productIdentifier]});
+                        send({event: "viewItem", item: productIdentifier(data)});
                         break;
                     case "ProductsVisible":
-                        var productIdentifiers = data.items.map(function(item){return item[productIdentifier]});
+                        var productIdentifiers = data.list.items.map(function(item){return productIdentifier(item)});
                         
                         if(data.search) {
                             send({event: "viewSearchResult",
@@ -68,7 +69,7 @@
                     case "CartPage":
                         var items = data.items.map(function(item){
                             return {
-                                'id': item[productIdentifier],
+                                'id': productIdentifier(item),
                                 'price': item.price,
                                 'quantity': item.quantity
                             }
@@ -80,7 +81,7 @@
                         if (data.change > 0) {
                             send({event: "addToCart", item:[
                                 {
-                                    'id': data[productIdentifier],
+                                    'id': productIdentifier(data),
                                     'price': data.price,
                                     'quantity': data.quantity
                                 }
@@ -90,7 +91,7 @@
                     case "CheckoutStep5OrderCompleted":
                         var items = data.items.map(function(item){
                             return {
-                                'id': item[productIdentifier],
+                                'id': productIdentifier(item),
                                 'price': item.price,
                                 'quantity': item.quantity
                             }
@@ -102,5 +103,5 @@
             });
         }
     })
-}(window,"TagRocket")
+}(window,"TagRocketDevelopment")
 </script>

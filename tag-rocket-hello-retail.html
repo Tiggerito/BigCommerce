@@ -6,7 +6,8 @@
     Copyright (C) 2021 Web Site Advantage
 */
 !function(w,t){
-    var feedId = 'productId'; // url, productId, productSku
+    var productIdentifier = function(product) {return ''+product.productId}; // productId, productSku
+    // var productIdentifier = 'url'; // use this line if you want to use product urls
 
     w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
 
@@ -70,7 +71,7 @@
     })
 
     function addDetails(cart, cartData) {
-        if (feedId == 'url') {
+        if (productIdentifier == 'url') {
             cartData.urls = [];
 
             for(var i=0; i < cart.items.length; i++) {
@@ -81,7 +82,7 @@
             cartData.productNumbers = [];
 
             for(var i=0; i < cart.items.length; i++) {
-                cartData.productNumbers.push(''+cart.items[i][feedId]);
+                cartData.productNumbers.push(''+productIdentifier(cart.items[i]));
             };
         }
 
