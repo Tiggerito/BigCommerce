@@ -1,8 +1,8 @@
 <script data-cfasync="false">   
 /*
-    Web Site Advantage: Tag Rocket Taboola [v1.0] 
+    Web Site Advantage: Tag Rocket Taboola [v1.1] 
     Taboola base pixel and conversion events
-    https://bigcommerce.websiteadvantage.com.au/tag-rocket/
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2021 Web Site Advantage
 */
 !function(w,t){
@@ -11,40 +11,44 @@
     w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
     
     T.init(function(){
-        w._tfa = w._tfa||[];
-        w._tfa.push({notify:'event',name:'page_view'});              
-        T.loadScript('//cdn.taboola.com/libtrc/unip/'+taboolaAccountId+'/tfa.js',{id:'tb_tfa_script'});
-                
-        T.on('.*',function(data, eventName){
-            switch(eventName) {
-                case "QuickSearch":
-                case "SearchPage":
-                    _tfa.push({notify: 'event', name: 'search', id: taboolaAccountId});
-                    break;
-                case "CartItemChanged": 
-                    if (data.change > 0) _tfa.push({notify: 'event', name: 'add_to_cart', id: taboolaAccountId});
-                    break;
-                case "CheckoutStep1CustomerStarted":
-                    _tfa.push({notify: 'event', name: 'start_checkout', id: taboolaAccountId});
-                    break;
-                case "CheckoutStep5OrderCompleted":
-                    _tfa.push({notify: 'event', name: 'add_payment_info', id: taboolaAccountId}); 
-                    _tfa.push({notify: 'event', name: 'make_purchase', revenue: data.orderAmount, currency: data.currency.code, orderid: data.orderId, id: taboolaAccountId});
-                    break;
-                case "AccountCreated":
-                    _tfa.push({notify: 'event', name: 'complete_registration', id: taboolaAccountId}); 
-                    break;
-                case "ContactSuccess":
-                    _tfa.push({notify: 'event', name: 'lead_contact', id: taboolaAccountId});
-                    break;
-                case "SubscribeSuccess":
-                    _tfa.push({notify: 'event', name: 'lead_subscribe', id: taboolaAccountId});
-                    break;
-                case "AddToWishList":
-                    _tfa.push({notify: 'event', name: 'add_to_wishlist', id: taboolaAccountId}); 
-                    break;
-            }                    
-        });
+
+        if (T.consent.targetingAdvertising) {
+
+            w._tfa = w._tfa||[];
+            w._tfa.push({notify:'event',name:'page_view'});              
+            T.loadScript('//cdn.taboola.com/libtrc/unip/'+taboolaAccountId+'/tfa.js',{id:'tb_tfa_script'});
+                    
+            T.on('.*',function(data, eventName){
+                switch(eventName) {
+                    case "QuickSearch":
+                    case "SearchPage":
+                        _tfa.push({notify: 'event', name: 'search', id: taboolaAccountId});
+                        break;
+                    case "CartItemChanged": 
+                        if (data.change > 0) _tfa.push({notify: 'event', name: 'add_to_cart', id: taboolaAccountId});
+                        break;
+                    case "CheckoutStep1CustomerStarted":
+                        _tfa.push({notify: 'event', name: 'start_checkout', id: taboolaAccountId});
+                        break;
+                    case "CheckoutStep5OrderCompleted":
+                        _tfa.push({notify: 'event', name: 'add_payment_info', id: taboolaAccountId}); 
+                        _tfa.push({notify: 'event', name: 'make_purchase', revenue: data.orderAmount, currency: data.currency.code, orderid: data.orderId, id: taboolaAccountId});
+                        break;
+                    case "AccountCreated":
+                        _tfa.push({notify: 'event', name: 'complete_registration', id: taboolaAccountId}); 
+                        break;
+                    case "ContactSuccess":
+                        _tfa.push({notify: 'event', name: 'lead_contact', id: taboolaAccountId});
+                        break;
+                    case "SubscribeSuccess":
+                        _tfa.push({notify: 'event', name: 'lead_subscribe', id: taboolaAccountId});
+                        break;
+                    case "AddToWishList":
+                        _tfa.push({notify: 'event', name: 'add_to_wishlist', id: taboolaAccountId}); 
+                        break;
+                }                    
+            });
+        }
     })
 }(window,"TagRocket")
 </script>
