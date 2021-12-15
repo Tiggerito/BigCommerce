@@ -1,0 +1,105 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Tag Rocket Criteo [v1.0] 
+    Criteo tags
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/
+    Copyright (C) 2021 Web Site Advantage
+*/
+!function(w,t){
+    var CRTO_PartnerID = 'REPLACE_WITH_YOUR_PARTNER_ID';
+
+    var productIdentifier = "productId";
+
+    // https://support.criteo.com/s/article?article=All-Criteo-OneTag-events-and-parameters&language=en_US
+    // need to review documentation for more data to send
+
+    var CRTO_DeviceType = /iPad/.test(navigator.userAgent)?"t":/Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Silk/.test(navigator.userAgent)?"m":"d";
+    var CRTO_Email = "{{customer.email}}" || "";
+    window.criteo_q = window.criteo_q || [];
+    window.criteo_q.push(
+        {event: "setAccount", account : CRTO_PartnerID},
+        {event: "setSiteType", type: CRTO_DeviceType},
+        {event: "setEmail", email: CRTO_Email},
+        {event: "setZipcode", zipcode: "{{customer.shipping_address.zip}}" }
+    );
+
+    var send = function(event) {
+        event.ecpplugin = "BigCommerce-TagRocket";
+        window.criteo_q.push(event);
+    }
+
+    {{#if settings.request.absolute_path '===' '/'}}
+    send({event: "viewHome"});
+    {{else if page_type '===' 'product'}}
+    // will send a viewItem
+    {{else if page_type '===' 'cart'}}
+    // will send a viewBasket
+    {{else}}
+    send({event:"viewPage"});
+    {{/if}}
+
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+    
+    T.init(function(){
+              
+        T.loadScript('https://dynamic.criteo.com/js/ld/ld.js?a='+CRTO_PartnerID);
+                
+        T.on('.*',function(data, eventName){
+            switch(eventName) {
+                case "ProductPage":
+                    send({event: "viewItem", item: data[productIdentifier]});
+                    break;
+                case "ProductsVisible":
+                    var productIdentifiers = data.items.map(function(item){return item[productIdentifier]});
+                    
+                    if(data.search) {
+                        send({event: "viewSearchResult",
+                            keywords: data.search,
+                            item: productIdentifiers
+                        });
+                    }
+                    else {
+                        send({event: "viewList",
+                            category: data.list.listName,
+                            item: productIdentifiers
+                        });
+                    }
+                    break;
+                case "CartPage":
+                    var items = data.items.map(function(item){
+                        return {
+                            'id': item[productIdentifier],
+                            'price': item.price,
+                            'quantity': item.quantity
+                        }
+                    });
+
+                    send({event: "viewBasket", item: items});
+                    break;
+                case "CartItemChanged": 
+                    if (data.change > 0) {
+                        send({event: "addToCart", item:[
+                            {
+                                'id': data[productIdentifier],
+                                'price': data.price,
+                                'quantity': data.quantity
+                            }
+                        ]});
+                    }
+                    break;
+                case "CheckoutStep5OrderCompleted":
+                    var items = data.items.map(function(item){
+                        return {
+                            'id': item[productIdentifier],
+                            'price': item.price,
+                            'quantity': item.quantity
+                        }
+                    });
+
+                    send({event: "trackTransaction", id: data.orderId, item: items});
+                    break;
+            }                    
+        });
+    })
+}(window,"TagRocket")
+</script>
