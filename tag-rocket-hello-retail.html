@@ -1,13 +1,14 @@
 <script data-cfasync="false"> 
 /*
-    Web Site Advantage: Tag Rocket Hello Retail [v1.1] 
+    Web Site Advantage: Tag Rocket Hello Retail [v1.2] 
     Hello Retail API support
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2021 Web Site Advantage
 */
 !function(w,t){
-    var productIdentifier = function(product) {return ''+product.productId}; // productId, productSku
-    // var productIdentifier = 'url'; // use this line if you want to use product urls
+    var partnerId = 'REPLACE_WITH_YOUR_ID';
+    var productIdentifier = function(product) {return ''+product.productId}; // productId, productSku, sku (product or variant)
+    // var productIdentifier = 'url'; // use this line instead if you want to use product urls
 
     w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
 
@@ -15,11 +16,11 @@
 
         if (T.consent.targetingAdvertising) {
 
-            T.on('.*',function(data, eventName){
-                _awev=w._awev||[];
+            _awev=w._awev||[];
 
-                // Tracking Script
-                // T.loadScript('????'); // need an example of a tracking script to work this out
+            T.loadScript('https://d1pna5l3xsntoj.cloudfront.net/scripts/company/awAddGift.js#'+partnerId); 
+
+            T.on('.*',function(data, eventName){
 
                 // https://apidocs.helloretail.com/register-email-on-tracking-user ??
 
@@ -42,13 +43,13 @@
 
                         // https://apidocs.helloretail.com/cart-tracking/tracking-when-a-visitor-adds-a-product-to-cart
                         // *******************************************
-                        if (data.change > 0) {
-                            var productData = {productNumber: ''+data.productId};
-                            // console.log('ADDWISH_PARTNER_NS.api.cart.addProduct', productData)
-                            _awev.push(["bind_once", "context_ready", function() { 
-                                ADDWISH_PARTNER_NS.api.cart.addProduct(productData);
-                            }]);
-                        }
+                        // if (data.change > 0) {
+                        //     var productData = {productNumber: ''+data.productId};
+                        //     // console.log('ADDWISH_PARTNER_NS.api.cart.addProduct', productData)
+                        //     _awev.push(["bind_once", "context_ready", function() { 
+                        //         ADDWISH_PARTNER_NS.api.cart.addProduct(productData);
+                        //     }]);
+                        // }
                         break;
                     case "CheckoutStep5OrderCompleted":
                         // https://apidocs.helloretail.com/conversion-tracking
