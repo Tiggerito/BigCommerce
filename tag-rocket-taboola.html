@@ -25,14 +25,19 @@
                         _tfa.push({notify: 'event', name: 'search', id: taboolaAccountId});
                         break;
                     case "CartItemChanged": 
-                        if (data.change > 0) _tfa.push({notify: 'event', name: 'add_to_cart', id: taboolaAccountId});
+                        if (data.change > 0) _tfa.push({notify: 'event', name: 'add_to_cart', id: taboolaAccountId, quantity: data.change});
                         break;
                     case "CheckoutStep1CustomerStarted":
                         _tfa.push({notify: 'event', name: 'start_checkout', id: taboolaAccountId});
                         break;
                     case "CheckoutStep5OrderCompleted":
                         _tfa.push({notify: 'event', name: 'add_payment_info', id: taboolaAccountId}); 
-                        _tfa.push({notify: 'event', name: 'make_purchase', revenue: data.orderAmount, currency: data.currency.code, orderid: data.orderId, id: taboolaAccountId});
+                        _tfa.push({notify: 'event', name: 'make_purchase', id: taboolaAccountId,
+                            revenue: data.orderAmount, 
+                            currency: data.currency.code, 
+                            orderid: data.orderId,                            
+                            quantity: data.items.reduce(function(p, c){p + c.quantity})                            
+                        });
                         break;
                     case "AccountCreated":
                         _tfa.push({notify: 'event', name: 'complete_registration', id: taboolaAccountId}); 
