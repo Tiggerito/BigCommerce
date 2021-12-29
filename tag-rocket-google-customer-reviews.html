@@ -9,12 +9,15 @@
     var MERCHANT_ID = REPLACE_WITH_YOUR_ID;
     var BADGE_POSITION = "BOTTOM_RIGHT"; {{!-- BOTTOM_LEFT, BOTTOM_RIGHT --}} 
     var OPT_IN_STYLE = "CENTER_DIALOG"; {{!-- CENTER_DIALOG, BOTTOM_RIGHT_DIALOG, BOTTOM_LEFT_DIALOG, TOP_RIGHT_DIALOG, TOP_LEFT_DIALOG, BOTTOM_TRAY --}} 
-    var ESTIMATED_DELIVERY_DAYS = function(order) {return 5}; {{!-- 5 day delivery --}}
-    var LANGUAGE = ""; {{!-- of not set, use browsers default language --}}
+    var ESTIMATED_DELIVERY_DAYS = 5;
+    var LANGUAGE = ""; {{!-- of not set it uses browsers default language --}}
 
+    var calcEstimatedDeliveryDays = function(order) {
+        return ESTIMATED_DELIVERY_DAYS;
+    }
     var calcEstimatedDeliveryDate = function(order) {
         var d = new Date();
-        d.setDate(d.getDate() + ESTIMATED_DELIVERY_DAYS(order));
+        d.setDate(d.getDate() + calcEstimatedDeliveryDays(order));
         return d;
     }
 
