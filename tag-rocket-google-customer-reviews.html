@@ -1,0 +1,90 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Tag Rocket Google Customer Reviews [v1.0] 
+    Badge and survey opt-in module
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2021 Web Site Advantage
+*/
+!function(w,d,t){
+    var MERCHANT_ID = REPLACE_WITH_YOUR_ID;
+    var BADGE_POSITION = "BOTTOM_RIGHT"; {{!-- BOTTOM_LEFT, BOTTOM_RIGHT --}} 
+    var OPT_IN_STYLE = "CENTER_DIALOG"; {{!-- CENTER_DIALOG, BOTTOM_RIGHT_DIALOG, BOTTOM_LEFT_DIALOG, TOP_RIGHT_DIALOG, TOP_LEFT_DIALOG, BOTTOM_TRAY --}} 
+    var ESTIMATED_DELIVERY_DAYS = function(order) {return 5}; {{!-- 5 day delivery --}}
+    var LANGUAGE = ""; {{!-- of not set, use browsers default language --}}
+
+    var calcEstimatedDeliveryDate = function(order) {
+        var d = new Date();
+        d.setDate(d.getDate() + ESTIMATED_DELIVERY_DAYS(order));
+        return d;
+    }
+
+    if (LANGUAGE) w.___gcfg = {lang: LANGUAGE};
+    
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+ 
+    T.init(function(){
+
+{{~#if page_type '===' 'orderconfirmation'}}
+        var cartData;
+        var loaded = false;
+        var renderOptIn = function(order) {
+            w.gapi.load('surveyoptin', function() {
+                var options = {
+                    "merchant_id": MERCHANT_ID,
+                    "order_id": order.orderId,
+                    "email": order.billingAddress.email,
+                    "delivery_country": order.consignments.shipping[0].countryCode,
+                    "estimated_delivery_date": calcEstimatedDeliveryDate(order).toISOString().split('T')[0],
+                    "opt_in_style": OPT_IN_STYLE                    
+                };
+
+                var products = [];
+
+                for(var i = 0; i < order.items.length; i++) {
+                    var item = order.items[i];
+
+                    if (item.gtin) {
+                        products.push({gtin: item.gtin}); 
+                    }
+                }
+
+                if (products.length > 0) options.products = products;
+
+                w.gapi.surveyoptin.render(options);
+            });
+        }
+                                  
+        T.on('.*',function(data, eventName){
+            switch(eventName) {
+                case "CheckoutStep5OrderCompleted":                        
+                    if (loaded) 
+                        renderOptIn(data);
+                    else 
+                        cartData = data;
+                    break;
+            }                    
+        });
+{{~/if}}
+
+        w.tagRocketGoogleCustomerReviews = function() {            
+            var ratingBadgeContainer = d.createElement("div");
+            d.body.appendChild(ratingBadgeContainer);
+            w.gapi.load('ratingbadge', function() {
+                w.gapi.ratingbadge.render(
+                ratingBadgeContainer, {
+                    "merchant_id": MERCHANT_ID,
+                    "position": BADGE_POSITION
+                });           
+            });
+
+{{~#if page_type '===' 'orderconfirmation'}}
+            loaded = true;
+            if (cartData) renderOptIn(cartData);
+{{~/if}}
+        }
+
+        T.loadScript('https://apis.google.com/js/platform.js?onload=tagRocketGoogleCustomerReviews',{defer:true});
+        
+    })
+}(window,document,"TagRocket")
+</script>
