@@ -1,0 +1,9 @@
+{{!-- Added this to the partial head section ---}}
+
+{{#if brand.image}}
+<link rel="preload" as="image" href="{{getImageSrcset brand.image 1x=(concat (first (split theme_settings.thumb_size 'x')) 'w')}}" importance="high">
+{{else}}
+{{#if brand.products.[0].image}}
+<link rel="preload" as="image" href="{{getImageSrcset brand.products.[0].image 1x='320px'}}" importance="high">
+{{/if}}
+{{/if}}

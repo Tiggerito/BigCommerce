@@ -1,0 +1,13 @@
+{{!-- Added this ---}}
+
+{{#partial "head"}}
+{{#if carousel.slides.[0].stencil_image}}
+<link rel="preload" as="image" imagesrcset="{{getImageSrcset carousel.slides.[0].stencil_image use_default_sizes=true}}" imagesizes="(max-width: 640px) 640px, (max-width: 1280px) 1280px, (max-width: 1920px) 1920px, 2560px" importance="high">
+{{else if products.featured.[0].image}}
+<link rel="preload" as="image" href="{{getImageSrcset products.featured.[0].image 1x='320px'}}" importance="high">
+{{else if products.top_sellers.[0].image}}
+<link rel="preload" as="image" href="{{getImageSrcset products.top_sellers.[0].image 1x='320px'}}" importance="high">
+{{else if products.new.[0].image}}
+<link rel="preload" as="image" href="{{getImageSrcset products.new.[0].image 1x='320px'}}" importance="high">
+{{/if}}
+{{/partial}}

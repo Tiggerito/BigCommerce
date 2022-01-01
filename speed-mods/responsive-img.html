@@ -1,0 +1,141 @@
+{{!--  
+    Image classes
+    All images generated here will have the "responsive-img" class. Use this class to control how the background looks before any image is shown.
+    If lazy-loading is enabled, images will have the "lazyload" class so that Lazysizes will target them automatically.
+    If lazy-loading is enabled, images will have the "loading-lazy" class, otherwise the "loading-auto" class.
+    If lqip is enabled, images will have the "loading-lqip" class, otherwise the "loading-blank" class.
+    Use the "loading-lqip" class to make sure LQIP background images are aligned correctly.
+
+    Lazysizes fallback
+    By default the browsers native lazy-loading mechanism is used. If this is not available (Safari) there is an option to fall back to using the Lazysizes library.
+    To do this you need to add a script to the head of the base.html and switch a boolean in this code.
+    The script detects if lazy-loading is supported and either updates all images to use it, or loads Lazysizes as the fallback.
+    This also means independent use of the Lazysizes pattern is possible https://github.com/aFarkas/lazysizes#modern-transparent-srcset-pattern
+ 
+    There are a few important arguments to know about when using this component:
+    `lazyload`: 'lazyload', 'disabled', 'lazyload+lqip', 'disabled+lqip'
+
+        - 'lazyload': This means the image will use the browsers built in lazy-load mechanism to delay the loading of images
+             that are not initially visible (or close to visible) on the page.
+             This speeds up the loading of the page, especially when it is long and with lots of images.
+             If the browser does not support lazy-loading (like Safari) there is an optional fallback to using the Lazysize library.
+        - 'disabled': This means it will not attempt to lazy-load the image and instead tell the browser to load it in the normal way (auto).
+             Use this for high-priority images that are typically visible on initial page load.
+        - '+lqip': This will load a low-res image in the background (CSS background-image) of where the full size image will be loaded.
+            On slower connections the user will initially see a blurry version of the image as a placeholder while the main image loads.
+            This can provide a better user experience but does add the loading of an extra small image.
+            If not specified, the user will see a blank space until the image appears. You could use CSS (.responsive-img or .loading-lqip) to alter the appearance.
+            This is of most value for larger images.
+ 
+    `fallback_size`:
+        This is the size to use for this image in legacy browsers that do not support srcset.
+        Can be defined as a pixel bounding-box size (e.g. "123x123) or inherent width (e.g. "123w").
+        Not required if 1x is specified
+    
+    `class`:
+        Extra CSS classes to add to the image, e.g. "card-image".    
+    
+    `otherAttributes`:
+        Any other HTML attributes you want on the img tag, for example "height='100' width='100'"
+        Specifying height and width can reduce Layout Shifts. They can also be specified in CSS
+    
+    `default_image`:
+        The default image to use if `image` is undefined or falsy. Should be a theme asset, usually defined as a relative
+        path in the theme config. If a default image is not provided, you'll get an image tag with no image if the primary
+        image is undefined.
+    
+    `lqip_size`:
+        If you want to specify a particular size for the LQIP image, you can do so with this argument. 
+        A default of 80 pixels wide will be used otherwise. This argument has no effect if the lazyload mode does not end in "+lqip".
+        
+     `sizes`:
+        The sizes attribute value. Required if there are multiple width based entries in the srcset and the image is not going to be 100% width of the viewport. 
+        It is used to determine which of the images in srcset to use.
+        Not required if x1 is supplied as it enforces a single image size
+        
+      `1x`, `2x`:
+        Can be defined as a pixel bounding-box size (e.g. "123x123) or inherent width (e.g. "123w").
+        Lets you specify that only a single 1x (and optional 2x) image should be included in the srcset. 
+        Useful if the images placeholder is a fixed width or does not vary much, then we only need the one image.
+        It will reduce code bloat and complexity   
+        If used, fallback size is not required.
+        2x will only work if 1x is also provided. I could not get 1.5x to work.
+        I've not added this to all the possible places yet.
+    
+      Ideas
+      Ability to use browser setting for Save-Data or network speed to disable LQIP and maybe even reduce image sizes.
+    --}}
+    <img 
+    {{#if sizes}}sizes="{{sizes}}"{{/if}}
+    {{#if image}}
+         {{!-- 
+            Get the default image for legacy browsers that do not support srcset
+            1x is a fallback_size fallback. If both are supplied they should be the same anyhow
+        --}}
+         src="{{getImageSrcset image 1x=(default fallback_size 1x '160w')}}" alt="{{image.alt}}" title="{{image.alt}}" 
+         
+         {{#startsWith "lazyload" lazyload }}
+
+         {{#if false }}
+         {{!-- 
+            If enabled, use lazysizes to support lazy-loading on Safari. 
+            Lazysizes generates the 'sizes' attribute automatically which would sometimes be more accurate than when we manually set sizes
+            However lazysizes needs to wait for rendering to do this, meaning image loading is delayed and can't be reliably preloaded. 
+         --}}
+         data-sizes="auto"
+         {{#if 1x}}
+         data-srcset="{{getImageSrcset image 1x=1x}}{{#if 2x}},{{getImageSrcset image 2x=2x}} 2x{{/if}}"
+         {{else}}
+         {{#if sizes}}sizes="{{sizes}}"{{/if}}
+         data-srcset="{{getImageSrcset image use_default_sizes=true }}"
+         {{/if}}
+         {{!-- always this so no default image if srcset is supported --}}
+         srcset="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=="
+         {{else}}
+         {{!-- using native lazy loading ony --}}
+         {{#if 1x}}
+         srcset="{{getImageSrcset image 1x=1x}}{{#if 2x}},{{getImageSrcset image 2x=2x}} 2x{{/if}}"
+         {{else}}
+         {{#if sizes}}sizes="{{sizes}}"{{/if}}
+         srcset="{{getImageSrcset image use_default_sizes=true }}"
+         {{/if}}
+         {{/if}}
+
+         loading="lazy"
+           
+         {{#if lazyload '==' 'lazyload+lqip'}}
+         {{!-- add the lqip image via the style --}}
+         style="background-image: url('{{getImageSrcset image 1x=(default lqip_size '80w')}}')"
+         class="responsive-img lazyload loading-lazy loading-lqip{{#if class}} {{class}}{{/if}}"
+         {{else}}
+         {{!-- not lqip  --}}
+         class="responsive-img lazyload loading-lazy loading-blank{{#if class}} {{class}}{{/if}}"
+         {{/if}}
+    
+         {{else}}
+         {{!-- disabled --}}
+         {{#if 1x}}
+         srcset="{{getImageSrcset image 1x=1x}}{{#if 2x}},{{getImageSrcset image 2x=2x}} 2x{{/if}}"
+         {{else}}
+         {{#if sizes}}sizes="{{sizes}}"{{/if}}
+         srcset="{{getImageSrcset image use_default_sizes=true }}"
+         {{/if}}
+    
+         {{#if lazyload '==' 'disabled+lqip'}}
+         {{!-- add the lqip image via the style --}}
+         style="background-image: url('{{getImageSrcset image 1x=(default lqip_size '80w')}}')"
+         class="responsive-img loading-auto loading-lqip{{#if class}} {{class}}{{/if}}"
+         {{else}}
+         {{!-- not lqip  --}}
+         class="responsive-img loading-auto loading-blank{{#if class}} {{class}}{{/if}}"
+         {{/if}}
+    
+         {{/startsWith}}
+    
+    {{!-- if no image use default_image or nothing --}}
+    {{else if default_image}}src="{{cdn default_image}}" alt="{{lang 'products.card_default_image_alt'}}" class="responsive-img loading-eager loading-blank"
+    {{else}}src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" alt="" class="responsive-img loading-eager loading-blank"
+    {{/if}}
+    
+    {{otherAttributes}} />
+    
