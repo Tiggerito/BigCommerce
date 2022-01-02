@@ -4,10 +4,10 @@
             Loads Lazysizes only if required
             Works bast with my modified responsive-img.html file
             Must be placed first inside the head section so that it's execution is not blocked
-            Remove the 'Load Lazysizes' code already in this file as it is done here
-            Remove the theme-bundle.head_async.js script as it only contained lazysizes which is now dynamically loaded if required (Safari)
-            May want to find a better source for the lazysizes script. Directly from the CDN would reduce a connection delay
-            CSS files still delay building the DOM. So on page images only start loading once the CSS has loaded.
+            Can Remove the 'Load Lazysizes' code already in this file as it is done here
+            Can Remove the theme-bundle.head_async.js script as it only contained lazysizes which is now dynamically loaded if required
+            May want to find a better source for the lazysizes script? Directly from the BC CDN would reduce a connection delay
+            CSS files still delay building the DOM. So on page lazy-loading images only start loading once the CSS has loaded.
         --}}
         <script>
         !function(w,d){
