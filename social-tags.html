@@ -35,9 +35,11 @@ Copyright (C) 2020 Web Site Advantage
 <meta property="og:availability" content="{{~#if product.pre_order}}available for order{{~else if product.out_of_stock '===' true}}out of stock{{~else if product.out_of_stock_message}}out of stock{{~else if product.can_purchase '===' false}}out of stock{{~else}}in stock{{~/if}}">
 <meta property="product:availability" content="{{~#if product.pre_order}}available for order{{~else if product.out_of_stock '===' true}}out of stock{{~else if product.out_of_stock_message}}out of stock{{~else if product.can_purchase '===' false}}out of stock{{~else}}in stock{{~/if}}">
 <meta property="product:condition" content="{{#if product.condition}}{{lowercase product.condition}}{{else}}new{{/if}}">
+{{#if theme_settings.restrict_to_login '!==' true}}
 <meta property="product:price:amount" content="{{~#if product.price.with_tax.value}}{{product.price.with_tax.value}}{{~else}}{{product.price.without_tax.value}}{{~/if}}">
 {{~#or product.price.rrp_with_tax.value product.price.rrp_without_tax.value}}<meta property="og:price:standard_amount" content="{{~#if product.price.rrp_with_tax.value}}{{product.price.rrp_with_tax.value}}{{~else}}{{product.price.rrp_without_tax.value}}{{~/if}}">{{~/or}}
 <meta property="product:price:currency" content="{{currency_selector.active_currency_code}}">
+{{~/if}}
 {{~#if (getVar "product:retailer_item_id")}}<meta property="product:retailer_item_id" content={{{json (getVar "product:retailer_item_id")}}}>{{~/if}}
 {{~#if (getVar "product:item_group_id")}}<meta property="product:item_group_id" content={{{json (getVar "product:item_group_id")}}}>{{~/if}}
 {{~else}}
