@@ -1,6 +1,6 @@
 <script data-cfasync="false">   
 /*
-    Web Site Advantage: Tag Rocket Criteo [v1.1] 
+    Web Site Advantage: Tag Rocket Criteo [v1.2] 
     Criteo tags
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2021 Web Site Advantage
@@ -17,7 +17,11 @@
     T.init(function(){
         if (T.consent.targetingAdvertising) {
 
-            T.loadScript('https://dynamic.criteo.com/js/ld/ld.js?a='+CRTO_PartnerID);
+            T.addScriptTag('https://dynamic.criteo.com/js/ld/ld.js?a='+CRTO_PartnerID);
+            T.addPreconnectTag('https://dynamic.criteo.com');
+            T.addPreconnectTag('https://static.criteo.net');
+            T.addPreconnectTag('https://sslwidget.criteo.com');
+            T.addPreconnectTag('https://gum.criteo.com');
 
             var CRTO_DeviceType = /iPad/.test(navigator.userAgent)?"t":/Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Silk/.test(navigator.userAgent)?"m":"d";
             var CRTO_Email = "{{customer.email}}" || "";
@@ -81,9 +85,9 @@
                         if (data.change > 0) {
                             send({event: "addToCart", item:[
                                 {
-                                    'id': productIdentifier(data),
-                                    'price': data.price,
-                                    'quantity': data.quantity
+                                    'id': productIdentifier(data.item),
+                                    'price': data.item.price,
+                                    'quantity': data.change
                                 }
                             ]});
                         }
