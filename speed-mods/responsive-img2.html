@@ -13,11 +13,22 @@
     The Low Quality Image Placeholder is now implemented via CSS using background-image. This is to make it compatible with a browsers native lazy-loading.
     Add the following style to your theme so that the LQIP image aligns well with the main image that replaces it:
 
-    .placeholder-lqip {
-        background-repeat: no-repeat;
-        background-size: contain;
-        background-position: center;
-    }
+    <style>          
+        img.placeholder-lqip {
+            background-repeat: no-repeat;
+            background-size: contain;
+            background-position: center;
+        }
+        img.placeholder-lqip.normalloaded, img.placeholder-lqip.lazyloaded {
+            background-image: none !important;
+        }
+    </style>
+
+    The use of CSS for LQIP may conflict with things. Like the main product image gets replaced by gallery images that may not fully cover the LQIP. The base.html script 
+    can fix that by making sure the 'lazyloaded' or 'normalloaded' class is added to the image once it has been loaded. And the above CSS removes the background image.
+
+    I also noticed the product gallery system is very slow at loading the alternate images. prefetch may help there. 
+    However it seems the mechanism will reload the large image every time it is selected, even if the image has been previously loaded?
 
     Lazysizes
     By default the Lazysizes library is used to lazy-load an image.
@@ -29,6 +40,9 @@
     If native lazy-loading is not available (e.g. Safari) the system will stick to Lazysizes.
     You can disable the Lazysizes fallback for each image using the lazysizes='disabled'
     With the script added you can remove the standard Lazysizes loading code so that it is only loaded if required.
+
+    The use of CSS LQIP and native lazy-loading means that the user sees a gradual quality improvement as the full size image is loaded.
+    With Lazysizes an image swap is done so the image goes from low quality to high quality in the last moment.
 
     Arguments
     'loading': 'auto' (default), 'lazy', 'eager'
@@ -45,11 +59,11 @@
        Importance of 'high' will also cause the LQIP image to be preloaded at a high importance level.
        
     'placeholder': 'auto' (default), 'lqip'
-       By default a blank image is used before the main image is loaded. The 'placeholder-auto' class can be used to decide what is shown.
+       By default a blank image is used before the main image is loaded. The 'placeholder-auto' class can be used to decide how it looks.
        'lqip' means a Low Quality Image Placeholder is loaded fist... 
-       On slower connections the user will initially see a blurry version of the image while the larger version of the image loads.
+       On slower connections the user will initially see a blurry version of the image while the full version of the image loads.
        This can provide a better user experience but does add the loading of an extra small image.
-       It's of little value to use 'lqip' on smaller images (LQIP images are 80 pixels wide) or images that typically load before the page is rendered.
+       It's of little value to use 'lqip' on smaller images (LQIP images are 80 pixels wide) or images that typically load before the page is rendered (preloaded or importance high).
 
     'sizes':
        https://developer.mozilla.org/en-US/docs/Learn/HTML/Multimedia_and_embedding/Responsive_images
@@ -97,7 +111,39 @@
       Ability to use browser setting for Save-Data or network speed to disable LQIP and maybe even reduce image sizes.
     --}}
 
-    {{#all (if (last (split (default placeholder lazyload) '+')) '===' 'lqip') (if importance '===' 'high') (if image)}}  
+    {{#if (isString sizes) '===' false}}
+    {{assignVar 'responsiveSizes' (get 'string' sizes)}}
+    {{else if sizes}}
+    {{assignVar 'responsiveSizes' sizes}}
+    {{else}}
+    {{assignVar 'responsiveSizes' 'auto'}}
+    {{/if}}
+
+    {{#all (if (occurrences (getVar 'responsiveSizes') ',') '===' 0) (if (occurrences (getVar 'responsiveSizes') 'p') '===' 1)}}
+    {{assignVar 'responsive1x' (get 'string' (concat (first (split (getVar 'responsiveSizes') 'p')) 'w'))}}
+    {{else}}
+    {{assignVar 'responsive1x' '-'}}
+    {{/all}}
+
+    {{#if loading}}
+    {{assignVar 'responsiveLoading' loading}}
+    {{else if lazyload '===' 'lazyload'}}
+    {{assignVar 'responsiveLoading' 'lazy'}}
+    {{else if lazyload '===' 'lazyload+lqip'}}
+    {{assignVar 'responsiveLoading' 'lazy'}}
+    {{else}}
+    {{assignVar 'responsiveLoading' 'auto'}}
+    {{/if}}
+
+    {{#if placeholder}}
+    {{assignVar 'responsivePlaceholder' placeholder}}
+    {{else if lazyload '===' 'lazyload+lqip'}}
+    {{assignVar 'responsivePlaceholder' 'lqip'}}
+    {{else}}
+    {{assignVar 'responsivePlaceholder' 'auto'}}
+    {{/if}}
+
+    {{#all (if (getVar 'responsivePlaceholder') '===' 'lqip') (if importance '===' 'high') (if image)}}  
     <link rel="preload" as="image" href="{{getImageSrcset image 1x=(default lqip_size '80w')}}" importance="high">
     {{/all}}
 
@@ -107,39 +153,30 @@
 
          {{#if importance}}importance="{{importance}}"{{/if}} 
       
-         {{#startsWith 'lazy' (default loading lazyload)}}
+         {{#if (getVar 'responsiveLoading') '===' 'lazy'}}
          loading="lazy"
          {{#if lazysizes '!==' 'disabled'}}
          data-sizes="auto"
          {{!-- always this so no default image if srcset is supported --}}
          srcset="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" 
-         data-sizes="auto" 
-         {{#all (if sizes) (if (occurrences sizes ',') '===' 0) (if (occurrences sizes 'p') '===' 1)}}
-         data-srcset="{{getImageSrcset image 1x=(concat (first (split sizes 'p')) 'w')}}"
+         {{#if (getVar 'responsive1x') '!==' '-'}}
+         data-srcset="{{getImageSrcset image 1x=(getVar 'responsive1x')}}"
          {{else}}       
-         data-srcset="{{getImageSrcset image use_default_sizes=true}}"
-         {{#if sizes}} sizes="{{sizes}}"{{/if}}
-         {{/all}}
+         data-srcset="{{getImageSrcset image use_default_sizes=true}}"{{#if sizes}} sizes="{{sizes}}"{{/if}}
+         {{/if}}
          {{/if}}
          {{else}}
-         {{#if loading}}
-         loading="{{loading}}"
-         commas="{{occurrences sizes ','}}"
-         ps="{{occurrences sizes 'p'}}"
-         isString="{{isString sizes}}"
-         JSONstringify="{{JSONstringify sizes}}"
-         JSONstringifyisString="{{isString (JSONstringify sizes)}}"
-         lowercase="{{isString (lowercase sizes)}}"
-         trim="{{isString (trim sizes)}}"
+         {{#if (getVar 'responsiveLoading') '!==' 'auto'}}
+         loading="{{getVar 'responsiveLoading'}}"
          {{/if}}
-         {{#all (if sizes) (if (occurrences sizes ',') '===' 0) (if (occurrences sizes 'p') '===' 1)}}
-         srcset="{{getImageSrcset image 1x=(concat (first (split sizes 'p')) 'w')}}"
+         {{#if (getVar 'responsive1x') '!==' '-'}}
+         srcset="{{getImageSrcset image 1x=(getVar 'responsive1x')}}"
          {{else}}       
          srcset="{{getImageSrcset image use_default_sizes=true }}"{{#if sizes}} sizes="{{sizes}}"{{/if}}
-         {{/all}}
-         {{/startsWith}}
+         {{/if}}
+         {{/if}}
 
-         class="responsive-img{{#if class}} {{class}}{{/if}} lazysizes-{{default lazysizes 'auto'}}{{#startsWith 'lazy' (default loading lazyload)}} loading-lazy{{#if lazysizes '!==' 'disabled' }} lazyload{{/if}}{{else}} loading-{{default loading 'auto'}}{{/startsWith}}{{#if (last (split (default placeholder lazyload) '+')) '===' 'lqip'}} placeholder-lqip" style="background-image: url('{{getImageSrcset image 1x=(default lqip_size '80w')}}')"{{else}} placeholder-auto"{{/if}}
+         class="responsive-img{{#if class}} {{class}}{{/if}} lazysizes-{{default lazysizes 'auto'}}{{#if (getVar 'responsiveLoading') '===' 'lazy'}} loading-lazy{{#if lazysizes '!==' 'disabled' }} lazyload{{/if}}{{else}} loading-{{getVar 'responsiveLoading'}}{{/if}}{{#if (getVar 'responsivePlaceholder') '===' 'lqip'}} placeholder-lqip" style="background-image: url('{{getImageSrcset image 1x=(default lqip_size '80w')}}')"{{else}} placeholder-auto"{{/if}}
     
     {{else if default_image}}
     src="{{cdn default_image}}" 

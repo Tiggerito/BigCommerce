@@ -1,0 +1,28 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Tag Rocket GTAG Modifications [v1.0] 
+    Modify the events sent via GTAG
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/
+    Copyright (C) 2022 Web Site Advantage
+*/
+!function(w,t){
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+    
+    T.init(function() { 
+      
+        T.on('GtagCommandPending',function(data, eventName){
+            // fires before a command is sent, giving you the ability to edit the arguments or stop it from being sent by setting cancel to true
+
+            switch(data.arguments[0]) {
+                case "js":
+                    // cross-domain tracking for GA3 Universal or Google Ads implemented by gtag
+                    // this gets added before js
+                    // Tag Rocket admin also lets you add domains
+                    gtag('set','linker',{'domains':['DomainA.com','DomainB.com']});
+                    break;
+            }
+            
+        });
+    })
+}(window,"TagRocket")
+</script>

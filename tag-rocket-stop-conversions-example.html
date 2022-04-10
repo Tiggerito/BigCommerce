@@ -1,0 +1,47 @@
+<script data-cfasync="false">   
+    !function(w,t){
+        w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+        
+        T.init(function() { 
+       
+            T.on('CheckoutStep5OrderCompleted',function(data, eventName){
+                if (data.paymentMethod === "Apply for finance") {
+                   data.cancelBuiltInEvents = true;
+                }               
+            });
+
+            // GA is separate as is not powered by Tag Rocket
+            // this may work but is dependent on Tag Rocket getting the order (a request) before BC EE sends its events.
+            T.on('GaCommandPending',function(data, eventName){
+                if (T.order && T.order.paymentMethod === "Apply for finance") {
+                    if (data.arguments.length >=2) {
+                        var command = data.arguments[0];
+                        var event = data.arguments[1];
+
+                        switch (command) {
+                            case 'ec:addProduct':
+                                data.cancel = true; 
+                                break;
+                            case 'ec:setAction':
+                                if (event === 'purchase') {
+                                    data.cancel = true; 
+                                }
+                                break;
+                            case 'send':
+                                if (data.arguments.length >=4) {
+                                    var type = data.arguments[2];
+                                    var eventName = data.arguments[3];
+
+                                    if (event === 'event' && type === 'EnhancedEcommerce' && eventName === 'Order Completed') {
+                                        data.cancel = true;                                    
+                                    }
+                                }
+                                break;
+
+                        }
+                    } 
+                }            
+            })
+        })
+    }(window,"TagRocket")
+</script>

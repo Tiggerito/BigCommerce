@@ -1,0 +1,138 @@
+<script data-cfasync="false">  
+/*
+    Web Site Advantage: Tag Rocket Matomo [v1.0] 
+    Matomo Analytics
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/
+    Copyright (C) 2022 Web Site Advantage
+*/
+!function(w,t){
+    // The sub domain part of Matomo tracking url and your site id: 
+    var matomoName='mymatomosubdomain'; // e.g. from https://mymatomosubdomain.matomo.cloud/
+    var matomoSiteId = '1';
+    // create goals for "Contact", "Account Created", "Subscribe" and "Add To Wish List",  then set their id here:
+    var matomoGoalContactId = 0;
+    var matomoGoalSubscribeId = 0;
+    var matomoGoalAccountCreatedId = 0;
+    var matomoGoalAddToWishListId = 0;
+
+    // create custom dimensions for "Customer Group Name" (Visit) and "Page Type" (Action) then set their id here:
+    var matomoCustomDimensionCustomerGroupNameId = 0;
+    var matomoCustomDimensionPageTypeId = 0;
+
+    var productIdentifier = function(product) {return ''+product.productId}; // productId, productSku
+
+    // https://developer.matomo.org/guides/tracking-javascript-guide
+    // https://matomo.org/faq/reports/advanced-manually-tracking-ecommerce-actions-in-matomo/
+
+    w._paq=w._paq||[];
+
+    var PaqPush = function(args) {
+        // console.log('PaqPush('+ args.join(', ')+')');
+        w._paq.push(args);
+    }
+
+    PaqPush(['setTrackerUrl', 'https://'+matomoName+'.matomo.cloud/matomo.php']);
+    PaqPush(['setSiteId', matomoSiteId]); 
+    PaqPush(['enableLinkTracking']);
+    PaqPush(['enableHeartBeatTimer']);
+
+    {{~#if customer.id}}PaqPush(['setUserId', '{{customer.id}}']);{{~/if}}
+        
+    {{~#if customer_group_name}}PaqPush(['setCustomDimension', matomoCustomDimensionCustomerGroupNameId, {{{json customer_group_name}}}]);{{~/if}}
+
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+    
+    T.init(function() { 
+
+        T.addPreconnectTag('https://cdn.matomo.cloud/'+matomoName+'.matomo.cloud');
+        T.addScriptTag('https://cdn.matomo.cloud/'+matomoName+'.matomo.cloud/matomo.js');
+
+        PaqPush(['setCustomDimension', matomoCustomDimensionPageTypeId, T.pageType]);
+
+        {{~#if settings.shopper_consent_tracking_enabled}}
+        PaqPush(['requireConsent']);
+        if (T.consent.targetingAdvertising) PaqPush(['setConsentGiven']);
+        {{~/if}}
+
+        {{~#if page_type '===' 'category'}}
+        PaqPush(['setEcommerceView',
+            false, // Product name is not applicable for a category view.
+            false, // Product SKU is not applicable for a category view.
+            {{{json category.name}}}, // (Optional) Product category, or array of up to 5 categories
+        ]);
+        {{~/if}}
+
+        {{~#if page_type '===' 'product'}}
+        // trackPageView done later so after setEcommerceView 
+        {{~else}}
+        PaqPush(['trackPageView']);
+        {{~/if}}
+
+        T.on('.*',function(data, eventName){
+            switch(eventName) {
+                case "QuickSearch":
+                case "SearchPage":
+                    PaqPush(['trackSiteSearch', data.term, false, false]);
+                    break;
+                case "ProductPage":
+                    PaqPush(['setEcommerceView',
+                        productIdentifier(data), // (Required) productSKU
+                        data.name, // (Optional) productName
+                        data.category&&data.category.name, // (Optional) categoryName
+                        data.price // (Optional) price
+                    ]);
+                    PaqPush(['trackPageView']); // setEcommerceView requires this to send the data
+                    break;
+                case "CartItemChanged":
+                    PaqPush(['clearEcommerceCart']); 
+                    for(var i =0; i < data.cart.items.length; i++){
+                        var item = data.cart.items[i];
+                        PaqPush(['addEcommerceItem',
+                            productIdentifier(item), // (Required) productSKU
+                            item.name, // (Optional) productName
+                            item.category&&item.category.name, // (Optional) productCategory
+                            item.price, // (Recommended) price
+                            item.quantity // (Optional, defaults to 1) quantity
+                        ]);     
+                    }
+                    PaqPush(['trackEcommerceCartUpdate', data.cart.cartAmount]); 
+                    break;
+                case "CheckoutStep5OrderCompleted":
+                    PaqPush(['clearEcommerceCart']); 
+                    for(var i =0; i < data.items.length; i++) {
+                        var item = data.items[i];
+                        PaqPush(['addEcommerceItem',
+                            productIdentifier(item), // (Required) productSKU
+                            item.name, // (Optional) productName
+                            item.category&&item.category.name, // (Optional) productCategory
+                            item.price, // (Recommended) price
+                            item.quantity // (Optional, defaults to 1) quantity
+                        ]); 
+                    }
+                    PaqPush(['trackEcommerceOrder',
+                        data.orderId, // (Required) orderId
+                        data.orderAmount, // (Required) grandTotal (revenue)
+                        9.99, // (Optional) subTotal
+                        1.5, // (optional) tax
+                        1, // (optional) shipping
+                        false // (optional) discount
+                    ]); 
+                    break;
+                case "AccountCreated":
+                    if (matomoGoalAccountCreatedId) PaqPush(['trackGoal', matomoGoalAccountCreatedId]);
+                    break;
+                case "ContactSuccess":
+                    if (matomoGoalContactId) PaqPush(['trackGoal', matomoGoalContactId]);
+                    break;
+                case "SubscribeSuccess":
+                    if (matomoGoalSubscribeId) PaqPush(['trackGoal', matomoGoalSubscribeId]);
+                    break;
+                case "AddToWishList":
+                    if (matomoGoalAddToWishListId) PaqPush(['trackGoal', matomoGoalAddToWishListId]);
+                    break;
+            }                    
+        });
+      
+    })
+}(window,"TagRocket")
+</script>

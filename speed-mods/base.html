@@ -1,3 +1,15 @@
+<!DOCTYPE html>
+<html class="no-js" lang="{{ locale_name }}">
+    <head>  
+        {{!-- crossorigin="anonymous"
+            This allows us to see cross origin script exceptions
+            Only use it in link/script if they require it and the following header is present in the response:
+            access-control-allow-origin: *
+            Note the JS attribute is called crossOrigin
+        --}}
+
+        {{!-- ****** Globaly Static Resources ****** --}}
+        {{!-- Possible to cache at a site wide level. Rarely change and are the same on every page and could request resources --}}
 
         {{!-- 
             Native lazy-loading with Lazysizes as a fallback
@@ -10,44 +22,61 @@
             CSS files still delay building the DOM. So on page lazy-loading images only start loading once the CSS has loaded.
         --}}
         <script>
-        !function(w,d){
+        !function(w,d){           
             var native = 'loading' in HTMLImageElement.prototype;
 
             var canGoNative = function(n) {
+                {{!-- return false; --}}{{!-- to disable the switch to native lazy-loading --}}
                 if (!native) return false;
-                if (n.tagName !== 'IMG') return false; // only deal with img tags
-                if (n.sizes) return true; // have sizes so can do it
-                if (!n.dataset.srcset) return true; //  no srcset so only can be one size
-                return !n.dataset.srcset.includes(','); // only one entry is safe
+                if (n.tagName !== 'IMG') return false; {{!-- only deal with img tags --}}
+                if (n.sizes) return true; {{!-- have sizes so can do it --}}
+                if (!n.dataset.srcset) return true; {{!--  no srcset so only can be one size --}}
+                return !n.dataset.srcset.includes(','); {{!-- only one entry is safe --}}
+            }
+
+            var loadLazySizes = function () {
+                if(!w.lazySizesConfig) {
+                    w.lazySizesConfig = w.lazySizesConfig || {};
+                    w.lazySizesConfig.loadMode = 1;
+                    var s = d.createElement('script');
+                    s.crossOrigin="anonymous"; {{!-- so can see its errors --}}
+                    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.1.2/lazysizes.min.js'; {{!-- Add this to the BC CDN --}}
+                    d.getElementsByTagName('head')[0].appendChild(s);
+                }
+            }
+
+            var goNative = function (n) {
+                {{!-- These are for backwards compatibility with the old responsive-img.html --}}
+                if(!n.loading) n.loading = "lazy";
+                {{#if theme_settings.lazyload_mode '===' 'lazyload+lqip'}}
+                if (!n.classList.contains('responsive-img')) {
+                    if (n.srcset) { n.style.cssText += "background-image: url('" + n.srcset + "');" };
+                }
+                {{/if }}
+                {{!-- END: These are for backwards compatibility --}}
+                if (n.dataset.src) n.src = n.dataset.src;                                    
+                if (n.dataset.srcset) n.srcset = n.dataset.srcset;
+                if (n.dataset.sizes && n.dataset.sizes !== 'auto') n.sizes = n.dataset.sizes;
+                n.classList.remove('lazyload');
+                n.classList.add('lazyloading');
+                n.onload=function(){n.classList.add('lazyloaded');n.classList.remove('lazyloading')};
             }
 
             var o = new MutationObserver(function(l) {
                 l.forEach(function(m) {
                     m.addedNodes.forEach(function(n) {
-                        if (n.nodeType === 1 && n.classList.contains('lazyload')) {
-                            if (canGoNative(n)) {
-                                {{!-- These are for backwards compatibility with responsive-img.html --}}
-                                if(!n.loading) n.loading = "lazy";
-                                {{#if theme_settings.lazyload_mode '===' 'lazyload+lqip'}}
-                                if (!n.classList.contains('responsive-img')) {
-                                    if (n.srcset) { n.style.cssText += "background-image: url('" + n.srcset + "');" };
+                        if (n.nodeType === 1 ) {                            
+                            if (n.classList.contains('lazyload')) {
+                                if (canGoNative(n)) {
+                                    goNative(n);
+                                } else {
+                                    loadLazySizes();
+                                    if (!native) o.disconnect();
                                 }
-                                {{/if }}
-                                {{!-- END: These are for backwards compatibility --}}
-                                if (n.dataset.src) n.src = n.dataset.src;                                    
-                                if (n.dataset.srcset) n.srcset = n.dataset.srcset;
-                                if (n.dataset.sizes && n.dataset.sizes !== 'auto') n.sizes = n.dataset.sizes;
-                                n.classList.remove('lazyload');
-                                n.onload=function(){n.classList.add('lazyloaded')};
-                            } else {
-                                if(!w.lazySizesConfig) {
-                                    w.lazySizesConfig = window.lazySizesConfig || {};
-                                    w.lazySizesConfig.loadMode = 1;
-                                    var script = d.createElement('script');
-                                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.1.2/lazysizes.min.js';
-                                    d.getElementsByTagName('head')[0].appendChild(script);
-                                }
-                                if (!native) o.disconnect();
+                            }
+                            else if (n.tagName === 'IMG') {
+                                n.classList.add('normalloading')
+                                n.onload=function(){n.classList.add('normalloaded');n.classList.remove('normalloading')};
                             }
                         }                         
                     });
@@ -62,10 +91,13 @@
             This CSS is needed to make the LQIP image match the positioning of the real image 
         --}}
         <style>          
-            .placeholder-lqip {
+            img.placeholder-lqip {
                 background-repeat: no-repeat;
                 background-size: contain;
                 background-position: center;
+            }
+            img.placeholder-lqip.normalloaded, img.placeholder-lqip.lazyloaded {
+                background-image: none !important;
             }
         </style>
 
@@ -81,12 +113,30 @@
         <link rel="preload" href="{{getImage settings.store_logo.image 'logo_size'}}" imagesrcset="{{getImageSrcset1x2x settings.store_logo.image theme_settings.logo_size}}" as="image" importance="high">
         {{/if}}
         {{/if}}
-        
+
+        {{!--  {{{ resourceHints }}} --}}
+        <link rel="preconnect" href="https://fonts.gstatic.com"  crossorigin="anonymous">
+        <link rel="dns-prefetch" href="https://fonts.gstatic.com"  crossorigin="anonymous">
+
+        <link href="{{ head.favicon }}" rel="shortcut icon">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <script>
+            {{!-- Change document class from no-js to js so we can detect this in css --}}
+            document.documentElement.className = document.documentElement.className.replace('no-js', 'js');
+        </script>
+
+        {{> components/common/polyfill-script }}
+ 
+
         {{!-- 
-            Change the webfont.js code up to but not including the getFontsCollection line to be async by replacing it with 
-            Make sure you list the correct fonts
+            NOT USING - seems to make no difference
+            Change the webfont.js code up to but not including the getFontsCollection line to be async by replacing it with this 
+            Make sure you list the correct fonts so that they load early
+            https://github.com/typekit/webfontloader
         --}}
-        <link rel="preload" href="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js" as="script">
+        {{!-- 
+        <link rel="preload" href="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js" crossorigin="anonymous" as="script">
         <script>
             WebFontConfig = {
                         custom: {
@@ -97,27 +147,49 @@
         
             (function(d) {
                 var wf = d.createElement('script'), s = d.scripts[0];
+                wf.crossOrigin="anonymous";
                 wf.src = 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js';
                 wf.async = true;
                 s.parentNode.insertBefore(wf, s);
             })(document);
         </script>
+        --}}
+        {{!--  
+            Make sure you list the correct fonts so that they load early. The same ones as getFontsCollection requests
+            The fonts will then load after webfont.js is loaded instead of after the css files are loaded.
+            https://github.com/typekit/webfontloader
+            You can also include variants to preload
+            https://github.com/typekit/webfontloader#custom
+            https://github.com/typekit/fvd#values
+        --}}
+        <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js" crossorigin="anonymous"></script>
+        <script>
+                WebFont.load({
+                    custom: {
+                        families: ['Roboto:n4', 'Volkhov:n4','Montserrat:n5', 'Source Sans Pro']
+                    },
+                    classes: false
+                });
+        </script>
         {{!-- 
+            NOT USING - too hard to determine which urls to load.
             Preload web fonts we know are used. On fast connections fonts can be the slowest bit. Does not seem to make much difference on slower connections.
             This also stops flicker.
             Not a very reliable way to do this as the real font URLs may change or the store may change what fonts they use.
             example...
         --}}
+        {{!--
         <link rel="preload" href="https://fonts.gstatic.com/s/roboto/v29/KFOmCnqEu92Fr1Mu4mxK.woff2" as="font" type="font/woff2" crossorigin="anonymous">
         <link rel="preload" href="https://fonts.gstatic.com/s/volkhov/v12/SlGQmQieoJcKemNecTUEhQ.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+        --}}
 
-        {{!-- ########################################## --}}
-        {{!-- Place before head.scripts --}}
+        {{ getFontsCollection }}
+        {{{stylesheet '/assets/css/theme.css'}}}
 
         {{!-- Get this loading as soon as possible --}}
-        <link rel="preload" href="{{cdn 'assets/dist/theme-bundle.main.js'}}" as="script">
+        <link rel="preload" href="{{cdn 'assets/dist/theme-bundle.main.js'}}" crossorigin="anonymous" as="script">
         {{!-- Not sure how chunking works, but you could potentially preload them
-        <link rel="preload" href="{{cdn 'assets/dist/theme-bundle.chunk.1.js'}}" as="script">
+        <link rel="preload" href="{{cdn 'assets/dist/theme-bundle.chunk.1.js'}}" crossorigin="anonymous" as="script">
         --}}
 
         {{!-- Preload specific urls in the footer scripts --}}
@@ -130,19 +202,23 @@
         {{/startsWith}}
         {{/eachIndex}}
 
-        {{!-- If you use Google Optimize a preload will help reduce flicker--}}
+        {{!-- 
+            If you use Google Optimize a preload will help reduce flicker
+            Tag Rocket loads it async with importance set to high 
+        --}}
         {{!--
-        <link xrel="preload" href="https://www.googleoptimize.com/optimize.js?id=OPT-XXXXXXX" as="script">
+        <link rel="preload" href="https://www.googleoptimize.com/optimize.js?id=OPT-XXXXXXX" crossorigin="anonymous" as="script">
         --}}
 
-        {{!-- Other preloads for scripts that are important for display but are not initially requested. e.g.--}}
+        {{!-- Other preloads for scripts that are important for display but are not initially requested --}}
+
+        {{!-- no crossorigin as required response header is missing --}}
         {{!--
         <link rel="preload" href="https://classyschema.org/2_13/faq_video_howto_unicode.min.js" as="script">
         --}}
 
-        {{!-- ########################################## --}}
         {{!-- Pre-connecting
-            Place last in head script so are the last requests to be considered. 
+            Place late in head script so are the last requests to be considered. 
             Only add what is used and is requested later on 
             These are browser hits. The browser will only apply them when it has time
             https://web.dev/preconnect-and-dns-prefetch/
@@ -292,7 +368,52 @@
         <link rel="dns-prefetch" href="https://gum.criteo.com">
         --}}
 
-        {{!-- ########################################## --}}
+        {{!-- ****** Page Static Resources ****** --}}
+        {{!-- Possible to cache at a page level. Rarely change but are page specific and could request resources --}}
+
+        {{{ head.config }}}
+
+        {{!-- This here assumes no users of this block add dynamic content --}}
+        {{#block "head"}} {{/block}}
+
+        {{!-- ****** Page Variable Resources ****** --}}
+        {{!-- Frequently change so should not be cached. Or are tags that would not trigger any network requests. --}}
+
+        <title>{{ head.title }}</title>
+        {{{ head.meta_tags }}}
+
+        <script>window.consentManagerTranslations = `{{{langJson 'consent_manager'}}}`;</script>
+
+        {{!-- This includes BCs GA and Facebook code site verification code a CSRF token (that can't be cached) and the custom scripts --}}
+        {{{head.scripts}}}
+
+        {{~inject 'zoomSize' theme_settings.zoom_size}}
+        {{~inject 'productSize' theme_settings.product_size}}
+        {{~inject 'genericError' (lang 'common.generic_error')}}
+        {{~inject 'maintenanceModeSettings' settings.maintenance}}
+        {{~inject 'adminBarLanguage' (langJson 'admin')}}
+        {{~inject 'urls' urls}}
+        {{~inject 'secureBaseUrl' settings.secure_base_url}}
+        {{~inject 'cartId' cart_id}}
+        {{~inject 'channelId' settings.channel_id}}
+        {{~inject 'template' template}}
+        {{~inject 'validationDictionaryJSON' (langJson 'validation_messages')}}
+        {{~inject 'validationFallbackDictionaryJSON' (langJson 'validation_fallback_messages')}}
+        {{~inject 'validationDefaultDictionaryJSON' (langJson 'validation_default_messages')}}
+        {{~inject 'carouselArrowAndDotAriaLabel' (lang 'carousel.arrow_and_dot_aria_label')}}
+        {{~inject 'carouselActiveDotAriaLabel' (lang 'carousel.active_dot_aria_label')}}
+        {{~inject 'carouselContentAnnounceMessage' (lang 'carousel.content_announce_message')}}
+
+    </head>
+    <body>
+        <svg data-src="{{cdn 'img/icon-sprite.svg'}}" class="icons-svg-sprite"></svg>
+
+        {{> components/common/header }}
+        {{> components/common/body }}
+        {{> components/common/footer }}
+
+        <script>window.__webpack_public_path__ = "{{cdn 'assets/dist/'}}";</script>
+
         {{!-- Stop theme-bundle.main.js from blocking
             Replace the theme-bundle.main.js script and stencilBootstrap script after it with this
             Needs to be after all uses of ~inject so jsContext is populated
@@ -303,8 +424,9 @@
                 var done = false;
                 var script=d.createElement('script');
                 script.src="{{cdn 'assets/dist/theme-bundle.main.js'}}";
-                script.async=true;
-                script.defer=true;
+                script.crossOrigin="anonymous";
+                script.async = true;
+                script.defer = true;
                 script.onload=script.onreadystatechange=function() {
                     if(!done) {
                         var readyState = script.readyState;
@@ -318,3 +440,8 @@
                 d.head.appendChild(script);
             }(document)
         </script>
+        <!-- footer scripts -->
+        {{{footer.scripts}}}
+        <!-- footer scripts end -->
+    </body>
+</html>

@@ -1,0 +1,26 @@
+<script data-cfasync="false">   
+    !function(w,t){
+        w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+        
+        T.init(function() { 
+       
+            T.on('GtagCommandPending',function(data, eventName){
+                // fires before a command is sent, giving you the ability to edit the arguments or stop it from being sent by setting cancel to true
+    
+                if (data.arguments.length >=3) {
+                    var command = data.arguments[0];
+                    var eventName = data.arguments[1];
+                    var eventData = data.arguments[2];
+
+                    if (command === 'event' && (eventName === 'purchase' || eventName === 'conversion' || eventName === 'add_payment_info')) {
+                        // A GA4 or Google Ads purchase or conversion or add_payment_info events. 
+                        if (T.order.paymentMethod === "Apply for finance") {
+                            data.cancel = true;
+                        }
+                    }
+
+                };                
+            });
+        })
+    }(window,"TagRocket")
+    </script>
