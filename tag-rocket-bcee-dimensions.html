@@ -1,0 +1,29 @@
+<script data-cfasync="false"> 
+{{~#if page_type '===' 'product'}}  
+/*
+    Web Site Advantage: Tag Rocket BCEE Dimensions [v1.0] 
+    Modify the events sent by the BigCommerce Enhanced Ecommerce solution
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/
+    Copyright (C) 2022 Web Site Advantage
+*/
+!function(w,t){
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+    
+    T.init(function() { 
+
+        T.on('GaCommandSent',function(data, eventName){
+
+            if (data.arguments[0] == 'create') {
+                    // fires after the create command is sent. You can't edit the data here.
+                    // Add your own custom dimensions or settings just after the create command and before the pageview
+                    // Tag Rocket supports a set of custom dimensions for you already
+                    ga('set', 'dimension1', {{{json product.stock_level}}}); 
+                    ga('set', 'dimension2', {{{json product.price.with_tax.value}}}); 
+                    ga('set', 'dimension3', {{{json product.price.non_sale_price_with_tax.value}}});
+                    ga('set', 'dimension4', {{{json product.price.rrp_with_tax.value}}});
+            };
+        });
+    })
+}(window,"TagRocket")
+{{~/if}}
+</script>

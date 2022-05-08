@@ -1,0 +1,121 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Tag Rocket BCEE Ecomm [v1.0] 
+    Add dynamic remarketing ecomm dimensions
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/
+    Copyright (C) 2022 Web Site Advantage
+*/
+!function(w,t){
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+
+    var dimension_ecomm_pagetype = "dimension1";
+    var dimension_ecomm_prodid = "dimension2";
+    var dimension_ecomm_totalvalue = "dimension3";
+
+    var productIdentifier = function(product) {return ''+product.productId}; // productId, productSku
+
+    var ecomm_pagetype = '
+{{~#if settings.request.absolute_path '===' '/'}}home
+{{~else if page_type '===' 'category'}}category
+{{~else if page_type '===' 'product'}}product
+{{~else if page_type '===' 'cart'}}cart
+{{~else if page_type '===' 'orderconfirmation'}}purchase
+{{~else if page_type '===' 'search'}}searchresults
+{{~else if page_type '===' 'checkout'}}other
+{{~else}}other{{/if}}';
+
+var ecomm_prodid = [];
+var ecomm_totalvalue;
+
+var delayPageview = false;
+var pageview;
+
+{{~#if page_type '===' 'category'}}
+{{~#if category.products}}
+{{#each category.products}} 
+ecomm_prodid.push(productIdentifier({productId:'{{id}}',productSku:'{{sku}}'}));
+{{/each~}}
+{{/if~}}
+{{/if~}}
+
+{{~#if page_type '===' 'product'}}
+ecomm_totalvalue = {{~#if product.price.with_tax.value}}{{product.price.with_tax.value}}{{~else if product.price.without_tax.value}}{{product.price.without_tax.value}}{{~else}}0{{/if~}};
+ecomm_prodid.push(productIdentifier({productId:'{{product.id}}',productSku:'{{product.sku}}'}));
+{{/if~}}
+
+{{#if page_type '===' 'search'}}
+{{~#if product_results.products}}
+{{#each product_results.products}}
+ecomm_prodid.push(productIdentifier({productId:'{{id}}',productSku:'{{sku}}'})); 
+{{/each~}}
+{{/if~}}
+{{/if~}}
+
+{{~#if page_type '===' 'cart'}}
+{{~#each cart.items}}
+  {{~#if type '===' 'Item'}}
+  ecomm_prodid.push(productIdentifier({productId:'{{product_id}}',productSku:'{{sku}}'}));  
+  {{/if~}}    
+{{/each~}}
+ecomm_totalvalue = {{cart.sub_total.value}};
+{{/if~}}
+
+{{~#if page_type '===' 'orderconfirmation'}}
+delayPageview = true;
+
+setTimeout(function() {
+    delayPageview = false;
+    if (pageview) {
+        ga.apply(null,pageview);
+        pageview = null;
+    }
+}, 1000);
+
+fetch('/api/storefront/order/{{checkout.order.id}}', {credentials: 'include'}) 
+  .then(function(response) {
+    return response.json();
+  })
+  .then(function(order) {
+
+    for (var i = 0; i < order.lineItems.physicalItems.length; i++) {
+        ecomm_prodid.push(productIdentifier({productId:order.lineItems.physicalItems[i].productId,productSku:order.lineItems.physicalItems[i].sku}));  
+    }
+
+    ecomm_totalvalue = order.orderAmount;
+
+    delayPageview = false;
+
+    ga('set', dimension_ecomm_pagetype, ecomm_pagetype); 
+    ga('set', dimension_ecomm_prodid, ecomm_prodid.join()); 
+    ga('set', dimension_ecomm_totalvalue, ecomm_totalvalue ? ecomm_totalvalue.toString() : '');
+
+    console.log('pageview', pageview);
+    if (pageview) {
+        ga.apply(null,pageview);
+        pageview = null;
+    }
+
+   
+  });
+{{/if~}}
+    
+    T.init(function() { 
+
+        T.on('GaCommandPending',function(data, eventName){
+            if (data.arguments[0] === 'send' && data.arguments[1] === 'pageview'){
+                if (!delayPageview) {
+                    ga('set', dimension_ecomm_pagetype, ecomm_pagetype); 
+                    ga('set', dimension_ecomm_prodid, ecomm_prodid.join()); 
+                    ga('set', dimension_ecomm_totalvalue, ecomm_totalvalue ? ecomm_totalvalue.toString() : '');
+                }
+                else {
+                    pageview = data.arguments;
+                    data.cancel = true;
+                }
+            }
+        });
+
+  
+    })
+}(window,"TagRocket")
+</script>
