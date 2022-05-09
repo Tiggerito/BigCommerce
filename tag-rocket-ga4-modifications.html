@@ -18,13 +18,13 @@
                 var options = data.arguments[2];
 
                 {{~#if product.stock_level}}
-                options.stock_level = {{product.stock_level}}; 
+                options.stock_level = {{product.stock_level}};  // requires stock levels to always be shown on a product page
                 {{~/if}}
                 {{~#if product.price.with_tax.value}}
-                options.price_with_tax = {{product.price.with_tax.value}}; 
+                options.price_with_tax = {{product.price.with_tax.value}}; // sale price or default price
                 {{~/if}}
                 {{~#if product.price.non_sale_price_with_tax.value}}
-                options.non_sale_price_with_tax = {{product.price.non_sale_price_with_tax.value}}; 
+                options.non_sale_price_with_tax = {{product.price.non_sale_price_with_tax.value}}; // not set if no sales price
                 {{~/if}}
                 {{~#if product.price.rrp_with_tax.value}}
                 options.rrp_with_tax = {{product.price.rrp_with_tax.value}}; 

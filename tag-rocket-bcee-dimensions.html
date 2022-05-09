@@ -17,10 +17,10 @@
                     // fires after the create command is sent. You can't edit the data here.
                     // Add your own custom dimensions or settings just after the create command and before the pageview
                     // Tag Rocket supports a set of custom dimensions for you already
-                    ga('set', 'dimension1', {{{json product.stock_level}}}); 
-                    ga('set', 'dimension2', {{{json product.price.with_tax.value}}}); 
-                    ga('set', 'dimension3', {{{json product.price.non_sale_price_with_tax.value}}});
-                    ga('set', 'dimension4', {{{json product.price.rrp_with_tax.value}}});
+                    ga('set', 'dimension1', '{{product.stock_level}}');  // requires stock levels to always be shown on a product page
+                    ga('set', 'dimension2', '{{product.price.with_tax.value}}'); // sale price or default price
+                    ga('set', 'dimension3', '{{product.price.non_sale_price_with_tax.value}}'); // not set if no sales price
+                    ga('set', 'dimension4', '{{ product.price.rrp_with_tax.value}}');
             };
         });
     })
