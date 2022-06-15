@@ -1,0 +1,20 @@
+<script data-cfasync="false">   
+    !function(w,t){w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+        
+        T.init(function() { 
+
+            console.log("Consent",T.consent); // Can use user consent information to be consent compliant
+       
+            T.on('CheckoutStep5OrderCompleted',function(order){
+
+                console.log('Order Completed', order)
+              
+                var orderId = order.orderId;
+                var orderAmount = order.orderAmount;
+
+                // add affiliate conversion code here using data from the order
+
+            });
+        })
+    }(window,"TagRocket")
+</script>
