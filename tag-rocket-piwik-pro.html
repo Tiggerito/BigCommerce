@@ -1,28 +1,28 @@
 <script data-cfasync="false">  
 /*
-    Web Site Advantage: Tag Rocket Matomo [v1.1] 
-    Matomo Analytics
+    Web Site Advantage: Tag Rocket Piwik Pro [v1.0] 
+    Piwik Pro Analytics
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/
     Copyright (C) 2022 Web Site Advantage
 */
-!function(w,t){
-    // The sub domain part of Matomo tracking url and your site id: 
-    var matomoName='mymatomosubdomain'; // e.g. from https://mymatomosubdomain.matomo.cloud/
-    var matomoSiteId = '1';
+!function(w,t){ 
+    var piwikInstanceName='your-instance-name'; // e.g. from https://mymatomosubdomain.matomo.cloud/
+    var piwikSiteId = 'XXX-XXX-XXX-XXX-XXX';
     // create goals for "Contact", "Account Created", "Subscribe" and "Add To Wish List",  then set their id here:
-    var matomoGoalContactId = 0;
-    var matomoGoalSubscribeId = 0;
-    var matomoGoalAccountCreatedId = 0;
-    var matomoGoalAddToWishListId = 0;
+    var piwikGoalContactId = 0;
+    var piwikGoalSubscribeId = 0;
+    var piwikGoalAccountCreatedId = 0;
+    var piwikGoalAddToWishListId = 0;
 
     // create custom dimensions for "Customer Group Name" (Visit) and "Page Type" (Action) then set their id here:
-    var matomoCustomDimensionCustomerGroupNameId = 0;
-    var matomoCustomDimensionPageTypeId = 0;
+    var piwikCustomDimensionCustomerGroupNameId = 0;
+    var piwikCustomDimensionPageTypeId = 0;
 
     var productIdentifier = function(product) {return ''+product.productId}; // productId, productSku
 
-    // https://developer.matomo.org/guides/tracking-javascript-guide
-    // https://matomo.org/faq/reports/advanced-manually-tracking-ecommerce-actions-in-matomo/
+    // https://help.piwik.pro/support/getting-started/install-a-tracking-code/
+    // https://help.piwik.pro/support/getting-started/track-ecommerce/
+    // https://developers.piwik.pro/en/latest/data_collection/web/guides.html#e-commerce
 
     w._paq=w._paq||[];
 
@@ -31,23 +31,39 @@
         w._paq.push(args);
     }
 
-    PaqPush(['setTrackerUrl', 'https://'+matomoName+'.matomo.cloud/matomo.php']);
-    PaqPush(['setSiteId', matomoSiteId]); 
+    PaqPush(['setTrackerUrl', 'https://'+piwikInstanceName+'.piwik.pro/ppms.php']);
+    PaqPush(['setSiteId', piwikSiteId]); 
     
-    PaqPush(['enableHeartBeatTimer']);
+    PaqPush(['enableHeartBeatTimer']); 
+
+    // Share the tracking cookie across example.com, www.example.com, subdomain.example.com, ...
+    //PaqPush(["setCookieDomain", "*.example.com"]);
+    //PaqPush(["setCookiePath", "/data/something_useful"]);
+
+    // Tell Piwik the website domain so that clicks on these domains are not tracked as "Outlinks"
+    //PaqPush(["setDomains", "*.example.com"]);
+
+    // specify which domains should be linked
+    //PaqPush(["setDomains", ["*.example.com", "otherdomain.com"]]);
+
+    // enable cross domains linking
+    //PaqPush(["enableCrossDomainLinking"]);
+
+    // measure performance on 33% of page loads
+    //PaqPush(["setTimingDataSamplingOnPageLoad", 33]);
 
     {{~#if customer.id}}PaqPush(['setUserId', '{{customer.id}}']);{{~/if}}
         
-    {{~#if customer_group_name}}PaqPush(['setCustomDimension', matomoCustomDimensionCustomerGroupNameId, {{{json customer_group_name}}}]);{{~/if}}
+    {{~#if customer_group_name}}PaqPush(['setCustomDimension', piwikCustomDimensionCustomerGroupNameId, {{{json customer_group_name}}}]);{{~/if}}
 
     w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
     
     T.init(function() { 
 
-        T.addPreconnectTag('https://cdn.matomo.cloud/'+matomoName+'.matomo.cloud');
-        T.addScriptTag('https://cdn.matomo.cloud/'+matomoName+'.matomo.cloud/matomo.js');
+        T.addPreconnectTag('https://'+piwikInstanceName+'.piwik.pro/');
+        T.addScriptTag('https://'+piwikInstanceName+'.piwik.pro/ppms.js', {async:true, defer:true});
 
-        PaqPush(['setCustomDimension', matomoCustomDimensionPageTypeId, T.pageType]);
+        PaqPush(['setCustomDimension', piwikCustomDimensionPageTypeId, T.pageType]);
 
         {{~#if settings.shopper_consent_tracking_enabled}}
         PaqPush(['requireConsent']);
@@ -66,14 +82,14 @@
         // trackPageView done later so after setEcommerceView 
         {{~else}}
         PaqPush(['trackPageView']);
-        PaqPush(['enableLinkTracking']);
+        PaqPush(['enableLinkTracking']); 
         {{~/if}}
 
         T.on('.*',function(data, eventName){
             switch(eventName) {
                 case "QuickSearch":
                 case "SearchPage":
-                    PaqPush(['trackSiteSearch', data.term, false, false]);
+                    PaqPush(['trackSiteSearch', data.term]);
                     break;
                 case "ProductPage":
                     PaqPush(['setEcommerceView',
@@ -121,16 +137,16 @@
                     ]); 
                     break;
                 case "AccountCreated":
-                    if (matomoGoalAccountCreatedId) PaqPush(['trackGoal', matomoGoalAccountCreatedId]);
+                    if (piwikGoalAccountCreatedId) PaqPush(['trackGoal', piwikGoalAccountCreatedId]);
                     break;
                 case "ContactSuccess":
-                    if (matomoGoalContactId) PaqPush(['trackGoal', matomoGoalContactId]);
+                    if (piwikGoalContactId) PaqPush(['trackGoal', piwikGoalContactId]);
                     break;
                 case "SubscribeSuccess":
-                    if (matomoGoalSubscribeId) PaqPush(['trackGoal', matomoGoalSubscribeId]);
+                    if (piwikGoalSubscribeId) PaqPush(['trackGoal', piwikGoalSubscribeId]);
                     break;
                 case "AddToWishList":
-                    if (matomoGoalAddToWishListId) PaqPush(['trackGoal', matomoGoalAddToWishListId]);
+                    if (piwikGoalAddToWishListId) PaqPush(['trackGoal', piwikGoalAddToWishListId]);
                     break;
             }                    
         });
