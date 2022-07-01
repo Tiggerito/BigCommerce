@@ -1,0 +1,86 @@
+<script data-cfasync="false">
+/*
+    Web Site Advantage: Tag Rocket Affiliate Future [v1.0] 
+    Affiliate Future tags
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2022 Web Site Advantage
+*/   
+!function(w,t){
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+
+    var AffiliateFuture_MerchantID = 0000000000000; // REPLACE WITH YOUR MERCHANT ID. You can check your ID by looking in the top left of your Advertiser account
+
+    var productIdentifier = function(product) {return ''+product.productId}; // productId, productSku
+
+    var roundTo = function(number, places){
+        if(isNaN(number)) return number;
+        if(!places) places=0;
+        var multiplier = Math.pow(10, places);
+        var epsilon = Number.EPSILON || 2.220446049250313e-16;
+        return Math.round((number + epsilon) * multiplier) / multiplier;
+    };
+
+    var escapeProductInfo = function(info) {
+        if (!info)return '';
+        return info.replace(/\|/, '?');
+    }
+        
+    T.init(function() { 
+
+        // not sure if or what consent is required?
+
+        T.addScriptTag('https://tags.affiliatefuture.com/'+AffiliateFuture_MerchantID+'.js');
+
+        T.on('CheckoutStep5OrderCompleted',function(order){
+
+            T.addScriptTag('https://scripts.affiliatefuture.com/AFFunctions.js',{id: 'wsa-tag-manager-affiliatefuture'}, function() {
+
+                var coupon = '';
+
+                if (order.coupons && order.coupons.length > 0) {
+                    coupon = order.coupons[0].code;
+                }
+
+                var productsText = order.items.map(function(product){
+                    var category = '';
+
+                    if (product.categories) {
+                        category = product.categories[0].name; // could alternatively use path
+                    }
+
+                    return '' + 
+                        product.productId + '|' +  // ProductID
+                        escapeProductInfo(product.sku) + '|' + // ProductSKU - this could ve a variant sku or blank if no variants and no productSku
+                        escapeProductInfo(product.name) + '|' + // ProductName
+                        escapeProductInfo(category) + '|' + // ProductCategory
+                        roundTo(product.price, 2) + '|' + // Price
+                        product.quantity; // Quantity
+                        
+                }).join('|,|');
+
+                console.log('AFProcessSaleV5', 
+                    AffiliateFuture_MerchantID, // merchantID 
+                    roundTo(order.orderAmount, 2), // orderValue to 2 decimal placed
+                    ''+order.orderId, // orderRef string
+                    '', // payoutCodes
+                    '', // offlineCode
+                    coupon, // voucher code
+                    productsText, // products
+                    order.currency.code // source currency
+                );
+
+                AFProcessSaleV5(
+                    AffiliateFuture_MerchantID, // merchantID 
+                    roundTo(order.orderAmount, 2), // orderValue to 2 decimal placed
+                    ''+order.orderId, // orderRef string
+                    '', // payoutCodes
+                    '', // offlineCode
+                    coupon, // voucher code
+                    productsText, // products
+                    order.currency.code // source currency
+                );
+            });
+        });
+    })
+}(window,"TagRocket")
+</script>
