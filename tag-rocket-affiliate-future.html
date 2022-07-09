@@ -24,63 +24,114 @@
         if (!info)return '';
         return info.replace(/\|/, '?');
     }
-        
+
+
     T.init(function() { 
 
         // not sure if or what consent is required?
 
         T.addScriptTag('https://tags.affiliatefuture.com/'+AffiliateFuture_MerchantID+'.js');
 
+        {{~#if page_type '===' 'orderconfirmation'}}
+
+        // Taken from https://scripts.affiliatefuture.com/AFFunctions.js
+        function getCookie(name) {
+            var nameEQ = name + "=";
+            var ca = document.cookie.split(';');
+
+            for (var i = 0; i < ca.length; i++) {
+                var c = ca[i];
+                while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) == 0)
+                    return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+        // modified to not use iframe and create a safe URL
+        // This is live function added on 26-Sep-2018. It includes ClickGUID from merchant and process based on clickguid else cookies
+        function AFProcessSaleV5(merchantID, orderValue, orderRef, payoutCodes, offlineCode, voucherCodes, productList, sourceCurrency) {
+            var affc = getCookie('Affc');
+            var secure = (document.location.toString().indexOf("https") == 0);
+
+            var RN = new String(Math.random());
+            var RNS = RN.substring(2, 11);
+
+            voucherCodes = voucherCodes || '';
+            productList = productList || '';
+            sourceCurrency = sourceCurrency || '';
+            //    travelDetails = travelDetails || '';
+
+            var url = secure ? "https" : "http";
+            url += "://scripts.affiliatefuture.com/AFSaleV5.aspx";
+            url += "?orderID="+ encodeURIComponent(orderRef);
+            url += "&orderValue="+ encodeURIComponent(orderValue);
+            url += "&merchant="+ encodeURIComponent(merchantID);
+            url += "&payoutCodes="+ encodeURIComponent(payoutCodes);
+            url += "&offlineCode="+ encodeURIComponent(offlineCode);
+            url += "&voucher="+ encodeURIComponent(voucherCodes);
+            url += "&products="+ encodeURIComponent(productList);
+            url += "&curr="+ encodeURIComponent(sourceCurrency);
+            url += "&affc="+ encodeURIComponent(affc);
+            url += "&r="+ encodeURIComponent(RNS);
+
+            var iframe = document.createElement('iframe');
+            iframe.style.display = "none";
+            iframe.frameBorder = 0;
+            iframe.src = url;
+            document.body.appendChild(iframe);
+        }
+
         T.on('CheckoutStep5OrderCompleted',function(order){
 
-            T.addScriptTag('https://scripts.affiliatefuture.com/AFFunctions.js',{id: 'wsa-tag-manager-affiliatefuture'}, function() {
+         //   T.addScriptTag('https://scripts.affiliatefuture.com/AFFunctions.js',{id: 'wsa-tag-manager-affiliatefuture'}, function() {
 
-                var coupon = '';
+            var coupon = '';
 
-                if (order.coupons && order.coupons.length > 0) {
-                    coupon = order.coupons[0].code;
+            if (order.coupons && order.coupons.length > 0) {
+                coupon = order.coupons[0].code;
+            }
+
+            var productsText = order.items.map(function(product){
+                var category = '';
+
+                if (product.categories) {
+                    category = product.categories[0].name; // could alternatively use path
                 }
 
-                var productsText = order.items.map(function(product){
-                    var category = '';
+                return '' + 
+                    product.productId + '|' +  // ProductID
+                    escapeProductInfo(product.sku) + '|' + // ProductSKU - this could ve a variant sku or blank if no variants and no productSku
+                    escapeProductInfo(product.name) + '|' + // ProductName
+                    escapeProductInfo(category) + '|' + // ProductCategory
+                    roundTo(product.price, 2) + '|' + // Price
+                    product.quantity; // Quantity
+                    
+            }).join('|,|');
 
-                    if (product.categories) {
-                        category = product.categories[0].name; // could alternatively use path
-                    }
+            console.log('AFProcessSaleV5', 
+                AffiliateFuture_MerchantID, // merchantID 
+                roundTo(order.orderAmount, 2), // orderValue to 2 decimal placed
+                ''+order.orderId, // orderRef string
+                '', // payoutCodes
+                '', // offlineCode
+                coupon, // voucher code
+                productsText, // products
+                order.currency.code // source currency
+            );
 
-                    return '' + 
-                        product.productId + '|' +  // ProductID
-                        escapeProductInfo(product.sku) + '|' + // ProductSKU - this could ve a variant sku or blank if no variants and no productSku
-                        escapeProductInfo(product.name) + '|' + // ProductName
-                        escapeProductInfo(category) + '|' + // ProductCategory
-                        roundTo(product.price, 2) + '|' + // Price
-                        product.quantity; // Quantity
-                        
-                }).join('|,|');
+            AFProcessSaleV5(
+                AffiliateFuture_MerchantID, // merchantID 
+                roundTo(order.orderAmount, 2), // orderValue to 2 decimal placed
+                ''+order.orderId, // orderRef string
+                '', // payoutCodes
+                '', // offlineCode
+                coupon, // voucher code
+                productsText, // products
+                order.currency.code // source currency
+            );
 
-                console.log('AFProcessSaleV5', 
-                    AffiliateFuture_MerchantID, // merchantID 
-                    roundTo(order.orderAmount, 2), // orderValue to 2 decimal placed
-                    ''+order.orderId, // orderRef string
-                    '', // payoutCodes
-                    '', // offlineCode
-                    coupon, // voucher code
-                    productsText, // products
-                    order.currency.code // source currency
-                );
-
-                AFProcessSaleV5(
-                    AffiliateFuture_MerchantID, // merchantID 
-                    roundTo(order.orderAmount, 2), // orderValue to 2 decimal placed
-                    ''+order.orderId, // orderRef string
-                    '', // payoutCodes
-                    '', // offlineCode
-                    coupon, // voucher code
-                    productsText, // products
-                    order.currency.code // source currency
-                );
-            });
         });
+        {{~/if}}
     })
 }(window,"TagRocket")
 </script>
