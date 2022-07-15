@@ -1,0 +1,55 @@
+<script data-cfasync="false"> 
+/*
+    Web Site Advantage: Tag Rocket Hit Path [v1.0] 
+    Hit Path Conversion Tracking
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2022 Web Site Advantage
+*/
+!function(w,t){
+    var domain = 'REPLACE_WITH_YOUR_DOMAIN'; // e.g. www.affdirect.com
+
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+
+    function getParameterByName(name, url) {
+        if (!url)url = window.location.href;
+        name = name.replace(/[\[\]]/g, '\\$&');
+        var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+            results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, ' '));
+    }
+
+    // track an incoming affiliate link to the home page
+    if (getParameterByName('hitid') && window.location.pathname === '/') {
+        sessionStorage.campaign_id = getParameterByName('campaign'); // session storage is per tab
+        sessionStorage.hitpath = getParameterByName('hitid');
+    }
+
+{{#if page_type '===' 'orderconfirmation'}}
+    T.init(function(){       
+        T.on('CheckoutStep5OrderCompleted',function(order){
+            if (sessionStorage.hitpath) {
+                var hid = sessionStorage.hitpath; // set by an affiliate link
+                var sid = sessionStorage.campaign_id||'';
+                var transid = order.orderId;
+                var ate = order.orderAmount;
+                var tid = order.orderAmount;
+
+                var url = 'https://' + domain +'/rd/ipx.php?' +
+                    'hid=' + hid + '&' +
+                    'sid=' + sid + '&' +
+                    'transid=' + transid + '&' +
+                    'ate=' + ate + '&' +
+                    'tid=' + tid;
+
+                var iframe = document.createElement('iframe');
+                iframe.style.display = "none";
+                iframe.src = url;
+                document.body.appendChild(iframe);
+            }
+        });
+    });
+{{~/if}}
+}(window,"TagRocket")
+</script>
