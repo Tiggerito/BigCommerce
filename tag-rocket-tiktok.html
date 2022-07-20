@@ -1,6 +1,6 @@
 <script data-cfasync="false">   
 /*
-    Web Site Advantage: Tag Rocket TikTok [v1.2] 
+    Web Site Advantage: Tag Rocket TikTok [v1.3] 
     TikTok pixel
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tracking-with-tiktok-on-bigcommerce/
     Copyright (C) 2021 Web Site Advantage
@@ -15,7 +15,8 @@
 
         if (T.consent.targetingAdvertising) {
 
-            // https://ads.tiktok.com/marketing_api/docs?rid=yqyw52eh4of&id=1701890973258754
+            // based on the accounts instructions/examples and the following document (which does not match up)
+            // https://ads.tiktok.com/help/article?aid=10028
             !function (w,d,t) {
             w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};T.addScriptTag("https://analytics.tiktok.com/i18n/pixel/events.js?sdkid="+e+"&lib="+t)};
             T.addPreconnectTag('https://analytics.tiktok.com');
@@ -29,6 +30,7 @@
                     content_id: productIdentifier(itemData),
                     content_type: 'product_group',
                     content_name: itemData.name,
+                    description: itemData.name,
                     price: itemData.price
                 };
                 if (itemData.category) {
@@ -53,10 +55,16 @@
                 switch(eventName) {
                     case "CheckoutStep5OrderCompleted":
                         send('AddPaymentInfo');
-                        send('CompletePayment');
+                        send('CompletePayment', {
+                            value: data.orderAmount,
+                            currency: data.currency.code,
+                            content_type: 'product_group',
+                            contents: data.items.map(function(item) {return buildItem(item)})
+                        });
                         send('PlaceAnOrder', {
                             value: data.orderAmount,
                             currency: data.currency.code,
+                            content_type: 'product_group',
                             contents: data.items.map(function(item) {return buildItem(item)})
                         });
                         break;
@@ -76,6 +84,7 @@
                         send('InitiateCheckout', {
                             value: data.cartAmount,
                             currency: data.currency.code,
+                            content_type: 'product_group',
                             contents: data.items.map(function(item) {return buildItem(item)})
                         });
                         break;
@@ -96,6 +105,9 @@
                         else {
                             send('ViewContent', {
                                 content_name: data.list.listName,
+                                description: data.list.listName,
+                                currency: data.currency.code,
+                                content_type: 'product_group',
                                 contents: data.list.items.map(function(item) {return buildItem(item)})
                             }) 
                         }                    
