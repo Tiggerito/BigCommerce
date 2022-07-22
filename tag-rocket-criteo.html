@@ -1,6 +1,6 @@
 <script data-cfasync="false">   
 /*
-    Web Site Advantage: Tag Rocket Criteo [v1.3] 
+    Web Site Advantage: Tag Rocket Criteo [v1.4] 
     Criteo tags
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2021 Web Site Advantage
@@ -54,12 +54,21 @@
             // will send a viewItem
             {{else if page_type '===' 'cart'}}
             // will send a viewBasket
+            {{else if page_type '===' 'category'}}
+            // will send a viewList
+            {{else if page_type '===' 'brand'}}
+            // will send a viewList
+            {{else if page_type '===' 'search'}}
+            // will send a viewSearchResult
             {{else}}
             send({event:"viewPage"});
             {{/if}}
-                    
+
+            var viewListSent  = false;
+
             T.on('.*',function(data, eventName){
                 switch(eventName) {
+                    {{#if page_type '===' 'search'}} 
                     case "ProductPage":
                         send({event: "viewItem", 
                             item: productIdentifier(data),
@@ -68,24 +77,50 @@
                             
                         });
                         break;
+                    {{/if}}
+                    {{#if page_type '===' 'search'}}    
                     case "ProductsVisible":
-                        {{#if page_type '!==' 'product'}}
-                        var productIdentifiers = data.list.items.map(function(item){return productIdentifier(item)});
-                        
-                        if(data.search) {
-                            send({event: "viewList",
+                        if (!viewListSent) {
+                            viewListSent = true;
+
+                            var productIdentifiers = T.products.flat().map(function(item){return productIdentifier(item)});
+
+                            send({event: "viewList", // viewSearchResult
                                 keywords: data.search,
                                 item: productIdentifiers
                             });
-                        }
-                        else {
+                        }        
+                        break;
+                    {{/if}}
+                    {{#if page_type '===' 'category'}}    
+                    case "ProductsVisible":
+                        if (!viewListSent) {
+                            viewListSent = true;
+
+                            var productIdentifiers = T.products.flat().map(function(item){return productIdentifier(item)});
+
+                            send({event: "viewList", // viewCategory
+                                category: data.list.listName,
+                                item: productIdentifiers
+                            });
+                        }                       
+                        break;
+                    {{/if}}
+                    {{#if page_type '===' 'brand'}}    
+                    case "ProductsVisible":
+                        if (!viewListSent) {
+                            viewListSent = true;
+
+                            var productIdentifiers = T.products.flat().map(function(item){return productIdentifier(item)});
+
                             send({event: "viewList",
                                 category: data.list.listName,
                                 item: productIdentifiers
                             });
-                        }
-                        {{/if}}
+                        }                       
                         break;
+                    {{/if}}
+                    {{#if page_type '===' 'cart'}}
                     case "CartPage":
                         var items = data.items.map(function(item){
                             return {
@@ -97,6 +132,7 @@
 
                         send({event: "viewBasket", item: items});
                         break;
+                    {{/if}}
                     case "CartItemChanged": 
                         if (data.change > 0) {
                             send({event: "addToCart", item:[
@@ -108,6 +144,7 @@
                             ]});
                         }
                         break;
+                    {{#if page_type '===' 'orderconfirmation'}}                        
                     case "CheckoutStep5OrderCompleted":
                         var items = data.items.map(function(item){
                             return {
@@ -119,6 +156,7 @@
 
                         send({event: "trackTransaction", id: data.orderId, item: items});
                         break;
+                    {{/if}}
                 }                    
             });
         }

@@ -1,6 +1,6 @@
 <script data-cfasync="false">   
 /*
-    Web Site Advantage: Tag Rocket TikTok [v1.3] 
+    Web Site Advantage: Tag Rocket TikTok [v1.4] 
     TikTok pixel
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tracking-with-tiktok-on-bigcommerce/
     Copyright (C) 2021 Web Site Advantage
@@ -106,7 +106,6 @@
                             send('ViewContent', {
                                 content_name: data.list.listName,
                                 description: data.list.listName,
-                                currency: data.currency.code,
                                 content_type: 'product_group',
                                 contents: data.list.items.map(function(item) {return buildItem(item)})
                             }) 
