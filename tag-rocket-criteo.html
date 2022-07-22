@@ -1,6 +1,6 @@
 <script data-cfasync="false">   
 /*
-    Web Site Advantage: Tag Rocket Criteo [v1.4] 
+    Web Site Advantage: Tag Rocket Criteo [v1.5] 
     Criteo tags
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2021 Web Site Advantage
@@ -29,11 +29,12 @@
                 {event: "setAccount", account: CRTO_PartnerID},
                 {event: "setSiteType", type: deviceType}
             );
-
+            {{#if page_type '!==' 'orderconfirmation'}}   
             {{~#if customer.email}}
             window.criteo_q.push({event: "setEmail", email: "{{customer.email}}".trim().toLowerCase(), hash_method: "none"});
             {{else}}
             window.criteo_q.push({event: "setEmail", email: "", hash_method: "none"});
+            {{~/if}}
             {{~/if}}
 
             {{!-- Can send customer ID but it most be MD5 hashed --}}
@@ -146,6 +147,17 @@
                         break;
                     {{#if page_type '===' 'orderconfirmation'}}                        
                     case "CheckoutStep5OrderCompleted":
+
+                        if (data.billingAddress && data.billingAddress.email) {
+                            window.criteo_q.push({event: "setEmail", email: data.billingAddress.email.trim().toLowerCase(), hash_method: "none"});
+                        } else {
+                            {{~#if customer.email}}
+                            window.criteo_q.push({event: "setEmail", email: "{{customer.email}}".trim().toLowerCase(), hash_method: "none"});
+                            {{else}}
+                            window.criteo_q.push({event: "setEmail", email: "", hash_method: "none"});
+                            {{~/if}}
+                        }
+
                         var items = data.items.map(function(item){
                             return {
                                 'id': productIdentifier(item),
