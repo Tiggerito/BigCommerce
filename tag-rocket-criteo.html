@@ -68,7 +68,7 @@
 
             T.on('.*',function(data, eventName){
                 switch(eventName) {
-                    {{#if page_type '===' 'search'}} 
+                    {{#if page_type '===' 'product'}} 
                     case "ProductPage":
                         send({event: "viewItem", 
                             item: productIdentifier(data),
