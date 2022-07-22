@@ -1,6 +1,6 @@
 <script data-cfasync="false">   
 /*
-    Web Site Advantage: Tag Rocket Criteo [v1.2] 
+    Web Site Advantage: Tag Rocket Criteo [v1.3] 
     Criteo tags
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2021 Web Site Advantage
@@ -9,8 +9,7 @@
     var CRTO_PartnerID = 'REPLACE_WITH_YOUR_PARTNER_ID';
     var productIdentifier = function(product) {return ''+product.productId}; // productId, productSku
     
-    // https://support.criteo.com/s/article?article=All-Criteo-OneTag-events-and-parameters&language=en_US
-    // need to review documentation for more data to send
+    // https://help.criteo.com/kb/guide/en/all-criteo-onetag-events-and-parameters-vZbzbEeY86/Steps/775825
 
     w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
     
@@ -23,15 +22,25 @@
             T.addPreconnectTag('https://sslwidget.criteo.com');
             T.addPreconnectTag('https://gum.criteo.com');
 
-            var CRTO_DeviceType = /iPad/.test(navigator.userAgent)?"t":/Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Silk/.test(navigator.userAgent)?"m":"d";
-            var CRTO_Email = "{{customer.email}}" || "";
+            var deviceType = /iPad/.test(navigator.userAgent) ? "t" : /Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Silk/.test(navigator.userAgent) ? "m" : "d";
+
             window.criteo_q = window.criteo_q || [];
             window.criteo_q.push(
-                {event: "setAccount", account : CRTO_PartnerID},
-                {event: "setSiteType", type: CRTO_DeviceType},
-                {event: "setEmail", email: CRTO_Email},
-                {event: "setZipcode", zipcode: "{{customer.shipping_address.zip}}" }
+                {event: "setAccount", account: CRTO_PartnerID},
+                {event: "setSiteType", type: deviceType}
             );
+
+            {{~#if customer.email}}
+            window.criteo_q.push({event: "setEmail", email: "{{customer.email}}".trim().toLowerCase(), hash_method: "none"});
+            {{else}}
+            window.criteo_q.push({event: "setEmail", email: "", hash_method: "none"});
+            {{~/if}}
+
+            {{!-- Can send customer ID but it most be MD5 hashed --}}
+
+            {{~#if customer.shipping_address.zip}}
+            window.criteo_q.push({event: "setZipcode", zipcode: "{{customer.shipping_address.zip}}" });
+            {{~/if}}
 
             var send = function(event) {
                 event.ecpplugin = "BigCommerce-TagRocket";
@@ -52,13 +61,19 @@
             T.on('.*',function(data, eventName){
                 switch(eventName) {
                     case "ProductPage":
-                        send({event: "viewItem", item: productIdentifier(data)});
+                        send({event: "viewItem", 
+                            item: productIdentifier(data),
+                            availability: "{{~#if product.stock_level '===' '0'}}0{{~else}}1{{~/if}}", 
+                            price: data.price
+                            
+                        });
                         break;
                     case "ProductsVisible":
+                        {{#if page_type '!==' 'product'}}
                         var productIdentifiers = data.list.items.map(function(item){return productIdentifier(item)});
                         
                         if(data.search) {
-                            send({event: "viewSearchResult",
+                            send({event: "viewList",
                                 keywords: data.search,
                                 item: productIdentifiers
                             });
@@ -69,6 +84,7 @@
                                 item: productIdentifiers
                             });
                         }
+                        {{/if}}
                         break;
                     case "CartPage":
                         var items = data.items.map(function(item){
