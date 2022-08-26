@@ -151,11 +151,11 @@
                         if (data.billingAddress && data.billingAddress.email) {
                             window.criteo_q.push({event: "setEmail", email: data.billingAddress.email.trim().toLowerCase(), hash_method: "none"});
                         } else {
-                            {{~#if customer.email}}
+                            {{#if customer.email}}
                             window.criteo_q.push({event: "setEmail", email: "{{customer.email}}".trim().toLowerCase(), hash_method: "none"});
                             {{else}}
                             window.criteo_q.push({event: "setEmail", email: "", hash_method: "none"});
-                            {{~/if}}
+                            {{/if}}
                         }
 
                         var items = data.items.map(function(item){

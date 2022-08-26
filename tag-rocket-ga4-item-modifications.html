@@ -1,0 +1,186 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Tag Rocket GA4 Item Modifications [v1.0] 
+    Modify the items/products sent to GA4
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/
+    Copyright (C) 2022 Web Site Advantage
+*/
+!function(w,t){
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+
+    var delimiter = '/';
+
+    var getCategoryPath = function(category, options) {
+        options = options || {};
+        options.delimiter = options.delimiter || delimiter;
+
+        if (options.depth) {
+            return category.breadcrumbs.slice(0,options.depth).join(options.delimiter);
+        }
+        return category.breadcrumbs.join(options.delimiter);
+    }
+
+    var sortCategories = function(categories, sortBy) {
+
+        sortBy = sortBy || 'oldest';
+
+        return categories.sort(function(category1, category2){
+            switch(sortBy) {
+                case 'oldest':
+                    return category1.id - category2.id;
+                case 'newest':
+                    return category2.id - category1.id;
+                case 'deepest':
+                    return category2.breadcrumbs.length - category1.breadcrumbs.length;
+                case 'shallowest':
+                    return category1.breadcrumbs.length - category2.breadcrumbs.length;
+                default:
+                    return 0;
+            }
+        });
+    }
+
+    // default is oldest first and no excludes
+    // excludes can be an integer id, text in the category path (case insensitive) or a Regex object
+    var pickCategory = function(categories, options) {
+
+        options = options || {};
+        options.index = options.index || 0;
+        options.sortBy = options.sortBy || 'oldest';
+
+        if (!categories || categories.length === 0) {
+            return {breadcrumbs: ['(no visible category)']};
+        }
+
+        var chosenCategories = categories;
+
+        if(options.exclude) {
+            chosenCategories = categories.filter(function(category){
+                var includeCategory = true;
+                
+                var categoryPath = getCategoryPath(category);
+                options.exclude.forEach(function(exclude){
+                    if (typeof exclude === RegExp) {
+                        if(exclude.test(categoryPath)) {
+                            includeCategory = false;
+                        }
+                    }
+                    else if (Number.isInteger(exclude)) {
+                        if (category.id = exclude){
+                            includeCategory = false;
+                        }
+                    }
+                    else {
+                        if(categoryPath.toLowerCase().includes(exclude.toLowerCase())) {
+                            includeCategory = false;
+                        }
+                    }
+                });
+                return includeCategory;
+            });
+        }
+        if(options.include) {
+            chosenCategories = chosenCategories.filter(function(category){
+                var includeCategory = false;
+                        
+                var categoryPath = getCategoryPath(category);
+                options.include.forEach(function(include){
+                    if (typeof include === RegExp) {
+                        if(include.test(categoryPath)) {
+                            includeCategory = true;
+                        }
+                    }
+                    else if (Number.isInteger(include)) {
+                        if (category.id = include){
+                            includeCategory = true;
+                        }
+                    }
+                    else {
+                        if(categoryPath.toLowerCase().includes(include.toLowerCase())) {
+                            includeCategory = true;
+                        }
+                    }
+                });
+            
+                return includeCategory;
+            });
+        }
+
+        chosenCategories = sortCategories(chosenCategories, options.thenBy);
+
+        chosenCategories = sortCategories(chosenCategories, options.sortBy);
+
+        if (chosenCategories.length === 0) {
+            return {breadcrumbs: ['(no category)']};
+        }    
+        
+        if (chosenCategories.length <= options.index) {
+            return {breadcrumbs: ['(no category '+(options.index+1)+')']};
+        }
+
+        return chosenCategories[options.index];
+    }
+    var pickCategoryPath = function(categories, options) {
+        return getCategoryPath(pickCategory(categories, options), options);
+    }
+    
+    T.init(function() { 
+      
+        T.on('GoogleAnalyticsFourItemPending',function(data){
+            // fires before an item is used. Setting cancel to true will stop the item being used
+            var productData = data.product;
+            var item = data.item;
+
+            // change how categories are set
+            var categories = productData.categories;
+
+            // pickCategoryPath(categories, // array of categories from productData.categories 
+            // { 
+            //     exclude, // array including integer ids, text in the category path (case insensitive) or a Regex object
+            //     include, // array including integer ids, text in the category path (case insensitive) or a Regex object
+            //     sortBy, // 'oldest' (default), 'newest', 'deepest', 'shallowest'
+            //     thenBy, // secondary sort: 'oldest' (default), 'newest', 'deepest', 'shallowest'
+            //     index, // category index to use, e.g. first = 0, second = 1
+            //     depth // how deep to go when building the categories breadcrumb trail. 0 = all the way
+            // });
+
+            // // how Tag Rocket does it - oldest category only, full path then increasing path lengths
+            // data.item.item_category  = pickCategoryPath(categories, {});
+            // data.item.item_category2 = pickCategoryPath(categories, {depth: 1});
+            // data.item.item_category3 = pickCategoryPath(categories, {depth: 2});
+            // data.item.item_category4 = pickCategoryPath(categories, {depth: 3});
+            // data.item.item_category5 = pickCategoryPath(categories, {depth: 4});
+
+            // // filter out general categories or anything inside them
+            // var exclude = ['all', 'featured', 'new'];
+            // data.item.item_category  = pickCategoryPath(categories, {exclude: exclude});
+            // data.item.item_category2 = pickCategoryPath(categories, {exclude: exclude, depth: 1});
+            // data.item.item_category3 = pickCategoryPath(categories, {exclude: exclude, depth: 2});
+            // data.item.item_category4 = pickCategoryPath(categories, {exclude: exclude, depth: 3});
+            // data.item.item_category5 = pickCategoryPath(categories, {exclude: exclude, depth: 4});
+
+            // // pick separate categories
+            // data.item.item_category  = pickCategoryPath(categories, {});
+            // data.item.item_category2 = pickCategoryPath(categories, {index: 1});
+            // data.item.item_category3 = pickCategoryPath(categories, {index: 2});
+            // data.item.item_category4 = pickCategoryPath(categories, {index: 3});
+            // data.item.item_category5 = pickCategoryPath(categories, {index: 4});
+
+            // pick deepest categories from different groups
+            // data.item.item_category  = pickCategoryPath(categories, {sortBy: 'deepest', thenBy: 'newest', exclude: ['all', 'featured', 'new', 'activity']}); // main category
+            // data.item.item_category2 = pickCategoryPath(categories, {sortBy: 'deepest', thenBy: 'newest', include: ['activity']}); // category based on activities
+            // data.item.item_category3 = pickCategoryPath(categories, {sortBy: 'deepest', thenBy: 'newest', include: ['featured']});
+            // data.item.item_category4 = pickCategoryPath(categories, {sortBy: 'deepest', thenBy: 'newest', include: ['new']});
+            // data.item.item_category5 = pickCategoryPath(categories, {sortBy: 'deepest', thenBy: 'newest', include: ['all']});
+
+            // deepest primary category
+            // top level primary category
+            // activity based category
+            // featured category
+            // 
+
+            // console.log('item', data.item);
+        });
+    })
+}(window,"TagRocket")
+</script>

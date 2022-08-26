@@ -1,0 +1,39 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Tag Rocket Zycada [v1.0] 
+    Record A/B tests in GA4 and GAEE
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/
+    Copyright (C) 2022 Web Site Advantage
+*/
+!function(w,t){
+    var abTestGoogleAnalyticsUniversalDimension = "dimension1"; // set this to a dimension you have defined in GA Universal
+    var abTestGoogleAnalyticsFourDimensionProperty = "zycada_ab_test"; // set this to a dimensions property you have defined in GA4
+
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+    
+    T.init(function() { 
+
+        var match=document.cookie.match(new RegExp('(^| )abtest=([^;]+)'));
+
+        if (match) {
+
+            var abTest = unescape(match[2]);
+
+            T.on('GaCommandSent',function(data, eventName){
+
+                if (data.arguments[0] == 'create') {
+                    ga('set', abTestGoogleAnalyticsUniversalDimension, abTest);
+                };
+            });
+
+            T.on('GtagCommandPending',function(data, eventName){
+                if (data.arguments[0] === 'config' && data.arguments.length >= 3) {
+                    var options = data.arguments[2];
+
+                    options[abTestGoogleAnalyticsFourDimensionProperty] = abTest;
+                };               
+            });
+        }
+    })
+}(window,"TagRocket")
+</script>
