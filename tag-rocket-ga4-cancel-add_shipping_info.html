@@ -1,0 +1,19 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Tag Rocket GA4 Cancel Shipping Event [v1.0] 
+    Cancels the add_shipping_info event
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/
+    Copyright (C) 2022 Web Site Advantage
+*/
+!function(w,t){
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+    
+    T.init(function() {   
+        T.on('GtagCommandPending',function(data, eventName){
+            if (data.arguments && data.arguments.length > 1 && data.arguments[1] == 'add_shipping_info') {
+                data.cancel = true;
+            }            
+        });
+    })
+}(window,"TagRocket")
+</script>
