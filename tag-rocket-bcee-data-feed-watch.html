@@ -1,0 +1,32 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Tag Rocket BCEE Data Feed Watch [v1.0] 
+    Add Data Feed Watch Analytics code before pageview
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/
+    Copyright (C) 2022 Web Site Advantage
+*/
+!function(w,t){
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+
+    var uaTrackerDimensionIndex = 1;
+    var usingBCEE = true;
+    
+    T.init(function() { 
+        T.on('GaCommandSent',function(data, eventName){
+            switch(data.arguments[0]) {
+                case "create":
+window.__dfwTracker = {dimension: uaTrackerDimensionIndex};
+/** DataFeedWatch tracker */ 
+//__dfwTracker = {dimension: 1};
+(function(){var n,e,t=window,a=function(){var n=/dfw_tracker=([0-9a-zA-Z\-\_]+)/.exec(location.href);null!==n&&g(n[1])&&(n=n[1]);return n}(),r=t.__dfwTracker||{},i=[{name:"gtag",fn:function(n){var e={};e[n.name]=n.value,t.gtag("event",n.name,e)},test:function(){
+return m(t.gtag) && !usingBCEE // otherwise gtag will take over from BCEE
+//return m(t.gtag)
+}},{name:"ga",fn:function(n){t._gaq.push(["set",n.name,n.value])},test:function(){return g(t._gaq)&&g(t._gaq.push)}},{name:"analytics",fn:function(n){t.ga("set",n.name,n.value)},test:function(){return m(t.ga)}},{name:"notfound",fn:function(){},test:function(){return!0}}];if(r.dimension=r.dimension||1,r.adapter=-1<["gtag","ga","analytics"].indexOf(r.adapter)?r.adapter:null,"string"==typeof a){var o=function(){var n="_dfwt",e=s(n);g(e)||(e=function(){function n(){return Math.floor(65536*(1+Math.random())).toString(16).substring(1)}return"dfwt"+n()+n()+n()+n()+n()+n()}(),s(n,e));return e}(),f={dimension:r.dimension,name:"dimension"+r.dimension,value:(n=o,e=a,"dfw_tracker="+n+"-"+e)};try{if(p('init {"dimension": "'+f.dimension+'", "value": "'+f.value+'", "v": "1.1"}'),null!==r.adapter)p('adapter force - "'+r.adapter+'"'),d(function(n){for(var e=0;e<i.length;e++)if(i[e].name===n)return i[e];throw new Error('adapter not found "'+n+'"')}(r.adapter),f);else for(var u,c=0;c<i.length;c++){if(!0===(u=i[c]).test()){p('adapter match - "'+u.name+'"'),d(u,f);break}p('adapter not match - "'+u.name+'"')}}catch(n){v("error",n.message)}}else p('missing "dfw_tracker" param');function d(n,e){g(n)&&"function"==typeof n.fn&&(p('execute adapter "'+n.name+'"'),n.fn(e))}function s(n,e){var t=document;if(g(e)){var a=new Date;return a.setTime(a.getTime()+63072e6),t.cookie=[n,"=",e,"; expires="+a.toUTCString(),"; path=/"].join("")}for(var r,i,o,f=n?void 0:{},u=t.cookie?t.cookie.split("; "):[],c=0,d=u.length;c<d;c++){if(i=(r=u[c].split("=")).shift(),o=r.join("="),n&&n===i){f=l(o);break}!n&&g(o=l(o))&&(f[i]=o)}return f}function l(n){0===n.indexOf('"')&&(n=n.slice(1,-1).replace(/\\"/g,'"').replace(/\\\\/g,"\\"));try{return n.replace(/\+/g," ")}catch(n){}return""}function m(n){return"function"==typeof n}function g(n){return null!==n&&void 0!==n}function p(n){v("event",n)}function v(n,e){-1<location.href.indexOf("dfw_tracker_debug=1")&&console.log("[dfw_tracker]["+n+"]",e)}})(); 
+/** DataFeedWatch tracker end */
+                    break;
+            }
+            
+        });
+    })
+}(window,"TagRocket")
+</script>
