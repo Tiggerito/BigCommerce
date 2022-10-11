@@ -1,0 +1,26 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Tag Rocket GA4 Content Group Modification [v1.0] 
+    Modify the Content Group sent to GA4
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/
+    Copyright (C) 2022 Web Site Advantage
+*/
+!function(w,t){
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+    
+    T.init(function() { 
+      
+        T.on('GtagCommandPending',function(data, eventName){
+
+            if (data.arguments[0] === 'config' && data.arguments.length >= 3) {
+                var options = data.arguments[2];
+
+                options.content_group = 'new_content_group';
+
+                options.content_sub_group = 'new_custom_dimension';
+
+            };         
+        });
+    })
+}(window,"TagRocket")
+</script>
