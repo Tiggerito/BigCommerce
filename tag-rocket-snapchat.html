@@ -1,0 +1,133 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Tag Rocket SnapChat [v1.0] 
+    SnapChat pixel
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2022 Web Site Advantage
+*/
+!function(w,t){
+    var snapChatPixelId = 'REPLACE_WITH_YOUR_ID';
+    var productIdentifier = function(product) {return ''+product.productId}; // productId, productSku
+
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+    
+    T.init(function(){
+        // https://businesshelp.snapchat.com/s/article/pixel-bigcommerce
+        // https://businesshelp.snapchat.com/s/article/pixel-website-install
+
+        if(!w.snaptr) {
+            var a=w.snaptr=function(){a.handleRequest?a.handleRequest.apply(a,arguments):a.queue.push(arguments)};
+            a.queue=[]; 
+        }
+
+        var scriptTagAdded = false;
+        function addScriptTag() {
+            if (!scriptTagAdded) {
+                scriptTagAdded = true;
+                T.addScriptTag("https://sc-static.net/scevent.min.js");
+            }    
+        }
+
+        if (T.consent.targetingAdvertising) {
+            addScriptTag();
+        }
+
+        var send = function(name, event) {
+            console.log("SnapChat "+name, event, arguments);
+            w.snaptr.apply(w.snaptr, arguments);
+        }
+
+        {{#if page_type '!==' 'orderconfirmation'}}
+        var options = {};
+
+        {{#if customer.email}}
+            options.user_email = '{{customer.email}}';
+        {{/if}}
+
+        {{#if customer.phone}}
+            options.user_phone_number = '{{customer.phone}}';
+        {{/if}}
+
+        send('init',snapChatPixelId, options);
+        send('track','PAGE_VIEW');
+
+        {{/if}}
+
+
+        T.on('.*',function(data, eventName){
+            switch(eventName) {
+                case "ConsentChanged":
+                    if (T.consent.targetingAdvertising) {
+                        addScriptTag();
+                    }
+                    break;
+                case "CheckoutStep5OrderCompleted":
+                    send('init',snapChatPixelId, {user_email: data.billingAddress.email, user_phone_number: data.billingAddress.phone});
+                    send('track','PAGE_VIEW');
+                    send('track','ADD_BILLING');
+                    send('track', 'PURCHASE', {
+                        transaction_id: data.orderId,
+                        client_dedup_id: data.orderId,
+                        price: data.orderAmount,
+                        currency: data.currency.code,
+                        number_items: data.items.reduce(function(previousValue, currentItem) {return previousValue + currentItem.quantity},0),
+                        item_ids: data.items.map(function(item) {return productIdentifier(item)})
+                    });
+                    break;
+                case "CartItemChanged": 
+                    if (data.change > 0) send('track', 'ADD_CART', {
+                        price: data.price,
+                        currency: data.currency,
+                        number_items: data.quantity,
+                        item_ids: [productIdentifier(data.item)]
+                    });
+                    break;
+                case "AddToWishList":
+                    send('track','ADD_TO_WISHLIST', {item_ids: [productIdentifier(data)]});
+                    break;
+                case "AccountCreated":
+                    send('track', 'SIGN_UP') 
+                    break;
+                case "ContactSuccess":
+                    send('track', 'CUSTOM_EVENT_1');
+                    break;
+                case "SiteLogin":
+                case "CheckoutLogin":
+                    send('track', 'LOGIN');
+                    break;
+                case "CheckoutStep1CustomerStarted":
+                    send('track', 'START_CHECKOUT', {
+                        price: data.cartAmount,
+                        currency: data.currency.code,
+                        number_items: data.items.reduce(function(previousValue, currentItem) {return previousValue + currentItem.quantity},0),
+                        item_ids: data.items.map(function(item) {return productIdentifier(item)})
+                    });
+                    break;
+                case "SubscribeSuccess":
+                    send('track', 'SUBSCRIBE');
+                    break;
+                case "ProductPage":
+                    send('track', 'VIEW_CONTENT', {
+                        item_ids: [productIdentifier(data)]
+                    });
+                    break;
+                case "ProductsVisible":
+                    if(data.search) {
+                        send('track', 'SEARCH', {
+                            search_string: data.search,
+                            item_category: data.list.listName,
+                            item_ids: data.list.items.map(function(item) {return productIdentifier(item)})
+                        })   
+                    }
+                    else {
+                        send('track', 'VIEW_CONTENT', {
+                            item_category: data.list.listName,
+                            item_ids: data.list.items.map(function(item) {return productIdentifier(item)})
+                        }) 
+                    }                    
+                    break;
+            }                    
+        });
+    })
+}(window,"TagRocket")
+</script>
