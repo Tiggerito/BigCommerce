@@ -1,6 +1,6 @@
 <script data-cfasync="false"> 
 /*
-    Web Site Advantage: Tag Rocket Hello Retail [v1.3] 
+    Web Site Advantage: Tag Rocket Hello Retail [v1.4] 
     Hello Retail API support
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2021 Web Site Advantage
@@ -12,63 +12,76 @@
 
     w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
 
-    T.init(function(){       
+    T.init(function(){   
+        
+        var scriptTagAdded = false;
+        function addScriptTag() {
+            if (!scriptTagAdded) {
+                scriptTagAdded = true;
+                T.addScriptTag('https://d1pna5l3xsntoj.cloudfront.net/scripts/company/awAddGift.js#'+partnerId); 
+            }    
+        }
+
+        _awev=w._awev||[];
 
         if (T.consent.targetingAdvertising) {
+            addScriptTag();
+        } 
 
-            _awev=w._awev||[];
+        T.on('.*',function(data, eventName){
 
-            T.addScriptTag('https://d1pna5l3xsntoj.cloudfront.net/scripts/company/awAddGift.js#'+partnerId); 
+            // https://apidocs.helloretail.com/register-email-on-tracking-user ??
 
-            T.on('.*',function(data, eventName){
+            switch(eventName) {
+                case "ConsentChanged":
+                    if (T.consent.targetingAdvertising) {
+                        addScriptTag();
+                    }
+                    break;
+                case "CartItemChanged": 
 
-                // https://apidocs.helloretail.com/register-email-on-tracking-user ??
+                    // https://apidocs.helloretail.com/cart-tracking/tracking-a-complete-cart
+                    // *******************************************
+                    var cartData = {
+                        total: data.cart.cartAmount,
+                        url: '{{settings.base_url}}{{urls.cart}}'
+                    };
 
-                switch(eventName) {
-                    case "CartItemChanged": 
+                    addDetails(data.cart, cartData);
 
-                        // https://apidocs.helloretail.com/cart-tracking/tracking-a-complete-cart
-                        // *******************************************
-                        var cartData = {
-                            total: data.cart.cartAmount,
-                            url: '{{settings.base_url}}{{urls.cart}}'
-                        };
+                    // console.log('ADDWISH_PARTNER_NS.api.cart.setCart', cartData)
+                    _awev.push(["bind_once", "context_ready", function() {                        
+                        ADDWISH_PARTNER_NS.api.cart.setCart(cartData);
+                    }]);
 
-                        addDetails(data.cart, cartData);
+                    // https://apidocs.helloretail.com/cart-tracking/tracking-when-a-visitor-adds-a-product-to-cart
+                    // *******************************************
+                    // if (data.change > 0) {
+                    //     var productData = {productNumber: ''+data.productId};
+                    //     // console.log('ADDWISH_PARTNER_NS.api.cart.addProduct', productData)
+                    //     _awev.push(["bind_once", "context_ready", function() { 
+                    //         ADDWISH_PARTNER_NS.api.cart.addProduct(productData);
+                    //     }]);
+                    // }
+                    break;
+                case "CheckoutStep5OrderCompleted":
+                    // https://apidocs.helloretail.com/conversion-tracking
+                    // *******************************************
+                    var cartData = {
+                        total: data.orderAmount,
+                        orderNumber: data.orderId
+                    };
 
-                        // console.log('ADDWISH_PARTNER_NS.api.cart.setCart', cartData)
-                        _awev.push(["bind_once", "context_ready", function() {                        
-                            ADDWISH_PARTNER_NS.api.cart.setCart(cartData);
-                        }]);
+                    addDetails(data, cartData);
 
-                        // https://apidocs.helloretail.com/cart-tracking/tracking-when-a-visitor-adds-a-product-to-cart
-                        // *******************************************
-                        // if (data.change > 0) {
-                        //     var productData = {productNumber: ''+data.productId};
-                        //     // console.log('ADDWISH_PARTNER_NS.api.cart.addProduct', productData)
-                        //     _awev.push(["bind_once", "context_ready", function() { 
-                        //         ADDWISH_PARTNER_NS.api.cart.addProduct(productData);
-                        //     }]);
-                        // }
-                        break;
-                    case "CheckoutStep5OrderCompleted":
-                        // https://apidocs.helloretail.com/conversion-tracking
-                        // *******************************************
-                        var cartData = {
-                            total: data.orderAmount,
-                            orderNumber: data.orderId
-                        };
-
-                        addDetails(data, cartData);
-
-                        // console.log('ADDWISH_PARTNER_NS.api.conversion.track_sale', cartData)
-                        _awev.push(["bind_once", "context_ready", function() {                        
-                            ADDWISH_PARTNER_NS.api.conversion.track_sale(cartData);
-                        }]);
-                        break;
-                }                                
-            });
-        }
+                    // console.log('ADDWISH_PARTNER_NS.api.conversion.track_sale', cartData)
+                    _awev.push(["bind_once", "context_ready", function() {                        
+                        ADDWISH_PARTNER_NS.api.conversion.track_sale(cartData);
+                    }]);
+                    break;
+            }                                
+        });
+     
     })
 
     function addDetails(cart, cartData) {
