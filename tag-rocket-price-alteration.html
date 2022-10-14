@@ -1,0 +1,34 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Tag Rocket Price Alteration [v1.0] 
+    Alter a products price based on a custom field '__Real World Value'
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/
+    Copyright (C) 2022 Web Site Advantage
+*/
+!function(w,t){
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+
+    var realWorldValueCustomField = '__Real World Value';
+    
+    T.init(function() {
+
+        T.on('ProductDataGathered',function(data, eventName){
+            console.log('OnEvent '+eventName, data);
+            data.items.forEach(function(item){
+                if (item.customFields){
+                    item.customFields.forEach(function(customField){
+                        if (customField.name == realWorldValueCustomField) {
+                            var realWorldValue = Number(customField.value);
+
+                            if (realWorldValue) {
+                                item.price = realWorldValue;
+                            }
+                        }
+                    });
+                }
+
+            });
+        });
+    })
+}(window,"TagRocket")
+</script>
