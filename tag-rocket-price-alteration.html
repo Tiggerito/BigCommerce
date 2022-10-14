@@ -13,7 +13,6 @@
     T.init(function() {
 
         T.on('ProductDataGathered',function(data, eventName){
-            console.log('OnEvent '+eventName, data);
             data.items.forEach(function(item){
                 if (item.customFields){
                     item.customFields.forEach(function(customField){
