@@ -1,0 +1,131 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Tag Rocket Linkedin [v1.0] 
+    Linkedin Insight tag and conversions
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/
+    Copyright (C) 2022 Web Site Advantage
+*/
+!function(w,t){
+    var linkedinPartnerId = 'REPLACE_WITH_YOUR_ID';
+
+    // create event based conversions you are interested in and enter their conversion IDs here
+    // primary conversions
+    var linkedinPurchaseConversionId = 0; // Purchase
+    var linkedinContactSuccessConversionId = 0; // Contact
+    var linkedinSubscribeSuccessConversionId = 0; // Subscribe
+    var linkedinEmailClickConversionId = 0; // Contact
+    var linkedinPhoneClickConversionId = 0; // Phone Call
+    // secondary conversions
+    var linkedinAddToCartConversionId = 0; // Add to Cart
+    var linkedinAddToWishListConversionId = 0; // Add to List
+    var linkedinCheckoutStep1CustomerStartedConversionId = 0; // Start Checkout
+    var linkedinCheckoutStep3BillingCompletedConversionId = 0; // Add Billing Info
+    var linkedinSearchPageConversionId = 0; // Search
+    var linkedinSiteLoginConversionId = 0; // Login
+    var linkedinDownloadClickConversionId = 0; // Download
+    var linkedinOutboundLinkClickConversionId = 0; // Outbound Click
+    var linkedinAccountCreatedConversionId = 0;
+    var linkedinProductPageConversionId = 0;
+    var linkedinPromotionClickedConversionId = 0; 
+
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+    
+    T.init(function(){
+
+        var scriptTagAdded = false;
+        function addScriptTag() {
+            if (!scriptTagAdded) {
+                scriptTagAdded = true;
+                T.addScriptTag("https://snap.licdn.com/li.lms-analytics/insight.min.js");
+            }    
+        }
+
+        w._linkedin_data_partner_ids = w._linkedin_data_partner_ids || [];
+        w._linkedin_data_partner_ids.push(linkedinPartnerId);
+        (function(l) {
+            if (!l) {
+                w.lintrk = function(a,b) {
+                    w.lintrk.q.push([a,b])
+                };
+                w.lintrk.q=[]
+            }
+        })(w.lintrk);
+
+        if (T.consent.targetingAdvertising) {
+            addScriptTag();
+        }
+
+        var trackConversion = function(id) {
+            if (id) {
+                // console.log("Linkedin Conversion "+id);
+                w.lintrk('track', {conversion_id: id });
+            }
+        }
+    
+        T.on('.*',function(data, eventName){
+            switch(eventName) {
+                case "ConsentChanged":
+                    if (T.consent.targetingAdvertising) {
+                        addScriptTag();
+                    }
+                    break;
+                case "CheckoutStep5OrderCompleted":
+                    trackConversion(linkedinPurchaseConversionId);
+                    break;
+                case "CartItemChanged": 
+                    if (data.change > 0) trackConversion(linkedinAddToCartConversionId);
+                    break;
+                case "AddToWishList":
+                    trackConversion(linkedinAddToWishListConversionId);
+                    break;
+                case "AccountCreated": 
+                    trackConversion(linkedinAccountCreatedConversionId);
+                    break;
+                case "ContactSuccess":
+                    trackConversion(linkedinContactSuccessConversionId);
+                    break;
+                case "CheckoutStep1CustomerStarted":
+                    trackConversion(linkedinCheckoutStep1CustomerStartedConversionId);
+                    break;
+                case "CheckoutStep3BillingCompleted":
+                    trackConversion(linkedinCheckoutStep3BillingCompletedConversionId);
+                    break;
+                case "SubscribeSuccess":
+                    trackConversion(linkedinSubscribeSuccessConversionId);
+                    break;
+                case "ProductPage":
+                    trackConversion(linkedinProductPageConversionId);
+                    break;
+                case "PromotionClicked":
+                    trackConversion(linkedinPromotionClickedConversionId);
+                    break;
+                case "SearchPage":
+                    trackConversion(linkedinSearchPageConversionId);
+                    break;
+                case "SiteLogin":
+                case "CheckoutLogin":
+                    trackConversion(linkedinSiteLoginConversionId);
+                    break;
+                case "LinkClick":
+                    switch(data.category) {
+                        case "Email":
+                            trackConversion(linkedinEmailClickConversionId);
+                            break;
+                        case "Phone":
+                            trackConversion(linkedinPhoneClickConversionId);
+                            break;
+                        case "Download":
+                            trackConversion(linkedinDownloadClickConversionId);
+                            break;
+                        case "Outbound Link":
+                            trackConversion(linkedinOutboundLinkClickConversionId);
+                            break;
+                    }
+
+                    break;
+
+            }                    
+        });
+    })
+}(window,"TagRocket")
+</script>
