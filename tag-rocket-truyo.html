@@ -1,0 +1,60 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Tag Rocket Truyo [v1.0] 
+    Integrates Truyo consent with the BigCommerce consent system
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2022 Web Site Advantage
+*/ 
+    !function(w,t){w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+
+        function getBlockedCookies() {
+
+            // if (w.blockedCookiesTest) {
+            //     // ["performance", "functional", "advertising"]
+            //     return w.blockedCookiesTest;
+            // }
+
+            var truyoConsent = localStorage.getItem('truyoConsentOptOut');
+
+            if (!truyoConsent) return null; // null means no consent provided yet. All blocked?
+
+            return JSON.parse(atob(truyoConsent)).optedOutCookiePurposes;	
+        }
+
+        function updateConsent(blockedCookies) {
+            // if no cookie data then assume consent is not provided. Even functions?
+            T.updateConsent(
+                blockedCookies != null && !blockedCookies.includes("performance"), 
+                blockedCookies != null && !blockedCookies.includes("functional"), 
+                blockedCookies != null && !blockedCookies.includes("advertising")
+            );
+        }
+
+        function createBlockedCookiesFingerprint(blockedCookies) {
+            if (blockedCookies == null) return null;
+
+            return blockedCookies.join();
+        }
+        
+        T.init(function() { 
+
+            var lastConsentFingerprint = -1; // this ensures updateConsent is called at least once, and keeps BCs consent inline with Truyo
+
+            // check every second to see if consent status has changed
+            setInterval(function () {
+                var blockedCookies = getBlockedCookies();
+
+                var newConsentFingerprint = createBlockedCookiesFingerprint(blockedCookies); 
+                            
+                if (lastConsentFingerprint != newConsentFingerprint) {
+                    // console.log('newConsentFingerprint', newConsentFingerprint);
+
+                    updateConsent(blockedCookies);
+
+                    lastConsentFingerprint = newConsentFingerprint;
+                }
+            }, 1000);
+
+        })
+    }(window,"TagRocket")
+</script>
