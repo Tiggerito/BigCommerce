@@ -1,6 +1,6 @@
 <script data-cfasync="false">   
 /*
-    Web Site Advantage: Tag Rocket GA4 Item Modifications [v1.0] 
+    Web Site Advantage: Tag Rocket GA4 Item Modifications [v1.1] 
     Modify the items/products sent to GA4
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2022 Web Site Advantage
@@ -40,6 +40,11 @@
         });
     }
 
+    // to support IE
+    var isInteger = function(num) {
+        return (num ^ 0) === num;
+    }
+
     // default is oldest first and no excludes
     // excludes can be an integer id, text in the category path (case insensitive) or a Regex object
     var pickCategory = function(categories, options) {
@@ -65,7 +70,7 @@
                             includeCategory = false;
                         }
                     }
-                    else if (Number.isInteger(exclude)) {
+                    else if (isInteger(exclude)) {
                         if (category.id = exclude){
                             includeCategory = false;
                         }
@@ -90,7 +95,7 @@
                             includeCategory = true;
                         }
                     }
-                    else if (Number.isInteger(include)) {
+                    else if (isInteger(include)) {
                         if (category.id = include){
                             includeCategory = true;
                         }
