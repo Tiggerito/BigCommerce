@@ -1,23 +1,35 @@
 <script data-cfasync="false">   
 /*
-    Web Site Advantage: Tag Rocket GA4 Content Group Modification [v1.0] 
-    Modify the Content Group sent to GA4
+    Web Site Advantage: Tag Rocket GA4 client_id to dataLayer [v1.0] 
+    Sends a dataLayer event with the client_id
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
-    Copyright (C) 2022 Web Site Advantage
+    Copyright (C) 2023 Web Site Advantage
 */
 !function(w,t){
     w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
     
     T.init(function() { 
       
-        T.on('GtagCommandPending',function(data, eventName){
+        T.on('GtagCommandSent',function(data, eventName){
 
-            if (data.arguments[0] === 'config' && data.arguments.length >= 3) {
-                var options = data.arguments[2];
+            if (data.arguments[0] === 'config' && data.arguments.length >= 2) {
+                var id = data.arguments[1];
 
-                options.content_group = 'new_content_group';
+                if (id.startsWith('G-')) {
 
-                options.content_sub_group = 'new_custom_dimension';
+                    // Following Simo's pattern: https://github.com/gtm-templates-simo-ahava/gtag-get-api/blob/main/template.tpl
+                    // more complex is want to get multiple values
+
+                    gtag('get', id, 'client_id', function(client_id) {
+                        dataLayer.push({
+                            event: 'gtagApiGet',
+                            gtagApiResult: {
+                                id: id, 
+                                client_id: client_id
+                            }
+                        });
+                    })
+                }
 
             };         
         });
