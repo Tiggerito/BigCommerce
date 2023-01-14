@@ -1,6 +1,6 @@
 <script data-cfasync="false">   
 /*
-    Web Site Advantage: Tag Rocket GA4 client_id to dataLayer [v1.0] 
+    Web Site Advantage: Tag Rocket GA4 client_id to dataLayer [v1.1] 
     Sends a dataLayer event with the client_id
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2023 Web Site Advantage
@@ -10,12 +10,14 @@
     
     T.init(function() { 
       
-        T.on('GtagCommandSent',function(data, eventName){
+        T.on('GtagCommandPending',function(data, eventName){
 
-            if (data.arguments[0] === 'config' && data.arguments.length >= 2) {
+            if (data.arguments[0] === 'config' && data.arguments.length >= 3) {
                 var id = data.arguments[1];
 
-                if (id.startsWith('G-')) {
+                if (id.indexOf('G-') == 0) {
+
+                    var options = data.arguments[2];
 
                     // Following Simo's pattern: https://github.com/gtm-templates-simo-ahava/gtag-get-api/blob/main/template.tpl
                     // more complex is want to get multiple values
