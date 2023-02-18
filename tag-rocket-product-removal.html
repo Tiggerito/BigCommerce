@@ -1,0 +1,32 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Tag Rocket Product Removal [v1.0] 
+    Remove products that match a characteristic
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2023 Web Site Advantage
+*/
+!function(w,t){
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+
+    T.init(function() {
+
+        T.on('ProductDataGathered',function(data, eventName){
+            // data.items - the products in a cart. they can be modified or items can be replaced with a subset
+            // data.reason = List, Details, AddToWishList, Order, Related, Similar, CheckoutPage, CheckoutLogout, CheckoutLogin, CheckoutStep1CustomerCompleted, CheckoutStep2ShippingCompleted, CheckoutStep3BillingCompleted, CheckCart (for multiple cart related activities including add/remove to/from cart)
+ 
+            // filter out cheap products from certain places so they don't get remarketed so much
+            var reasonList = ['List', 'Related', 'Similar', 'AddToWishList'];
+            var cheap = 10;
+            var inList = false;
+            for(var index=0; index<reasonList.length; index++){
+                if(reasonList[index]===data.reason) inList = true;
+            }
+            if (inList) {
+                data.items = data.items.filter(function(item) {
+                    return item.price > cheap; 
+                });
+            }
+        });
+    })
+}(window,"TagRocket")
+</script>

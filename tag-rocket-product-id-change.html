@@ -1,0 +1,40 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Tag Rocket Product ID change [v1.0] 
+    Change the ID sent to different tags
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2023 Web Site Advantage
+*/
+!function(w,t){
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+
+    T.init(function() {
+
+        T.on('GetId',function(data, eventName){
+            // destination = GA4, GoogleAds, MicrosoftAds, FacebookAds, PinterestAds, YahooAds
+            // type = ItemId (variant, e.g. when added to a cart), ItemGroupId (product, e.g. category page)
+            // itemGroupIdFormat = format set in the app
+            // itemIdFormat = optional format set in the app           
+            // id = set to the initially calculated ID, you can change it
+            // item = information about the product
+ 
+            // rewrite how a specific id is sent
+            switch(data.destination + data.type) {
+                case "GA4ItemGroupId":
+                    data.id = data.item.productId + '-' + data.item.currency;
+                    break;
+
+            }
+
+            // trim long ids as they get rejected by some tags
+            switch(data.destination) {
+                case "GoogleAds":
+                case "MicrosoftAds":
+                    data.id = data.id.slice(0, 50);
+                    break;
+
+            }
+        });
+    })
+}(window,"TagRocket")
+</script>

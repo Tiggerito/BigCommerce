@@ -1,0 +1,117 @@
+<script data-cfasync="false">
+/*
+    Web Site Advantage: Preezie GA Tracking [v1.0] 
+    Tracking of user activity with Preezie 
+    https://bigcommerce.websiteadvantage.com.au/
+    Copyright (C) 2023 Web Site Advantage
+*/
+
+!function() {
+    var ga4Id = ''; // optional if you want to send it to a specific destination
+
+    var exitintent = false;
+    var popup = false;
+    var cta = false;
+    var workflow = false;
+    var result = false;
+
+    var gtagEvent = function (name, options) {
+        if (ga4Id) {
+            options = options || {};
+            options.send_to = ga4Id;
+        }
+
+        gtag('event', name, options);
+
+        // console.log('event', name, options);
+    }
+
+    var journeyClickHandler = function(node) {
+        var text  = node.innerText;
+        node.addEventListener('click', function(event) {
+            gtagEvent('journey_click', {
+                'journey_click': text, // so always get the text in the node
+            });
+        }, false);
+    }
+
+    var resultClickHandler = function(node) {
+        
+        node.addEventListener('click', function(event) {
+            gtagEvent('preezie_result_click', {
+                'journey_result': event.target.href, 
+            });
+        }, false);
+    }
+
+    new MutationObserver(function(mutationsList, observer) {
+        
+        mutationsList.forEach(function(mutation){
+            for (let i = 0; i < mutation.addedNodes.length; i++) {
+                var node = mutation.addedNodes[i];
+                if(node.nodeType === Node.ELEMENT_NODE) {
+
+                    if(node.classList.toString().match(/exitintent_/)) {
+                        
+                        if (!exitintent) {
+                            exitintent = true;
+
+                            gtagEvent('preezie_exitintent');
+                        }
+                    }
+
+                    if(node.classList.toString().match(/popup_/)) {   
+
+                        if (!popup) {
+                            popup = true;
+
+                            gtagEvent('preezie_popup');
+                        }
+                    }
+
+                    if(node.classList.toString().match(/cta_/)) {
+                        
+                        if (!cta) {
+                            cta = true;
+
+                            gtagEvent('preezie_cta');
+                        }
+                    }
+
+                    if(node.classList.toString().match(/workflow_/)) {
+                        
+                        if (!workflow) {
+                            workflow = true;
+
+                            gtagEvent('preezie_workflow');
+                        }
+                    }
+
+                    node.querySelectorAll("#preezienav [id^='preez-'], #preezieans [id^='preezans-']").forEach(function(innerNode){
+                        journeyClickHandler(innerNode);
+                    });
+
+                    if (node.id == 'preezieres') {
+                        console.log('preezieres', node);
+                    }
+
+                    var results = node.querySelectorAll("#preezieres a");
+
+                    results.forEach(function(innerNode){
+                        resultClickHandler(innerNode);
+                    });
+
+                    if (!result && results.length > 0) {
+                        result = true;
+
+                        gtagEvent('preezie_result', { 
+                            'count': results.length,
+                        });
+                    }
+
+                }
+            }
+        });
+    }).observe(document.body, { childList: true, subtree: true });
+}()
+</script>
