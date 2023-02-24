@@ -10,18 +10,22 @@
 
     T.init(function() {
 
-        T.on('GetId',function(data, eventName){
+        T.on('GetValue',function(data, eventName){
             // destination = GA4, GoogleAds, MicrosoftAds, FacebookAds, PinterestAds, YahooAds
-            // type = ItemId (variant, e.g. when added to a cart), ItemGroupId (product, e.g. category page)
+            // type = ItemId (variant, e.g. when added to a cart), ItemGroupId (product, e.g. category page), VariantName
             // itemGroupIdFormat = format set in the app
-            // itemIdFormat = optional format set in the app           
-            // id = set to the initially calculated ID, you can change it
-            // item = information about the product
+            // itemIdFormat = optional format set in the app  
+            // for the VariantName type a default variantFormat is provided instead         
+            // value = set to the initially calculated value, you can change it
+            // item = information about the relevant product
+
+            // type = OrderAmount. supported by destinations GoogleAds, MicrosoftAds, FacebookAds, GA4, PinterestAds, TwitterAds, YahooAds. includes order. defaults to order.orderAmount
+            
  
             // rewrite how a specific id is sent
             switch(data.destination + data.type) {
                 case "GA4ItemGroupId":
-                    data.id = data.item.productId + '-' + data.item.currency;
+                    data.value = data.item.productId + '-' + data.item.currency;
                     break;
 
             }
@@ -30,7 +34,7 @@
             switch(data.destination) {
                 case "GoogleAds":
                 case "MicrosoftAds":
-                    data.id = data.id.slice(0, 50);
+                    data.value = data.value.slice(0, 50);
                     break;
 
             }

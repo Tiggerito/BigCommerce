@@ -1,6 +1,6 @@
 <script data-cfasync="false">   
 /*
-    Web Site Advantage: Tag Rocket Taboola [v1.4] 
+    Web Site Advantage: Tag Rocket Taboola [v1.5] 
     Taboola base pixel and conversion events
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2021 Web Site Advantage
@@ -21,7 +21,7 @@
         }
 
         w._tfa = w._tfa||[];
-        w._tfa.push({notify:'event',name:'page_view'});    
+        w._tfa.push({notify:'event',name:'page_view', id: taboolaAccountId});    
         
         if (T.consent.targetingAdvertising) {
             addScriptTag();

@@ -1,0 +1,42 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Tag Rocket Google Ads Product Removal [v1.0] 
+    Remove certain products from events
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2023 Web Site Advantage
+*/
+!function(w,t){
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+
+    var idsToExclude = []; // enter the IDs that you don't want to be sent to Google Ads as strings
+
+    T.init(function() {
+
+        T.on('GtagCommandPending',function(data, eventName){
+
+            if (data.arguments && data.arguments.length > 2) {
+                var options = data.arguments[2];
+
+                if (options.send_to && options.send_to.indexOf("AW-") === 0 && options.items) {
+                    // Going to Ad Words with items
+
+                    var newItems = [];
+
+                    for(var index=0; index<options.items.length; index++){
+                        var item = options.items[index];
+
+                        if (!idsToExclude.includes(item.id)) {
+                            newItems.push(item);
+                        }
+                    }
+                    options.items = newItems;
+
+                    if (newItems.length === 0) {
+                        data.cancel = true;
+                    }
+                }
+            }
+        });
+    })
+}(window,"TagRocket")
+</script>

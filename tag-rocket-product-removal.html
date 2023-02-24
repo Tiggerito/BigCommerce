@@ -12,7 +12,7 @@
 
         T.on('ProductDataGathered',function(data, eventName){
             // data.items - the products in a cart. they can be modified or items can be replaced with a subset
-            // data.reason = List, Details, AddToWishList, Order, Related, Similar, CheckoutPage, CheckoutLogout, CheckoutLogin, CheckoutStep1CustomerCompleted, CheckoutStep2ShippingCompleted, CheckoutStep3BillingCompleted, CheckCart (for multiple cart related activities including add/remove to/from cart)
+            // data.reason = List, Details, AddToWishList, Order, Related, Similar, CheckoutPage (repeatedly done for steps and login), CheckCart (for multiple cart related activities including add/remove to/from cart)
  
             // filter out cheap products from certain places so they don't get remarketed so much
             var reasonList = ['List', 'Related', 'Similar', 'AddToWishList'];
