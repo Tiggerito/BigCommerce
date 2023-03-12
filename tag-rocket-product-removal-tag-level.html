@@ -1,0 +1,109 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Tag Rocket Product Removal Tag Level [v1.0] 
+    Remove products that contain a word in their name
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2023 Web Site Advantage
+*/
+!function(w,t){
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+
+    // rule on when to exclude an item from Facebook or Pinterest
+    var excludeWord = 'free';
+
+    const excludeWordRegex = new RegExp('.*'+excludeWord+'.*', 'gi');
+    var excludeItem = function(item) {
+        return item.name.match(excludeWordRegex) != null;
+    };
+
+    // this removes items from all events that send items, but does not adjust things like an orders totals
+
+    T.init(function() {
+        // Facebook, remove certain products
+        var fbProductsToRemove = [];
+        T.on('GetValue',function(data, eventName){
+            if (data.destination == 'FacebookAds' && excludeItem(data.item)) {
+                fbProductsToRemove.push(data.value);
+            }
+        });
+        T.on('FbqCommandPending',function(data, eventName){
+            var args = data.arguments;
+
+            if(!fbProductsToRemove) return;
+
+            if(args.length < 3) return;
+
+            var event = args[1];
+            var options = args[2];
+ 
+            if (!options.content_ids && !options.contents) return;
+
+            if (options.content_ids) {
+                var content_ids = options.content_ids.filter(function(id) {
+                    var remove = fbProductsToRemove.includes(id);
+                    return !remove; 
+                });
+
+                options.content_ids = content_ids;
+            }
+
+            if (options.contents) {
+                var contents = options.contents.filter(function(item) {
+                    var remove = fbProductsToRemove.includes(item.id); 
+                    return !remove; 
+                });
+
+                options.contents = contents;
+            }
+
+            if ((!options.content_ids || options.content_ids.length == 0) && (!options.contents || options.contents.length == 0)) {
+                data.cancel = true;
+            }               
+        });
+
+        // Pinterest, remove certain products
+        var pinterestProductsToRemove = [];
+        T.on('GetValue',function(data, eventName){
+            if (data.destination == 'PinterestAds' && excludeItem(data.item)) {
+                pinterestProductsToRemove.push(data.value);
+            }
+        });
+        T.on('PintrkCommandPending',function(data, eventName){
+
+            var args = data.arguments;
+
+            if(!pinterestProductsToRemove) return;
+
+            if(args.length < 3) return;
+
+            var event = args[1];
+            var options = args[2];
+
+            if (!options.product_ids && !options.line_items) return;
+
+            if (options.product_ids) {
+                var product_ids = options.product_ids.filter(function(id) {
+                    var remove = pinterestProductsToRemove.includes(id); 
+                    return !remove; 
+                });
+
+                options.product_ids = product_ids;
+            }
+
+            if (options.line_items) {
+                var line_items = options.line_items.filter(function(item) {
+                    var remove = pinterestProductsToRemove.includes(item.product_id); 
+                    return !remove; 
+                });
+
+                options.line_items = line_items;
+            }
+
+            if ((!options.product_ids || options.product_ids.length == 0) && (!options.line_items || options.line_items.length == 0)) {
+                data.cancel = true;
+            }
+        });
+
+    })
+}(window,"TagRocket")
+</script>

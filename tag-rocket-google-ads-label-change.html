@@ -1,0 +1,54 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Tag Rocket Google Ads Label Change [v1.0] 
+    Changes the conversion label when certain products are present
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2023 Web Site Advantage
+*/
+!function(w,t){
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+
+    // The conversion label to use when doing the change  
+    var googleAdsAlternateConversionLabel = '1234567890/sampleconversion';
+
+    // rule on when to change the label based on a product (item)
+    var changeWord = 'free';
+
+    const changeWordRegex = new RegExp('.*'+changeWord+'.*', 'gi');
+    var changeItem = function(item) {
+        return item.name.match(changeWordRegex) != null;
+    };
+
+    T.init(function() {
+        var useAlternateConversionLabel = false;  
+
+        T.on('ProductDataGathered',function(data, eventName){
+            if (data.reason == 'Order') {
+                for(var i = 0; i< data.items.length; i++) {
+
+                    var item = data.items[i];
+
+                    if (changeItem(item)) {
+                        useAlternateConversionLabel = true;
+                    }
+                }
+            }
+        });
+
+        T.on('GtagCommandPending',function(data, eventName){
+            if (!useAlternateConversionLabel) return;
+
+            var args = data.arguments;
+
+            if(args.length < 3) return;
+
+            var event = args[1];
+            var options = args[2];
+            
+            if (event != 'purchase' && event != 'conversion') return;
+
+            options.send_to = googleAdsAlternateConversionLabel;
+        }); 
+    })
+}(window,"TagRocket")
+</script>
