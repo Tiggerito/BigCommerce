@@ -1,0 +1,37 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: SEO Rich Snippets Availability Alteration [v1.0] 
+    Change a products availability based on specific stock levels
+    https://bigcommerce.websiteadvantage.com.au/rich-snippets/
+    Copyright (C) 2023 Web Site Advantage
+*/
+
+// place this in the footer
+
+{{~#if page_type '===' 'product'}}
+
+var stockLevel = '{{product.stock_level}}';
+
+if (stockLevel == '999') {
+    updateAvailability('PreOrder');
+}
+
+function updateAvailability(newValue) {
+    var element = document.getElementById('wsa-rich-snippets-jsonld-product');
+
+    var json = JSON.parse(element.text);
+
+    if (json.offers) {
+        for(var i=0; i < json.offers.length; i++) {
+            var offer = json.offers[i];
+
+            if (offer.availability) {
+                offer.availability = newValue;
+            }
+        }
+    } 
+    element.text = JSON.stringify(json);
+}
+
+{{~/if}}
+</script>
