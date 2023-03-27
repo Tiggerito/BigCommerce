@@ -1,0 +1,273 @@
+<script data-cfasync="false">  
+/*
+    Web Site Advantage: Tag Rocket Blotout Edgetag [v1.0] 
+    Blotout Edgetag 
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2023 Web Site Advantage
+*/
+!function(w,t){
+    // improvements:
+    // complies with BigCommerce consent
+
+    var tagUrl = 'https://d.mysite.com'; // replace tagUrl with the tag url you get from app.edgetag.io when onboarding is completed
+
+    var productIdentifier = function(product) {return ''+product.productId}; // productId, productSku
+    var variantIdentifier = function(product) {return ''+product.variantId}; // variantId, variantSku, variantName
+    var productCategory = function(product) {if (product.category && product.category.name) return product.category.name};
+
+    // https://app.edgetag.io/assets/script-templates/big-commerce/big-commerce.txt
+    // https://app.edgetag.io/docs/standard-events
+    // https://app.edgetag.io/docs/coding-shop
+
+    w.edgetag=w.edgetag||function(){(edgetag.stubs=edgetag.stubs||[]).push(arguments)};
+
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+
+    var EdgeTag = function() {
+        console.log('EdgeTag', arguments);
+        edgetag.apply(edgetag,arguments)
+    }
+
+    // Consent
+    {{#if settings.shopper_consent_tracking_enabled}}
+    EdgeTag('init', {
+      edgeURL: tagUrl
+    });
+
+    if (T.consent.enabled) {
+        EdgeTag('consent', {}); //????????
+    }
+    {{else}}
+    EdgeTag('init', {
+      edgeURL: tagUrl,
+      disableConsentCheck: true 
+    });
+    {{/if}}
+
+    // User data
+    var userData = {};
+    {{#if customer.email}}
+    userData.email = {{{json (trim customer.email)}}}.toLowerCase();
+    {{/if}}
+    {{#if customer.phone}}
+    userData.phoneNumber = {{{json customer.phone}}};
+    {{/if}}
+    {{#if customer.name}}
+    var names = {{{json (trim customer.name)}}}.split(' ');
+    userData.firstName = names[0].trim();
+    if (names.length > 1) userData.lastName = names[names.length-1].trim();
+    {{/if}}
+    {{#if customer.shipping_address.first_name}}
+    userData.firstName = {{{json (trim customer.shipping_address.first_name)}}};
+    {{/if}}
+    {{#if customer.shipping_address.last_name}}
+    userData.lastName = {{{json (trim customer.shipping_address.last_name)}}};
+    {{/if}}
+    {{#if customer.shipping_address.address1}}
+    userData.address = {{{json (trim customer.shipping_address.address1)}}};
+    {{/if}}
+    {{#if customer.shipping_address.address2}}
+    if (userData.address) {
+        userData.address += ', ' + {{{json (trim customer.shipping_address.address2)}}};
+    }
+    else {
+        userData.address = {{{json (trim customer.shipping_address.address2)}}};
+    } 
+    {{/if}}
+    {{#if customer.shipping_address.city}}
+    userData.city = {{{json (trim customer.shipping_address.city)}}};
+    {{/if}}
+    {{#if customer.shipping_address.state}}
+    userData.state = {{{json (trim customer.shipping_address.state)}}};
+    {{/if}}
+    // country = don't have access to ISO 2 code country from here, but the order does
+
+    if (userData) EdgeTag('data', userData); // I'm assuming data can be updated and at any time before events
+
+    // Some BigCommerce specific thing
+    var sendBigCommerceEmail = function (email) {
+        if (email) {
+            EdgeTag(
+            'tag',
+            'map_id',
+            {
+                map_id: email,
+                map_provider: 'bigcommerce_email',
+            },
+            { blotoutCloud: true }
+            );
+        }
+    };
+
+    if (userData.email) sendBigCommerceEmail(userData.email);
+
+    var buildProduct = function(item) {
+        var product = {
+            id: productIdentifier(item),
+            quantity: item.quantity || 1,
+            item_price: item.price,
+            title: item.name,
+            type: 'product', // product | product_group ???????
+        };
+        {{#if product.main_image.data}}
+        product.image = {{{json product.main_image.data}}}.replace('{:size}', '500x659'); // random size, or to fit its use?
+        {{/if}}
+        {{#if product.url}}
+        product.url = {{{json product.url}}};
+        {{/if}}
+        var variantId = variantIdentifier(item);
+        if (variantId) product.variantId = variantId; // should I include variantID if it is a secret id (product without variant) ???????
+
+        var category = productCategory(item);
+        if (category)product.category = category;
+
+        if (item.brand) product.brand = item.brand;
+
+        // description
+
+        return product;
+    };
+    
+    T.init(function() { 
+
+        T.addScriptTag(tagUrl+'/load');
+
+        EdgeTag('tag', 'PageView'); 
+
+        T.on('.*',function(data, eventName){
+            switch(eventName) {
+                {{#if settings.shopper_consent_tracking_enabled}}
+                case "ConsentChanged":
+                    EdgeTag('consent', {}); //????????
+                    break;
+                {{/if}}
+                case "QuickSearch":
+                case "SearchPage":
+                    EdgeTag('tag', 'Search', {
+                        search: data.term,
+                    }, {}, { method: 'beacon' });
+                    break;
+                {{#if page_type '===' 'product'}} 
+                case "ProductPage":
+                    EdgeTag('tag', 'ViewContent', {
+                        currency: data.currency,
+                        value: data.price,
+                        contents: [buildProduct(data)],
+                    });
+                    break;
+                {{/if}}
+                case "CartItemChanged":
+                    EdgeTag('tag', 'AddToCart', {
+                        currency: data.currency,
+                        value: data.price,
+                        contents: [buildProduct(data.item)],
+                    }, {}, { method: 'beacon' });
+                    break;
+                case "CheckoutStep1CustomerStarted":
+                    var contents = data.items.map(function(item){
+                        return buildProduct(item);
+                    });
+                    EdgeTag('tag', 'InitiateCheckout', {
+                        contents: contents,
+                        currency: data.currency.code,
+                        value: data.cartAmount
+                    }); 
+                    break;
+                case "CheckoutStep2ShippingCompleted":
+                    // we don't have shipping address ?????
+
+                    if (data.email && userData.email != data.email) {
+                        userData.email = data.email; 
+                        EdgeTag('data', userData);
+                    }
+                    var contents = data.items.map(function(item){
+                        return buildProduct(item);
+                    });
+                    EdgeTag('tag', 'AddShippingInfo', {
+                        contents: contents,
+                        currency: data.currency.code,
+                        value: data.cartAmount
+                    }); 
+                    break;
+                case "CheckoutStep3BillingCompleted":
+                    var contents = data.items.map(function(item){
+                        return buildProduct(item);
+                    });
+                    EdgeTag('tag', 'AddPaymentInfo', {
+                        contents: contents,
+                        currency: data.currency.code,
+                        value: data.cartAmount
+                    }); 
+                    break;
+                case "CheckoutStep5OrderCompleted":
+                    // user data
+                    var shipping = (data.consignments && data.consignments.shipping && data.consignments.shipping.length && data.consignments.shipping[0]) || {}
+                    var billing = data.billingAddress || {}
+
+                    var newEmail = false;
+                    var orderEmail = shipping.email || billing.email;
+                    if (userData.email != orderEmail) {
+                        userData.email = orderEmail;
+                        newEmail = true;
+                    };
+
+                    userData.phoneNumber = shipping.phone || billing.phone;
+                    userData.firstName = shipping.firstName || billing.firstName;
+                    userData.lastName = shipping.lastName || billing.lastName;
+
+                    var addressSource = billing;
+                    if (shipping.address1 || shipping.address2 || !billing) {
+                        addressSource = shipping;
+                    }
+                    userData.address = addressSource.address1; 
+                    if (addressSource.address2) {
+                        if (userData.address) {
+                            userData.address += ', ' + addressSource.address2;
+                        }
+                        else {
+                            userData.address = addressSource.address2;
+                        }
+                    }
+                    userData.city = addressSource.city;                   
+                    userData.state = addressSource.stateOrProvince;
+                    userData.country = addressSource.countryCode;
+
+                    EdgeTag('data', userData);
+
+                    if (newEmail) sendBigCommerceEmail(userData.email);
+
+                    var contents = data.items.map(function(item){
+                        return buildProduct(item);
+                    });
+                    EdgeTag('tag', 'Purchase', {
+                        contents: contents,
+                        currency: data.currency.code,
+                        value: data.orderAmount,
+                        eventId: data.orderId, // is this only unique per event name?
+                        orderId: data.orderId
+                    }); 
+                    break;
+                case "AccountCreated":
+                    // we don't currently gather email and details
+                    EdgeTag('tag', 'CompleteRegistration');
+                    break;
+                case "ContactSuccess":
+                    // no event ???????
+                    userData.email = data.email;
+                    EdgeTag('data', userData);
+                    if (data.email) sendBigCommerceEmail(data.email);
+                    break;
+                case "SubscribeSuccess":                 
+                    userData.email = data.email;
+                    EdgeTag('data', userData);
+                    if (data.email) sendBigCommerceEmail(data.email);
+                    // could provide sourceId (e.g. 'Email'), currency and value 
+                    EdgeTag('tag', 'Subscribe', {}, {}, {method: 'beacon'});
+                    break;
+                // Lead = When a sign-up is completed ?????
+            }                    
+        });
+      
+    })
+}(window,"TagRocketDevelopment")
+</script>
