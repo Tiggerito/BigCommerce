@@ -1,0 +1,31 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Tag Rocket Product ID Change 2 [v1.0] 
+    Change certain product ItemIds
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2023 Web Site Advantage
+*/
+!function(w,t){
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+
+    var productIdsToChange = []; // enter the integer Product IDs that you want to alter
+
+    var destinations = ["MicrosoftAds", "GoogleAds"];
+
+    var changeItem = function(data) {
+        if (
+            data.type === "ItemGroupId" &&
+            destinations.includes(data.destination) &&  
+            productIdsToChange.includes(data.item.productId)            
+        ) {
+            data.value = '' + data.item.productId + '-2';
+        }
+    };
+
+    T.init(function() {
+        T.on('GetValue',function(data, eventName){
+            changeItem(data);
+        });
+    })
+}(window,"TagRocket")
+</script>
