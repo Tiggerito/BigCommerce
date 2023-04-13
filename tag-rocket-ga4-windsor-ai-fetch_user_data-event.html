@@ -23,7 +23,7 @@
                     // more complex if want to get multiple values
 
                     gtag('get', id, 'client_id', function(client_id) {
-                        gtag('event', 'fetch_user_data', {send_to: id, user_properties: {custom_client_id: client_id}});
+                        gtag('event', 'fetch_user_data', {send_to: id, user_properties: {custom_client_id: ''+client_id+'.'}});
                     })
                 }
 
