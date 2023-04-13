@@ -1,0 +1,34 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Tag Rocket GA4 Windsor.ai fetch_user_data event [v1.0] 
+    Sends a GA4 fetch_user_data event with a user property for custom_client_id
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2023 Web Site Advantage
+*/
+!function(w,t){
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+    
+    T.init(function() { 
+      
+        T.on('GtagCommandPending',function(data, eventName){
+
+            if (data.arguments[0] === 'config' && data.arguments.length >= 3) {
+                var id = data.arguments[1];
+
+                if (id.indexOf('G-') == 0) {
+
+                    var options = data.arguments[2];
+
+                    // Following Simo's pattern: https://github.com/gtm-templates-simo-ahava/gtag-get-api/blob/main/template.tpl
+                    // more complex if want to get multiple values
+
+                    gtag('get', id, 'client_id', function(client_id) {
+                        gtag('event', 'fetch_user_data', {send_to: id, user_properties: {custom_client_id: client_id}});
+                    })
+                }
+
+            };         
+        });
+    })
+}(window,"TagRocket")
+</script>
