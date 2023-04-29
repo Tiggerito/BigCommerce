@@ -1,0 +1,289 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: SEO Rich Snippets Advanced Shipping Services [v1.0] 
+    Adds advanced shipping service rules to the product markup
+    https://bigcommerce.websiteadvantage.com.au/rich-snippets/
+    Copyright (C) 2023 Web Site Advantage
+*/
+
+{{~#if page_type '===' 'product'}}
+
+!function(){
+    // this example is designed to work with BigCommerce stores using our SEO Rich Snippets app
+    // It is using made up shipping rules. You will have to modify it to follow your rules.
+
+    // These should match the settings in Store Settings->Website->Physical Dimension Settings
+    var bigCommerceDecimalToken = '.';
+    var bigCommerceThousandsToken = ','
+
+    // handling times
+    var minHandlingTimeInDays = 0;
+    var maxHandlingTimeInDays = 1;
+
+    // transit times for the regions we ship to
+    var newYorkMinTransitTimeInDays = 1;
+    var newYorkMaxTransitTimeInDays = 3;
+    var usMinTransitTimeInDays = 1;
+    var usMaxTransitTimeInDays = 5;
+    var caMinTransitTimeInDays = 1;
+    var caMaxTransitTimeInDays = 7;
+
+    var offerId = '#Offer'; // This is what SEO Rich Snippets uses to identify the products offer
+
+    var shippingDetails = [];
+
+    var offer = {
+        "@context":"https://schema.org",
+        "@id": offerId,
+        "shippingDetails": shippingDetails
+    };
+
+    // BigCommerce provides formatted dimensions. This converts them to numbers
+    function parseBigCommerceDimension(text) {
+        var newText = text.toLowerCase().replace("{{settings.measurements.length}}".toLowerCase(), "").replace("{{settings.measurements.weight}}".toLowerCase(), "").replace(bigCommerceDecimalToken, ".").replace(bigCommerceThousandsToken, "").trim();
+
+        if (newText) {
+            return parseFloat(newText);
+        }
+        else return -1;
+    }
+
+    // Let's get BigCommerce product data that could be of use when calculating shipping prices
+    var bigCommerceProduct = {
+        price: {{~#if product.price.with_tax}}{{product.price.with_tax.value}}{{else}}{{~#if product.price.without_tax}}{{product.price.without_tax.value}}{{else}}-1{{~/if}}{{~/if}}, // -1 = price unknown
+        priceCurrency: '{{~#if product.price.with_tax}}{{product.price.with_tax.currency}}{{else}}{{~#if product.price.without_tax}}{{product.price.without_tax.currency}}{{else}}{{~/if}}{{~/if}}', 
+        weight: parseBigCommerceDimension('{{product.weight}}'), 
+        width: parseBigCommerceDimension('{{product.width}}'),
+        height: parseBigCommerceDimension('{{product.height}}'), 
+        depth: parseBigCommerceDimension('{{product.depth}}'),
+        fixedShippingPrice: {{~#if product.shipping.price}}{{product.shipping.price.value}}{{else}}-1{{~/if}}, // -1 = no fixed price. 0 = free
+        fixedShippingCurrency: '{{~#if product.shipping.price}}{{product.shipping.price.currency}}{{~/if}}'
+    };
+
+    // console.log('bigCommerceProduct', bigCommerceProduct);
+
+    // Say we offer free shipping in the New York state
+    shippingDetails.push({
+        "@type": "OfferShippingDetails",
+        "shippingRate": {
+            "@type": "MonetaryAmount",
+            "value": 0, // FREE
+            "currency": bigCommerceProduct.priceCurrency
+        },
+        "shippingDestination": {
+            "@type": "DefinedRegion",
+            "addressCountry": ["US"],
+            "addressRegion": ["NY"] // New York
+        },
+        "deliveryTime": {
+            "@type": "ShippingDeliveryTime",
+            "handlingTime": {
+                "@type": "QuantitativeValue",
+                "minValue": minHandlingTimeInDays,
+                "maxValue": maxHandlingTimeInDays,
+                "unitCode": "DAY"
+            },
+            "transitTime": {
+                "@type": "QuantitativeValue",
+                "minValue": newYorkMinTransitTimeInDays,
+                "maxValue": newYorkMaxTransitTimeInDays,
+                "unitCode": "DAY"
+            }
+        }
+    });
+
+    // If a product has a fixed shipping price then offer that in the places we ship to:
+    if (bigCommerceProduct.fixedShippingPrice >= 0) {
+        shippingDetails.push({
+            "@type": "OfferShippingDetails",
+            "shippingRate": {
+                "@type": "MonetaryAmount",
+                "value": bigCommerceProduct.fixedShippingPrice, 
+                "currency": bigCommerceProduct.fixedShippingCurrency
+            },
+            "shippingDestination": {
+                "@type": "DefinedRegion",
+                "addressCountry": ["US"]
+            },
+            "deliveryTime": {
+                "@type": "ShippingDeliveryTime",
+                "handlingTime": {
+                    "@type": "QuantitativeValue",
+                    "minValue": minHandlingTimeInDays,
+                    "maxValue": maxHandlingTimeInDays,
+                    "unitCode": "DAY"
+                },
+                "transitTime": {
+                    "@type": "QuantitativeValue",
+                    "minValue": usMinTransitTimeInDays,
+                    "maxValue": usMaxTransitTimeInDays,
+                    "unitCode": "DAY"
+                }
+            }
+        });
+
+        shippingDetails.push({
+            "@type": "OfferShippingDetails",
+            "shippingRate": {
+                "@type": "MonetaryAmount",
+                "value": bigCommerceProduct.fixedShippingPrice,
+                "currency": bigCommerceProduct.fixedShippingCurrency
+            },
+            "shippingDestination": {
+                "@type": "DefinedRegion",
+                "addressCountry": ["CA"]
+            },
+            "deliveryTime": {
+                "@type": "ShippingDeliveryTime",
+                "handlingTime": {
+                    "@type": "QuantitativeValue",
+                    "minValue": minHandlingTimeInDays,
+                    "maxValue": maxHandlingTimeInDays,
+                    "unitCode": "DAY"
+                },
+                "transitTime": {
+                    "@type": "QuantitativeValue",
+                    "minValue": caMinTransitTimeInDays,
+                    "maxValue": caMaxTransitTimeInDays,
+                    "unitCode": "DAY"
+                }
+            }
+        });
+    }
+    else {
+        // not fixed, so shipping is calculated. 
+
+        // free shipping over $100
+        if (bigCommerceProduct.price >= 100) {
+            shippingDetails.push({
+                "@type": "OfferShippingDetails",
+                "shippingRate": {
+                    "@type": "MonetaryAmount",
+                    "value": 0,
+                    "currency": bigCommerceProduct.priceCurrency
+                },
+                "shippingDestination": {
+                    "@type": "DefinedRegion",
+                    "addressCountry": ["US"]
+                },
+                "deliveryTime": {
+                    "@type": "ShippingDeliveryTime",
+                    "handlingTime": {
+                        "@type": "QuantitativeValue",
+                        "minValue": minHandlingTimeInDays,
+                        "maxValue": maxHandlingTimeInDays,
+                        "unitCode": "DAY"
+                    },
+                    "transitTime": {
+                        "@type": "QuantitativeValue",
+                        "minValue": usMinTransitTimeInDays,
+                        "maxValue": usMaxTransitTimeInDays,
+                        "unitCode": "DAY"
+                    }
+                }
+            });
+
+            shippingDetails.push({
+                "@type": "OfferShippingDetails",
+                "shippingRate": {
+                    "@type": "MonetaryAmount",
+                    "value": 0,
+                    "currency": bigCommerceProduct.priceCurrency
+                },
+                "shippingDestination": {
+                    "@type": "DefinedRegion",
+                    "addressCountry": ["CA"]
+                },
+                "deliveryTime": {
+                    "@type": "ShippingDeliveryTime",
+                    "handlingTime": {
+                        "@type": "QuantitativeValue",
+                        "minValue": minHandlingTimeInDays,
+                        "maxValue": maxHandlingTimeInDays,
+                        "unitCode": "DAY"
+                    },
+                    "transitTime": {
+                        "@type": "QuantitativeValue",
+                        "minValue": caMinTransitTimeInDays,
+                        "maxValue": caMaxTransitTimeInDays,
+                        "unitCode": "DAY"
+                    }
+                }
+            });
+        }
+        else {
+            // shipping is based on weight in the US. We can only calculate a max cost.
+
+            var usShippingMaxCost = Math.min(10 + (bigCommerceProduct.weight / 100), 100);
+
+            shippingDetails.push({
+                "@type": "OfferShippingDetails",
+                "shippingRate": {
+                    "@type": "MonetaryAmount",
+                    "maxValue": usShippingMaxCost, // note: maxValue instead of value
+                    "currency": bigCommerceProduct.priceCurrency
+                },
+                "shippingDestination": {
+                    "@type": "DefinedRegion",
+                    "addressCountry": ["US"]
+                },
+                "deliveryTime": {
+                    "@type": "ShippingDeliveryTime",
+                    "handlingTime": {
+                        "@type": "QuantitativeValue",
+                        "minValue": minHandlingTimeInDays,
+                        "maxValue": maxHandlingTimeInDays,
+                        "unitCode": "DAY"
+                    },
+                    "transitTime": {
+                        "@type": "QuantitativeValue",
+                        "minValue": usMinTransitTimeInDays,
+                        "maxValue": usMaxTransitTimeInDays,
+                        "unitCode": "DAY"
+                    }
+                }
+            });
+
+            // and is price based in CA. We can only calculate a max cost.
+
+            var caShippingMaxCost = 10 + (bigCommerceProduct.price / 5);
+
+            shippingDetails.push({
+                "@type": "OfferShippingDetails",
+                "shippingRate": {
+                    "@type": "MonetaryAmount",
+                    "maxValue": caShippingCost, // note: maxValue instead of value
+                    "currency": bigCommerceProduct.priceCurrency
+                },
+                "shippingDestination": {
+                    "@type": "DefinedRegion",
+                    "addressCountry": ["CA"]
+                },
+                "deliveryTime": {
+                    "@type": "ShippingDeliveryTime",
+                    "handlingTime": {
+                        "@type": "QuantitativeValue",
+                        "minValue": minHandlingTimeInDays,
+                        "maxValue": maxHandlingTimeInDays,
+                        "unitCode": "DAY"
+                    },
+                    "transitTime": {
+                        "@type": "QuantitativeValue",
+                        "minValue": caMinTransitTimeInDays,
+                        "maxValue": caMaxTransitTimeInDays,
+                        "unitCode": "DAY"
+                    }
+                }
+            });
+        }
+    }
+
+    var script = document.createElement('script');
+    script.id = 'wsa-rich-snippets-jsonld-offer-shipping';
+    script.setAttribute('type', 'application/ld+json');
+    script.textContent = JSON.stringify(offer);
+    document.head.appendChild(script);
+
+}();
+{{~/if}}
+</script>
