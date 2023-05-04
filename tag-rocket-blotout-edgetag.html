@@ -1,42 +1,153 @@
 <script data-cfasync="false">  
 /*
-    Web Site Advantage: Tag Rocket Blotout Edgetag [v1.0] 
+    Web Site Advantage: Tag Rocket Blotout Edgetag [v1.1] 
     Blotout Edgetag 
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2023 Web Site Advantage
 */
 !function(w,t){
-    // improvements:
-    // complies with BigCommerce consent
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
 
     var tagUrl = 'https://d.mysite.com'; // replace tagUrl with the tag url you get from app.edgetag.io when onboarding is completed
 
-    var productIdentifier = function(product) {return ''+product.productId}; // productId, productSku
-    var variantIdentifier = function(product) {return ''+product.variantId}; // variantId, variantSku, variantName
-    var productCategory = function(product) {if (product.category && product.category.name) return product.category.name};
+    var subscriptionValue = 1;
+    var subscriptionValueCurrency = "USD";
+
+    var contactValue = 1;
+    var contactValueCurrency = "USD";
+
+    var debug = false;
+
+    // all is the default options if a specified provider does not define a property, or if the provider is not specified
+    // consent required uses BigCommerce terminology: targetingAdvertising, analytics or functional
+    // add properties to a provider to override how the function behaves for that provider
+    // should always leave one provider using the all settings
+    var providers = {
+        all: {
+            // default Data Feed Watch ID formats
+            consentRequired: "targetingAdvertising",
+
+            // This defines how the id is set
+            itemGroupIdFormat: '[[pid]]', // format to use when sending product group level IDs
+
+            // These define how the variantId is set. Note, it could be a product level ID
+            // We do that as variantId may be used as the Content ID in facebook, which may be a product identifier
+            itemIdProductFormat: '[[pid]]', // format to use when sending item level IDs for a product
+            itemIdVariantFormat: '[[pid]]-[[vid]]' // format to use when sending item level IDs for a variant
+        },
+        facebook: {
+            // this is how BigCommerce structures their Meta feed
+            itemGroupIdFormat: '[[pid]]', // product_group format to use.
+            itemIdProductFormat: '[[psku]]||P[[pid]]', // product format to use for products.
+            itemIdVariantFormat: '[[vsku]]', // product format to use for variants.
+            sendVariantIdInsteadOfProductIdSet: false // a setting in the Meta provider admin. If true we will send product and not product_group IDs where possible.
+        },
+        googleAnalytics4: {
+            consentRequired: "analytics"
+        }
+        // googleAds
+    };
+
+    // End of settings --------
 
     // https://app.edgetag.io/assets/script-templates/big-commerce/big-commerce.txt
     // https://app.edgetag.io/docs/standard-events
     // https://app.edgetag.io/docs/coding-shop
+    // https://app.edgetag.io/docs/onboarding
+    // https://app.edgetag.io/docs/step-by-step
 
     w.edgetag=w.edgetag||function(){(edgetag.stubs=edgetag.stubs||[]).push(arguments)};
 
-    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
-
+    // wrapper so we can log events
     var EdgeTag = function() {
-        console.log('EdgeTag', arguments);
-        edgetag.apply(edgetag,arguments)
+        if (debug) console.log('EdgeTag', arguments);
+        edgetag.apply(edgetag, arguments);
+    }
+
+    // complete providers 
+    var defaultProvider = providers.all;
+
+    if (!defaultProvider.productCategory) {
+        defaultProvider.productCategory = function(product) {
+            if (product.category && product.category.name) return product.category.name
+        };
+    }
+
+    defaultProvider.consentRequired = defaultProvider.consentRequired || "targetingAdvertising";
+
+    if (defaultProvider.sendVariantIdInsteadOfProductIdSet === undefined) defaultProvider.sendVariantIdInsteadOfProductIdSet = false;
+
+    var modifiedProviders = {};
+    for (const providerName in providers) {
+        var provider = providers[providerName];
+
+        provider.name = providerName;
+
+        provider.modified = provider.itemGroupIdFormat || provider.itemIdProductFormat || provider.itemIdVariantFormat || provider.productCategory;
+
+        if (provider.modified) {
+            modifiedProviders[providerName] = provider;
+        }
+
+        if (providerName != 'all') {
+            provider.consentRequired = provider.consentRequired || defaultProvider.consentRequired;
+            provider.productCategory = provider.productCategory || defaultProvider.productCategory;
+
+            if (provider.itemGroupIdFormat === undefined) provider.itemGroupIdFormat = defaultProvider.itemGroupIdFormat;
+            if (provider.itemIdProductFormat === undefined) provider.itemIdProductFormat = defaultProvider.itemIdProductFormat;
+            if (provider.itemIdVariantFormat === undefined) provider.itemIdVariantFormat = defaultProvider.itemIdVariantFormat;
+            if (provider.sendVariantIdInsteadOfProductIdSet === undefined) provider.sendVariantIdInsteadOfProductIdSet = defaultProvider.sendVariantIdInsteadOfProductIdSet;
+        }       
+    }
+
+    // if an event uses any of the provider functions for product information then this lets us send it to each modified provider
+    var forEachModifiedProvider = function(doFunction) {
+        for (const providerName in modifiedProviders) {
+            doFunction(providers[providerName]);
+        }
+    }
+
+    // this returns the destinations object for one of the modified providers so that the modified event only goes to them
+    // all is a special case where we send it to all but the modified providers 
+    var buildDestinationObject = function(provider) {
+        var destinations = {};
+
+        if (provider.name == "all") {
+            // do all but modified providers
+            for (const providerName in modifiedProviders) {
+                destinations[providerName] = false;
+            }     
+            destinations.all = true;      
+        }
+        else {
+            // do only the provider
+            destinations.all = false;
+            destinations[provider.name] = true;
+        }
+
+        return destinations;
     }
 
     // Consent
+    // https://app.edgetag.io/docs/step-by-step#consent e.g. { all: true, facebook: false }
+    var GetConsentObject = function() {
+        if (!T.consent.enabled) return {all: true};
+
+        var consent = {all: T.consent[defaultProvider.consentRequired || 'targetingAdvertising']}; // un specified providers use the default
+
+        for (const providerName in providers) {
+            if (providerName != 'all') {
+                consent[providerName] = T.consent[providers[providerName].consentRequired || 'targetingAdvertising'] || false;
+            }
+        }
+        return consent;
+    }
+
     {{#if settings.shopper_consent_tracking_enabled}}
     EdgeTag('init', {
       edgeURL: tagUrl
     });
-
-    if (T.consent.enabled) {
-        EdgeTag('consent', {}); //????????
-    }
+    EdgeTag('consent', GetConsentObject()); 
     {{else}}
     EdgeTag('init', {
       edgeURL: tagUrl,
@@ -82,9 +193,9 @@
     {{/if}}
     // country = don't have access to ISO 2 code country from here, but the order does
 
-    if (userData) EdgeTag('data', userData); // I'm assuming data can be updated and at any time before events
+    if (userData && Object.keys(userData).length > 0) EdgeTag('data', userData); // I'm assuming data can be updated and at any time before events
 
-    // Some BigCommerce specific thing
+    // Some BigCommerce specific thing from the example BigCommerce implementation
     var sendBigCommerceEmail = function (email) {
         if (email) {
             EdgeTag(
@@ -101,29 +212,44 @@
 
     if (userData.email) sendBigCommerceEmail(userData.email);
 
-    var buildProduct = function(item) {
+    var buildProduct = function(item, provider, preferedType) {
+        // facebook and tiktok use the product | product_group
+        // settings in admin decide if variantId is used
+
+        var type = preferedType;
+        if (!type || !provider.sendVariantIdInsteadOfProductIdSet) {
+            type = 'product_group';
+        }
+
         var product = {
-            id: productIdentifier(item),
             quantity: item.quantity || 1,
             item_price: item.price,
             title: item.name,
-            type: 'product', // product | product_group ???????
+            type: type
         };
+
+        product.id = T.getProductId('Blotout', 'ItemGroupId', item, provider.itemGroupIdFormat);
+
         {{#if product.main_image.data}}
         product.image = {{{json product.main_image.data}}}.replace('{:size}', '500x659'); // random size, or to fit its use?
         {{/if}}
         {{#if product.url}}
         product.url = {{{json product.url}}};
         {{/if}}
-        var variantId = variantIdentifier(item);
-        if (variantId) product.variantId = variantId; // should I include variantID if it is a secret id (product without variant) ???????
 
-        var category = productCategory(item);
+        if (type == 'product' || !provider.sendVariantIdInsteadOfProductIdSet) {
+            // for product we need the variant id. But if it is product_group we want to make sure it is not set as it will be sent
+            if (provider.itemIdProductFormat && provider.itemIdVariantFormat) {
+                product.variantId = T.getProductId('Blotout', 'ItemId', item, provider.itemIdProductFormat, provider.itemIdVariantFormat);
+            }
+        }
+ 
+        var category = provider.productCategory(item);
         if (category)product.category = category;
 
         if (item.brand) product.brand = item.brand;
 
-        // description
+        // description - we don't have that. maybe sometimes from Stencil
 
         return product;
     };
@@ -138,7 +264,7 @@
             switch(eventName) {
                 {{#if settings.shopper_consent_tracking_enabled}}
                 case "ConsentChanged":
-                    EdgeTag('consent', {}); //????????
+                    EdgeTag('consent', GetConsentObject()); 
                     break;
                 {{/if}}
                 case "QuickSearch":
@@ -149,55 +275,84 @@
                     break;
                 {{#if page_type '===' 'product'}} 
                 case "ProductPage":
-                    EdgeTag('tag', 'ViewContent', {
-                        currency: data.currency,
-                        value: data.price,
-                        contents: [buildProduct(data)],
+                    forEachModifiedProvider(function(provider) {
+                        EdgeTag('tag', 'ViewContent', {
+                            currency: data.currency,
+                            value: data.price,
+                            contents: [buildProduct(data, provider, 'product_group')],
+                        }, buildDestinationObject(provider));
                     });
                     break;
                 {{/if}}
+                
+                case "ProductsVisible":
+                    forEachModifiedProvider(function(provider) {
+                        var destination = buildDestinationObject(provider);
+
+                        // Sending ViewContent to GA4 causes a view_item which is wrong. it should be a view_item_list
+                        destination.googleAnalytics4 = false;
+                   
+                        var payload = {
+                            contents: data.list.items.map(function(item){
+                                return buildProduct(item, provider, 'product_group');
+                            })
+                        };
+
+                        if (data.search) payload.search = data.search;
+
+                        EdgeTag('tag', {{~#if page_type '===' 'category'}}'ViewCategory'{{~else if page_type '===' 'search'}}'Search'{{~else}}'ViewContent'{{/if~}}, payload, destination);
+                    });
+                    break;
                 case "CartItemChanged":
-                    EdgeTag('tag', 'AddToCart', {
-                        currency: data.currency,
-                        value: data.price,
-                        contents: [buildProduct(data.item)],
-                    }, {}, { method: 'beacon' });
+                    if (data.change > 0) {
+                        forEachModifiedProvider(function(provider) {
+                            EdgeTag('tag', 'AddToCart', {
+                                currency: data.currency,
+                                value: data.price,
+                                contents: [buildProduct(data.item, provider, 'product')],
+                            }, buildDestinationObject(provider), { method: 'beacon' });
+                        });
+                    }
                     break;
                 case "CheckoutStep1CustomerStarted":
-                    var contents = data.items.map(function(item){
-                        return buildProduct(item);
+                    forEachModifiedProvider(function(provider) {
+                        var contents = data.items.map(function(item){
+                            return buildProduct(item, provider, 'product');
+                        });
+                        EdgeTag('tag', 'InitiateCheckout', {
+                            contents: contents,
+                            currency: data.currency.code,
+                            value: data.cartAmount
+                        }, buildDestinationObject(provider)); 
                     });
-                    EdgeTag('tag', 'InitiateCheckout', {
-                        contents: contents,
-                        currency: data.currency.code,
-                        value: data.cartAmount
-                    }); 
                     break;
                 case "CheckoutStep2ShippingCompleted":
-                    // we don't have shipping address ?????
-
                     if (data.email && userData.email != data.email) {
                         userData.email = data.email; 
                         EdgeTag('data', userData);
                     }
-                    var contents = data.items.map(function(item){
-                        return buildProduct(item);
+                    forEachModifiedProvider(function(provider) {
+                        var contents = data.items.map(function(item){
+                            return buildProduct(item, provider, 'product');
+                        });
+                        EdgeTag('tag', 'AddShippingInfo', {
+                            contents: contents,
+                            currency: data.currency.code,
+                            value: data.cartAmount
+                        }, buildDestinationObject(provider)); 
                     });
-                    EdgeTag('tag', 'AddShippingInfo', {
-                        contents: contents,
-                        currency: data.currency.code,
-                        value: data.cartAmount
-                    }); 
                     break;
                 case "CheckoutStep3BillingCompleted":
-                    var contents = data.items.map(function(item){
-                        return buildProduct(item);
+                    forEachModifiedProvider(function(provider) {
+                        var contents = data.items.map(function(item){
+                            return buildProduct(item, provider, 'product');
+                        });
+                        EdgeTag('tag', 'AddPaymentInfo', {
+                            contents: contents,
+                            currency: data.currency.code,
+                            value: data.cartAmount
+                        }, buildDestinationObject(provider)); 
                     });
-                    EdgeTag('tag', 'AddPaymentInfo', {
-                        contents: contents,
-                        currency: data.currency.code,
-                        value: data.cartAmount
-                    }); 
                     break;
                 case "CheckoutStep5OrderCompleted":
                     // user data
@@ -236,23 +391,29 @@
 
                     if (newEmail) sendBigCommerceEmail(userData.email);
 
-                    var contents = data.items.map(function(item){
-                        return buildProduct(item);
+                    forEachModifiedProvider(function(provider) {
+                        var contents = data.items.map(function(item){
+                            return buildProduct(item, provider, 'product');
+                        });
+                        EdgeTag('tag', 'Purchase', {
+                            contents: contents,
+                            currency: data.currency.code,
+                            value: data.orderAmount,
+                            eventId: data.orderId,
+                            orderId: data.orderId
+                        }, buildDestinationObject(provider)); 
                     });
-                    EdgeTag('tag', 'Purchase', {
-                        contents: contents,
-                        currency: data.currency.code,
-                        value: data.orderAmount,
-                        eventId: data.orderId, // is this only unique per event name?
-                        orderId: data.orderId
-                    }); 
                     break;
                 case "AccountCreated":
-                    // we don't currently gather email and details
-                    EdgeTag('tag', 'CompleteRegistration');
+                    EdgeTag('tag', 'CompleteRegistration', {
+                        status: 'AccountCreated'
+                        // name - The name of the page or product associated with the event.
+                        // currency
+                        // value
+                    });
                     break;
                 case "ContactSuccess":
-                    // no event ???????
+                    EdgeTag('tag', 'Contact', {value: contactValue, currency: contactValueCurrency}); // custom event
                     userData.email = data.email;
                     EdgeTag('data', userData);
                     if (data.email) sendBigCommerceEmail(data.email);
@@ -261,10 +422,22 @@
                     userData.email = data.email;
                     EdgeTag('data', userData);
                     if (data.email) sendBigCommerceEmail(data.email);
-                    // could provide sourceId (e.g. 'Email'), currency and value 
-                    EdgeTag('tag', 'Subscribe', {}, {}, {method: 'beacon'});
+                    EdgeTag('tag', 'Lead', {category: "Newsletter Subscription", name: "Newsletter Subscription", value: subscriptionValue, currency: subscriptionValueCurrency}); 
                     break;
-                // Lead = When a sign-up is completed ?????
+                case "AddToWishList":
+                    forEachModifiedProvider(function(provider) {
+                        EdgeTag('tag', 'AddToWishList', {
+                            name: data.name,
+                            category: data.category.name,
+                            contents: [buildProduct(data, provider, 'product_group')],
+                            currency: data.currency,
+                            value: data.price
+                        }); 
+                    });
+                    break;
+                // EdgeTag('tag', 'Subscribe', {}, {}, {method: 'beacon'}); // this is for a paid subscription
+                // EdgeTag('tag', 'SignUp'); - pinterest
+                // EdgeTag('tag', 'CustomizeProduct'); - facebook
             }                    
         });
       
