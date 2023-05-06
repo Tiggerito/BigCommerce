@@ -2,16 +2,17 @@
 /*
     Web Site Advantage: SEO Rich Snippets Advanced Shipping Services [v1.0] 
     Adds advanced shipping service rules to the product markup
-    https://bigcommerce.websiteadvantage.com.au/rich-snippets/
+    https://bigcommerce.websiteadvantage.com.au/rich-snippets/articles/advanced-google-shipping-information-via-javascript/
     Copyright (C) 2023 Web Site Advantage
 */
 
 {{~#if page_type '===' 'product'}}
 
+// this example is designed to work with BigCommerce stores using our SEO Rich Snippets app. Add the script in the script manager.
+// https://bigcommerce.websiteadvantage.com.au/rich-snippets/
+// It is using example shipping rules. You will have to modify it to follow your rules.
+
 !function(){
-    // this example is designed to work with BigCommerce stores using our SEO Rich Snippets app
-    // https://bigcommerce.websiteadvantage.com.au/rich-snippets/
-    // It is using made up shipping rules. You will have to modify it to follow your rules.
 
     var offerId = '#Offer'; // This is what SEO Rich Snippets uses to identify the products offer. It is used to connect this with the Offer created by SEO Rich Snippets
 
@@ -41,11 +42,11 @@
     var bigCommerceDecimalToken = '.';
     var bigCommerceThousandsToken = ','
 
-    // handling times
+    // Standard handling times for the examples
     var minHandlingTimeInDays = 0;
     var maxHandlingTimeInDays = 1;
 
-    // transit times for the regions we ship to
+    // Transit times for the regions the examples ship to
     var newYorkMinTransitTimeInDays = 1;
     var newYorkMaxTransitTimeInDays = 3;
     var usMinTransitTimeInDays = 1;
@@ -55,29 +56,7 @@
 
     shippingItems = [];
 
-    // Example item format with comments
-    // shippingItems.push({
-    // 
-    //     // The cost of shipping to the specified destination. One of cost or maxCost is required
-    //     cost: 0,
-    //     maxCost: 10,
-    //     currency: "USD",
-    //
-    //     // Country is required. 2 letter country codes. Can specify more than one.
-    //     country: ["US"],
-    //     // region or postal codes are optional. Don't use both. 
-    //     region: ["NY"], // 2 or 3 letter codes. Currently supported in US, Australia, and Japan. Can specify more than one.
-    //     postalCode: ["5000"], // currently supported in Australia, Canada, and the US. Can specify more than one.
-        //
-    //     // Required. The typical delay in days between the receipt of the order and the goods leaving the warehouse.
-    //     handlingTimeMinDays: 0, 
-    //     handlingTimeMaxDays: 0,
-    //
-    //     // Required. The typical delay in days between when the order has been sent for delivery and when the goods reach the final customer.
-    //     transitTimeMinDays: 0,
-    //     transitTimeMaxDays: 0
-    // });
-
+    // Example shipping items
 
     // Say we offer free shipping in the New York state
     shippingItems.push({
@@ -166,9 +145,8 @@
         }
     }
 
-    // End of settings --------------------------------
-
-    // Start of code that builds the Structured Data 
+    // ---------------------------------------------------------------
+    // Code to add the structured data
 
     var shippingDetails = [];
 
