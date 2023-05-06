@@ -10,23 +10,17 @@
 
 !function(){
 
-    var offerId = '#Offer'; // This should be the @id for the Offer JSON-LD that the page already contains
+    var offerId = '#offer'; // This should be the @id for the Offer JSON-LD that the page already contains
 
-    // This needs modifying to get your product information from your CMS. Gather any data that is needed to determine the shipping services for this product
-    var product = {
-        price: %%price%%, 
-        priceCurrency: '%%priceCurrency%%', 
-        weight: %%weight%%, 
-        width: %%width%%,
-        height: %%height%%, 
-        depth: %%depth%%,
-        fixedShippingPrice: %%fixedShippingPrice%%, 
-        fixedShippingCurrency: '%%fixedShippingCurrency%%'
-    };
+    // Gather any product information that you will use to determine your shipping prices.
+    // e.g. price, weight, dimensions, 
 
     shippingItems = [];
 
     // create your own code to add appropriate shipping items to be used to build the structured data
+    // you can use the product information gathered to help create the rules.
+    // e.g. if you offer free shipping for products over a certain price
+    // or your shipping costs vary by the weight of the product.
 
     // Example item format with comments
     // shippingItems.push({
