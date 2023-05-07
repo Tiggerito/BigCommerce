@@ -16,6 +16,10 @@
 
     var offerId = '#Offer'; // This is what SEO Rich Snippets uses to identify the products offer. It is used to connect this with the Offer created by SEO Rich Snippets
 
+// These should match the settings in Store Settings->Website->Physical Dimension Settings
+var bigCommerceDecimalToken = '.';
+var bigCommerceThousandsToken = ','
+
     // BigCommerce provides formatted dimensions. This converts them to numbers
     function parseBigCommerceDimension(text) {
         var newText = text.toLowerCase().replace("{{settings.measurements.length}}".toLowerCase(), "").replace("{{settings.measurements.weight}}".toLowerCase(), "").replace(bigCommerceDecimalToken, ".").replace(bigCommerceThousandsToken, "").trim();
@@ -38,9 +42,7 @@
         fixedShippingCurrency: '{{~#if product.shipping.price}}{{product.shipping.price.currency}}{{~/if}}'
     };
 
-    // These should match the settings in Store Settings->Website->Physical Dimension Settings
-    var bigCommerceDecimalToken = '.';
-    var bigCommerceThousandsToken = ','
+
 
     // Standard handling times for the examples
     var minHandlingTimeInDays = 0;
