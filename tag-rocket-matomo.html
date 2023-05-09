@@ -1,14 +1,15 @@
 <script data-cfasync="false">  
 /*
-    Web Site Advantage: Tag Rocket Matomo [v1.2] 
+    Web Site Advantage: Tag Rocket Matomo [v1.3] 
     Matomo Analytics
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2022 Web Site Advantage
 */
 !function(w,t){
-    // The sub domain part of Matomo tracking url and your site id: 
-    var matomoName='mymatomosubdomain'; // e.g. from https://mymatomosubdomain.matomo.cloud/
+    // Update settings to match your setup
+    var matomoTrackingDomain = 'mymatomosubdomain.matomo.cloud';  
     var matomoSiteId = '1';
+
     // create goals for "Contact", "Account Created", "Subscribe" and "Add To Wish List",  then set their id here:
     var matomoGoalContactId = 0;
     var matomoGoalSubscribeId = 0;
@@ -19,63 +20,73 @@
     var matomoCustomDimensionCustomerGroupNameId = 0;
     var matomoCustomDimensionPageTypeId = 0;
 
-    var productIdentifier = function(product) {return ''+product.productId}; // productId, productSku
+    // how products are identified
+    var matomoProductIdFormat = "[[psku]]||P[[pid]]"; // [[psku]] = Product SKU, [[pid]] = Internal Product ID. || is fallback if psku is not set.
+
+    // End of settings --------
 
     // https://developer.matomo.org/guides/tracking-javascript-guide
     // https://matomo.org/faq/reports/advanced-manually-tracking-ecommerce-actions-in-matomo/
+    // https://developer.matomo.org/api-reference/tracking-javascript
+
+    var productIdentifier = function(item) {return T.getProductId('Matomo', 'ItemGroupId', item, matomoProductIdFormat)};
+
+    matomoTrackingDomain = matomoTrackingDomain.replace(/(^\w+:|^)\/\//, '').replace(/\/*$/, ''); // remove protocol and trailing slash
 
     w._paq=w._paq||[];
 
     var PaqPush = function(args) {
-        // console.log('PaqPush('+ args.join(', ')+')');
+        // console.log('PaqPush('+ args.join(', ')+')', args);
         w._paq.push(args);
     }
 
-    PaqPush(['setTrackerUrl', 'https://'+matomoName+'.matomo.cloud/matomo.php']);
+    PaqPush(['setTrackerUrl', '//'+matomoTrackingDomain+'/matomo.php']);
     PaqPush(['setSiteId', matomoSiteId]); 
     
     PaqPush(['enableHeartBeatTimer']);
 
     {{~#if customer.id}}PaqPush(['setUserId', '{{customer.id}}']);{{~/if}}
-        
-    {{~#if customer_group_name}}PaqPush(['setCustomDimension', matomoCustomDimensionCustomerGroupNameId, {{{json customer_group_name}}}]);{{~/if}}
+      
+    {{~#if customer_group_name}}if (matomoCustomDimensionCustomerGroupNameId) PaqPush(['setCustomDimension', matomoCustomDimensionCustomerGroupNameId, {{{json customer_group_name}}}]);{{~/if}}
 
     w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
     
     T.init(function() { 
 
-        T.addPreconnectTag('https://cdn.matomo.cloud/'+matomoName+'.matomo.cloud');
-        T.addScriptTag('https://cdn.matomo.cloud/'+matomoName+'.matomo.cloud/matomo.js');
+     //   T.addPreconnectTag('https://cdn.matomo.cloud/'+matomoName+'.matomo.cloud');
+     //   T.addScriptTag('https://cdn.matomo.cloud/'+matomoName+'.matomo.cloud/matomo.js');
 
-        PaqPush(['setCustomDimension', matomoCustomDimensionPageTypeId, T.pageType]);
+        T.addPreconnectTag('https://'+matomoTrackingDomain);
+        T.addScriptTag('//'+matomoTrackingDomain+'/matomo.js');
 
-        {{~#if settings.shopper_consent_tracking_enabled}}
-        PaqPush(['requireConsent']);
-        if (T.consent.analytics) PaqPush(['setConsentGiven']);
-        {{~/if}}
+        if (matomoCustomDimensionPageTypeId) PaqPush(['setCustomDimension', matomoCustomDimensionPageTypeId, T.pageType]);
 
-        {{~#if page_type '===' 'category'}}
+        {{#if settings.shopper_consent_tracking_enabled}}
+        if (!T.consent.analytics) PaqPush(['requireConsent']);
+        {{/if}}
+
+        {{#if page_type '===' 'category'}}
         PaqPush(['setEcommerceView',
             false, // Product name is not applicable for a category view.
             false, // Product SKU is not applicable for a category view.
             {{{json category.name}}}, // (Optional) Product category, or array of up to 5 categories
         ]);
-        {{~/if}}
+        {{/if}}
 
-        {{~#if page_type '===' 'product'}}
+        {{#if page_type '===' 'product'}}
         // trackPageView done later so after setEcommerceView 
-        {{~else}}
+        {{else}}
         PaqPush(['trackPageView']);
         PaqPush(['enableLinkTracking']);
-        {{~/if}}
+        {{/if}}
 
         T.on('.*',function(data, eventName){
             switch(eventName) {
-                {{~#if settings.shopper_consent_tracking_enabled}}
+                {{#if settings.shopper_consent_tracking_enabled}}
                 case "ConsentChanged":
                     if (T.consent.analytics) PaqPush(['setConsentGiven']);
                     break;
-                {{~/if}}
+                {{/if}}
                 case "QuickSearch":
                 case "SearchPage":
                     PaqPush(['trackSiteSearch', data.term, false, false]);
