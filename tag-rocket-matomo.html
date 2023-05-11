@@ -1,6 +1,6 @@
 <script data-cfasync="false">  
 /*
-    Web Site Advantage: Tag Rocket Matomo [v1.3] 
+    Web Site Advantage: Tag Rocket Matomo [v1.4] 
     Matomo Analytics
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2022 Web Site Advantage
@@ -10,10 +10,10 @@
     var matomoTrackingDomain = 'mymatomosubdomain.matomo.cloud';  
     var matomoSiteId = '1';
 
-    // create goals for "Contact", "Account Created", "Subscribe" and "Add To Wish List",  then set their id here:
+    // create manually triggered goals for "Contact", "Account Created", "Subscribe" and "Add To Wish List",  then set their id here:
     var matomoGoalContactId = 0;
-    var matomoGoalSubscribeId = 0;
     var matomoGoalAccountCreatedId = 0;
+    var matomoGoalSubscribeId = 0;
     var matomoGoalAddToWishListId = 0;
 
     // create custom dimensions for "Customer Group Name" (Visit) and "Page Type" (Action) then set their id here:
@@ -45,16 +45,13 @@
     
     PaqPush(['enableHeartBeatTimer']);
 
-    {{~#if customer.id}}PaqPush(['setUserId', '{{customer.id}}']);{{~/if}}
+    {{#if customer.id}}PaqPush(['setUserId', '{{customer.id}}']);{{/if}}
       
-    {{~#if customer_group_name}}if (matomoCustomDimensionCustomerGroupNameId) PaqPush(['setCustomDimension', matomoCustomDimensionCustomerGroupNameId, {{{json customer_group_name}}}]);{{~/if}}
+    {{#if customer_group_name}}if (matomoCustomDimensionCustomerGroupNameId) PaqPush(['setCustomDimension', matomoCustomDimensionCustomerGroupNameId, {{{json customer_group_name}}}]);{{/if}}
 
     w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
     
     T.init(function() { 
-
-     //   T.addPreconnectTag('https://cdn.matomo.cloud/'+matomoName+'.matomo.cloud');
-     //   T.addScriptTag('https://cdn.matomo.cloud/'+matomoName+'.matomo.cloud/matomo.js');
 
         T.addPreconnectTag('https://'+matomoTrackingDomain);
         T.addScriptTag('//'+matomoTrackingDomain+'/matomo.js');
