@@ -64,8 +64,8 @@
 
         {{#if page_type '===' 'category'}}
         PaqPush(['setEcommerceView',
-            false, // Product name is not applicable for a category view.
             false, // Product SKU is not applicable for a category view.
+            false, // Product name is not applicable for a category view.
             {{{json category.name}}}, // (Optional) Product category, or array of up to 5 categories
         ]);
         {{/if}}

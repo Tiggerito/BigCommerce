@@ -1,0 +1,98 @@
+<script data-cfasync="false">  
+/*
+    Web Site Advantage: Tag Rocket Outbrain [v1.0] 
+    Outbrain Tracking
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2023 Web Site Advantage
+*/
+!function(w,t){
+    // Update settings to match your setup
+    var OB_ADV_ID = 'myoutbrainid';   // can be an array of IDs
+
+    // Have these values match the Event-Based conversions created in the dashboard
+    // Set to an empty string '' to disable
+    var PurchaseEvent = 'Purchase';
+    var AddToCartEvent = 'Add to cart';
+    var CheckoutEvent = 'Checkout';
+    var AccountCreatedEvent = 'Registration';
+    var ContactEvent = 'Lead';
+    var SubscribeEvent = 'Email sign up';
+    var AddToWishListEvent = 'Add to wish list';
+    var SearchEvent = 'Search';
+
+    // End of settings --------
+
+    // chrome extension: https://chrome.google.com/webstore/detail/outbrain-pixel-tracker/daebadnaphbiobojnpgcenlkgpihmbdc
+    // https://www.outbrain.com/help/advertisers/install-outbrain-pixel/
+    // https://www.outbrain.com/help/advertisers/multiple-conversions/
+    // https://www.outbrain.com/help/publishers/how-do-i-implement-pixels-to-track-conversions/
+
+    if(w.obApi){var toArray=function(object){return Object.prototype.toString.call(object)==='[object Array]'?object:[object];};w.obApi.marketerId=toArray(w.obApi.marketerId).concat(toArray(OB_ADV_ID));return;}var api=w.obApi=function(){api.dispatch?api.dispatch.apply(api,arguments):api.queue.push(arguments);};api.version='1.1';api.loaded=true;api.marketerId=OB_ADV_ID;api.queue=[];
+
+    var ObApi = function(args) {
+        console.log('ObApi', arguments);
+        w.obApi.apply(w.obApi, arguments); 
+    }
+
+    ObApi('track', 'PAGE_VIEW');
+
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+    
+    T.init(function() { 
+
+        var scriptTagAdded = false;
+        function addScriptTag() {
+            if (!scriptTagAdded) {
+                scriptTagAdded = true;
+                T.addScriptTag('//amplify.outbrain.com/cp/obtp.js');
+            }    
+        }
+
+        if (T.consent.targetingAdvertising) {
+            addScriptTag();
+            T.addPreconnectTag('https://amplify.outbrain.com');
+        }
+        
+        T.on('.*',function(data, eventName){
+            switch(eventName) {
+                case "ConsentChanged":
+                    if (T.consent.targetingAdvertising) {
+                        addScriptTag();
+                    }
+                    break;
+                case "CartItemChanged":
+                    if (AddToCartEvent) ObApi('track', AddToCartEvent);
+                    break;
+                case "CheckoutPage":
+                    if (CheckoutEvent) ObApi('track', CheckoutEvent);
+                    break;
+                case "CheckoutStep5OrderCompleted":
+                    if (PurchaseEvent) {
+                        ObApi('track', PurchaseEvent, {
+                            orderId: data.orderId,
+                            orderValue: data.orderAmount, 
+                            currency: data.currency.code
+                        });
+                    } 
+                    break;
+                case "SearchPage":
+                    if (SearchEvent) ObApi('track', SearchEvent);
+                    break;
+                case "AccountCreated":
+                    if (AccountCreatedEvent) ObApi('track', AccountCreatedEvent);
+                    break;
+                case "ContactSuccess":
+                    if (ContactEvent) ObApi('track', ContactEvent);
+                    break;
+                case "SubscribeSuccess":
+                    if (SubscribeEvent) ObApi('track', SubscribeEvent);
+                    break;
+                case "AddToWishList":
+                    if (AddToWishListEvent) ObApi('track', AddToWishListEvent);
+                    break;
+            }                    
+        });
+      
+    })
+}(window,"TagRocket")
+</script>
