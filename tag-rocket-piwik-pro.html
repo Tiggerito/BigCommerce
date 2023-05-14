@@ -1,6 +1,6 @@
 <script data-cfasync="false">  
 /*
-    Web Site Advantage: Tag Rocket Piwik Pro [v1.1] 
+    Web Site Advantage: Tag Rocket Piwik Pro [v1.2] 
     Piwik Pro Analytics
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2022 Web Site Advantage
@@ -54,7 +54,7 @@
 
     {{~#if customer.id}}PaqPush(['setUserId', '{{customer.id}}']);{{~/if}}
         
-    {{~#if customer_group_name}}PaqPush(['setCustomDimension', piwikCustomDimensionCustomerGroupNameId, {{{json customer_group_name}}}]);{{~/if}}
+    {{~#if customer.customer_group_name}}PaqPush(['setCustomDimension', piwikCustomDimensionCustomerGroupNameId, {{{json customer.customer_group_name}}}]);{{~/if}}
 
     w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
     

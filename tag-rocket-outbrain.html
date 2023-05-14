@@ -29,8 +29,8 @@
 
     if(w.obApi){var toArray=function(object){return Object.prototype.toString.call(object)==='[object Array]'?object:[object];};w.obApi.marketerId=toArray(w.obApi.marketerId).concat(toArray(OB_ADV_ID));return;}var api=w.obApi=function(){api.dispatch?api.dispatch.apply(api,arguments):api.queue.push(arguments);};api.version='1.1';api.loaded=true;api.marketerId=OB_ADV_ID;api.queue=[];
 
-    var ObApi = function(args) {
-        console.log('ObApi', arguments);
+    var ObApi = function() {
+        // console.log('ObApi', arguments);
         w.obApi.apply(w.obApi, arguments); 
     }
 

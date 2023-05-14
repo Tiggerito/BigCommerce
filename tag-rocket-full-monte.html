@@ -1,0 +1,197 @@
+<script data-cfasync="false">  
+/*
+    Web Site Advantage: Tag Rocket Full Monte [v1.0] 
+    This is a complete template to help build other tags
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2023 Web Site Advantage
+*/
+!function(w,t){
+    // Update settings to match your setup
+    var trackingId = 'tracking-id'; 
+    
+    // TODO: add variables for any settings made in the tags dashboard, like for goal/conversion IDs
+    var goalAccountCreated = '';
+    var goalContactSuccess ='';
+    var goalSubscribeSuccess = '';
+    var goalAddToWishList = '';
+
+    var debug = false;
+
+    // TODO: how products are identified. set to an appropriate default
+    var itemGroupIdFormat = "[[psku]]||P[[pid]]"; 
+    var itemIdProductFormat = "";
+    var itemIdVariantFormat = "";
+
+    // End of settings --------
+
+    // links to documentation
+    // TODO: add links
+
+    var tagName = 'FullMonte'; // TODO: change the name
+    var consentRequired = 'targetingAdvertising'; // TODO: set to 'targetingAdvertising' or 'analytics'
+
+    var getProductId = function(item, type) {
+        if (type == 'ItemId' && itemIdProductFormat && itemIdVariantFormat){
+            return T.getProductId(tagName, 'ItemId', item, itemIdProductFormat, itemIdVariantFormat);
+        }
+        else {
+            return T.getProductId(tagName, 'ItemGroupId', item, itemGroupIdFormat)
+        }  
+    };
+
+    // TODO: update to the product data format this tag expects
+    var productInformation = function(item, type) {
+
+        var type = type || 'ItemGroupId';
+
+        var product = {
+            id: getProductId(item, type),
+            name: item.name,
+            price: item.price
+        };
+
+        // TODO: if there is a variant specific field
+        if (item.isVariant && itemIdProductFormat && itemIdVariantFormat) product.variantId = getProductId(item, 'ItemId'); 
+
+        if (item.category) product.category = item.category.name || item.category;
+        if (item.quantity) product.quantity = item.quantity; // TODO: if supporting removes, this could be negative. check the tag to see if it wants it always to be positive
+
+        return product;
+    }
+
+    var cartInformation = function(cart, type) {
+        var tagData = {
+            total: cart.orderAmount,
+            items: []
+        };
+
+        if (cart.orderId) tagData.transaction_id = cart.orderId;
+
+        for(var i =0; i < cart.items.length; i++) {
+            var item = cart.items[i];
+
+            tagData.items.push(productInformation(item, type));
+        }
+    };
+
+    // TODO: add base tag here, excluding code to add the script
+    w.realTag = w.realTag || [];
+
+    var CallTag = function(arg1) {
+        if(debug) console.log('CallTag', arguments); 
+
+        // TODO: add code to send to real tag. e.g.
+        w.realTag.push(arg1); // if it is an array
+        // w.realTag.apply(w.realTag, arguments); // if it is a function
+    }
+
+    // Establish the TagRocket tag
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+    
+    T.init(function() { 
+
+        // TODO: add any tag initialisation commands. e.g.
+        CallTag('init', trackingId);
+        CallTag('pageView', T.pageType);
+
+        // TODO: add any user data: stencil object customer.id, customer.email, customer.phone, customer.address, customer.customer_group_name etc. e.g.
+        // {{~#if customer.id}}CallTag('setUserId', '{{customer.id}}');{{~/if}}
+
+        var scriptTagAdded = false;
+        function addScriptTag() {
+            if (!scriptTagAdded) {
+                scriptTagAdded = true;
+                T.addPreconnectTag('https://fullmonte.com'); // TODO: change to real domain
+                T.addScriptTag('//fullmonte.com/tag.js'); // TODO: change to real URL
+            }    
+        }
+
+        // TODO: update if consent mode is supported
+        // this mechanism is to disable the tag until consent is given. 
+        // when consent mode is supported the tag should always be added and the consent mode commands used
+        // {{settings.shopper_consent_tracking_enabled}} can be used to simplify things when consent is not required.
+        if (T.consent[consentRequired]) {
+            addScriptTag();
+        }
+        else {
+            T.on('ConsentChanged',function(data){
+                if (T.consent[consentRequired]) addScriptTag();
+            });
+        }
+
+        // TODO: remove or update to send the correct data to the tag based on each event
+        // put TagRocket in debug mode to see the eventData provided in each event
+        T.on('.*',function(eventData, eventName){
+            switch(eventName) {               
+                case "QuickSearch":
+                    CallTag('search', {query: eventData.term});
+                    break;
+                case "SearchPage":
+                    CallTag('search', {query: eventData.term});
+                    break;
+                case "ProductPage":
+                    CallTag('product', productInformation(eventData, 'ItemGroupId'));
+                    break;
+                case "ProductsVisible":
+                    var tagData = {
+                        items: eventData.list.items.map(function(item){
+                            return productInformation(item, 'ItemGroupId');
+                        })
+                    }
+                    CallTag('viewItemList', tagData);
+                    break;
+                case "CartItemChanged":                   
+                    for(var i = 0; i < eventData.cart.items.length; i++){
+                        var item = eventData.cart.items[i];
+
+                        if (item.quantity > 0) { 
+                            CallTag('addToCart', productInformation(item, 'ItemId'));
+                        }
+                        else {
+                            CallTag('removeFromCart', productInformation(item, 'ItemId'));
+                        }    
+                    }
+                    break;
+                case "CartPage":
+                    CallTag('cart', cartInformation(eventData));
+                    break;
+                case "CheckoutPage":
+                    CallTag('checkout', cartInformation(eventData));
+                    break;
+                case "CheckoutStep1CustomerStarted":
+                    CallTag('checkoutCustomerStarted', cartInformation(eventData));
+                    break;
+                case "CheckoutStep2ShippingCompleted":
+                    CallTag('checkoutShippingCompleted', cartInformation(eventData));
+                    break;
+                case "CheckoutStep3BillingCompleted":
+                    CallTag('checkoutBillingCompleted', cartInformation(eventData));
+                    break;
+                case "CheckoutStep5OrderCompleted":
+                    CallTag('purchase', cartInformation(eventData));
+                    break;
+                case "AccountCreated":
+                    if (goalAccountCreated) CallTag('goal', goalAccountCreated);
+                    break;
+                case "ContactSuccess":
+                    if (goalContactSuccess) CallTag('goal', goalContactSuccess);
+                    break;
+                case "SubscribeSuccess":
+                    if (goalSubscribeSuccess) CallTag('goal', goalSubscribeSuccess);
+                    break;
+                case "AddToWishList":
+                    if (goalAddToWishList) CallTag('goal', goalAddToWishList);
+                    break;
+                case "ProductClicked":
+                case "PromotionClicked":
+                case "PromotionsVisible":
+                case "SiteLogin":
+                case "CheckoutLogin":
+                case "LinkClick":
+                        break;
+            }                    
+        });
+      
+    })
+}(window,"TagRocket")
+</script>

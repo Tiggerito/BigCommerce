@@ -1,0 +1,92 @@
+<script data-cfasync="false">
+/*
+    Web Site Advantage: Update Consent [v1.0] 
+    Ability to update the BigCommerce consent status using updateConsent(analytics, functional, advertising)
+    https://bigcommerce.websiteadvantage.com.au/
+    Copyright (C) 2022 Web Site Advantage
+*/
+!function(w,d) {
+
+    // BigCommerce's Consent system needs to be on for this to work
+
+    // hack to hide their banners
+    function hideBigCommerceBanners() {
+        var css = '#consent-manager-update-banner, #consent-manager { display:none; visibility : hidden; }',
+        head = d.head || d.getElementsByTagName('head')[0],
+        style = document.createElement('style');
+
+        head.appendChild(style);
+
+        style.type = 'text/css';
+        if (style.styleSheet){
+            style.styleSheet.cssText = css;
+        } else {
+            style.appendChild(document.createTextNode(css));
+        }
+    }
+    hideBigCommerceBanners();
+
+    // BCs mechanism to disable scripts until consent is granted
+    function checkAndLoadScript(e, n=[]) {
+        const o = e.dataset.bcCookieConsent;
+        if (void 0 === o)
+            return !1;
+        const t = Number(o);
+        if (isNaN(t))
+            return !1;
+        if (n.includes(t) && "text/plain" === e.type) {
+            const n = e.cloneNode(!0);
+            n.type = "text/javascript";
+            const o = e.parentElement;
+            e.remove(),
+            o.appendChild(n)
+        }
+    }
+    function loadAllowedScripts(e) {
+        d.querySelectorAll("[data-bc-cookie-consent]").forEach(n=>checkAndLoadScript(n, e.allow))
+    }
+
+    w.updateConsent = function(analytics, functional, advertising) {
+
+        // 2 = Analytics
+        // 3 = Functional
+        // 4 = Targeting; Advertising
+        var consent = {"allow": [],"deny": []};
+
+        if (analytics) {
+            consent.allow.push(2);
+        } else {
+            consent.deny.push(2);
+        }
+
+        if (functional) {
+            consent.allow.push(3);
+        } else {
+            consent.deny.push(3);
+        }
+
+        if (advertising) {
+            consent.allow.push(4);
+        } else {
+            consent.deny.push(4);
+        }
+
+        // https://developer.bigcommerce.com/api-reference/6fc489ff8267a-set-cookie-consent-preferences
+        fetch("/api/storefront/consent", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(consent)
+        }).then(function() {
+            if(window.consentManagerStoreConfig().improvedConsentManagerEnabled) {
+                loadAllowedScripts(consent)
+            } else {
+                document.location.reload(!0)
+            }
+        }).catch(function(e) {
+            console.log('updateConsent failed',e)
+        })
+    }
+}(window, document)
+</script>

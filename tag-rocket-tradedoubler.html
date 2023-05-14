@@ -1,0 +1,136 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Tag Rocket Trade Doubler Container Tag [v1.0] 
+    http://dev.tradedoubler.com/container/advertiser/
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2022 Web Site Advantage
+*/
+!function(w,t){
+    var tradeDoublerId = 'REPLACE_WITH_YOUR_ID';
+
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+    
+    T.init(function(){
+
+        if (T.consent.targetingAdvertising) {
+
+            function getVar(name) {
+                get_string = document.location.search;
+                return_value = '';
+                do {
+                    name_index = get_string.indexOf(name + '=');
+                    if(name_index != -1) {
+                        get_string = get_string.substr(name_index + name.length + 1,
+                        get_string.length - name_index);
+                        end_of_value = get_string.indexOf('&');
+                        if(end_of_value != -1) {
+                            value = get_string.substr(0, end_of_value);
+                        } else {
+                            value = get_string;
+                        }
+                        if(return_value == '' || value == '') {
+                            return_value += value;
+                        } else {
+                            return_value += ', ' + value;
+                        }
+                    }
+                }
+                while(name_index != -1) {
+                    space = return_value.indexOf('+');
+                }
+                while(space != -1) {
+                    return_value = return_value.substr(0, space) + ' ' +
+                    return_value.substr(space + 1, return_value.length);
+                    space = return_value.indexOf('+');
+                }
+                return(return_value);
+            }           
+            function setCookie(name, value, expires, path, domain, secure) {
+                        var today = new Date();
+                        today.setTime( today.getTime() );
+                        if ( expires ) {
+                                        expires = expires * 1000 * 60 * 60 * 24;
+                        }
+                        var expires_date = new Date( today.getTime() + (expires) );
+                        document.cookie= name + "=" + escape(value) +
+                        ((expires) ? "; expires=" + expires_date.toGMTString() : "") +
+                        ((path) ? "; path=" + path : "") +
+                        ((domain) ? "; domain=" + domain : "") +
+                        ((secure) ? "; secure" : "");
+            }
+            var mytduid = getVar('tduid');
+
+            if  (mytduid!='')
+            {   
+                setCookie('TRADEDOUBLER', mytduid, 365, '/', '.domain.com');
+            }
+
+            var TDConf = TDConf || {};
+            TDConf.sudomain = ("https:" == document.location.protocol) ? "swrap" : "wrap";
+            TDConf.host = ".tradedoubler.com/wrap";
+            TDConf.containerTagURL = (("https:" == document.location.protocol) ? "https://" : "http://")  + TDConf.sudomain + TDConf.host;
+
+            // this system can only send one message per page
+            // I think use page_type to only add the exact code for each page type.
+
+            // home page, newsletter subscription, non product related pages
+            TDConf.Config = {
+                protocol : document.location.protocol,
+                containerTagId : tradeDoublerId
+            };
+
+            // product list page
+            TDConf.Config = {
+                products:[
+                    {id: "[product-id1]", price:"[price1]", currency:"[currency1]", name:"[product-name1]"},  
+                    {id: "[product-id2]", price:"[price2]", currency:"[currency2]", name:"[product-name2]"}
+                ],  
+                Category_name : "[Name of category products]", 
+                containerTagId : tradeDoublerId
+            };
+
+            // product page
+            TDConf.Config = {
+                productId: "[product-id]", 
+                category: "[main-category-name]",
+                brand: "[brand]",  
+                productName: "[product-name]", 
+                productDescription: "[product-description]", 
+                price: "[price]", 
+                currency: "[currency]",
+                url: "[click-url]", 
+                imageUrl: "[url-to-product-image]",
+                containerTagId : tradeDoublerId
+            };
+
+            // cart page
+            TDConf.Config = {
+                products:[
+                    {id: "[product-id1]", price:"[price1]", currency:"[currency1]", name:"[product-name1]", qty:"[quantity1]"},  
+                    {id: "[product-id2]", price:"[price2]", currency:"[currency2]", name:"[product-name1]", qty:"[quantity2]"}
+                ],  
+                containerTagId : tradeDoublerId
+            };
+
+            // purchase page
+            TDConf.Config = {
+                products:[
+                    {id: "[product-id1]", price:"[price1]", currency:"[currency1]", name:"[product-name1]",grpId:"[group-product-id1]", qty:"[quantity1]"},  
+                    {id: "[product-id2]", price:"[price2]", currency:"[currency2]", name:"[product-name1]",grpId:"[group-product-id2]", qty:"[quantity2]"}
+                ],  
+                orderId: "[orderId]", 
+                orderValue: "[orderValue]",
+                currency: "[currency]",  
+                containerTagId : "XXXX"
+            };
+
+            // has to be after the Config is set
+            if (typeof (TDConf.Config) != "undefined") {
+                T.addScriptTag(TDConf.containerTagURL  + "?id="+ TDConf.Config.containerTagId);		
+            }
+
+                
+        }
+    })
+}(window,"TagRocket")
+</script>

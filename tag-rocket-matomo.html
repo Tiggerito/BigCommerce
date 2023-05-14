@@ -1,6 +1,6 @@
 <script data-cfasync="false">  
 /*
-    Web Site Advantage: Tag Rocket Matomo [v1.4] 
+    Web Site Advantage: Tag Rocket Matomo [v1.5] 
     Matomo Analytics
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2022 Web Site Advantage
@@ -47,7 +47,7 @@
 
     {{#if customer.id}}PaqPush(['setUserId', '{{customer.id}}']);{{/if}}
       
-    {{#if customer_group_name}}if (matomoCustomDimensionCustomerGroupNameId) PaqPush(['setCustomDimension', matomoCustomDimensionCustomerGroupNameId, {{{json customer_group_name}}}]);{{/if}}
+    {{#if customer.customer_group_name}}if (matomoCustomDimensionCustomerGroupNameId) PaqPush(['setCustomDimension', matomoCustomDimensionCustomerGroupNameId, {{{json customer.customer_group_name}}}]);{{/if}}
 
     w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
     
