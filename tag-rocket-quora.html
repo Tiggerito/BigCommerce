@@ -1,0 +1,101 @@
+<script data-cfasync="false">  
+/*
+    Web Site Advantage: Tag Rocket Quora [v1.0] 
+    Quora tag and main events
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2023 Web Site Advantage
+*/
+!function(w,t){
+    // Update settings to match your setup
+ //   var quoraPixelId = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'; 
+ //   var quoraPixelId = '09012d70ab8245e699511c7e8ad2093e'; 
+    var quoraPixelId = '91314235afe447308ec89a61a87f2d4e'; 
+    
+    var debug = true;
+
+    // End of settings --------
+
+    // Generic event is subscribe
+    // GenerateLead event is contact
+    // AddPaymentInfo event is before payment entered
+
+    // links to documentation
+    // https://quoraadsupport.zendesk.com/hc/en-us/categories/115001573928-Pixels-Tracking
+    // https://quoraadsupport.zendesk.com/hc/en-us/articles/115010466208-How-do-I-install-the-Quora-pixel-
+
+    var tagName = 'Quora';
+    var consentRequired = 'targetingAdvertising';
+    
+    if(w.qp) return;n=w.qp=function(){n.qp?n.qp.apply(n,arguments):n.queue.push(arguments);};n.queue=[];
+
+    var CallTag = function() {
+        if(debug) console.log(tagName, arguments); 
+        w.qp.apply(w.qp, arguments);
+    }
+
+    // Establish the TagRocket tag
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+    
+    T.init(function() { 
+        var intArgs = {};
+        {{#if customer.email}}intArgs.email={{{json customer.email}}};{{/if}}
+
+        CallTag('init', quoraPixelId, intArgs);
+        CallTag('track', 'ViewContent');
+
+        var scriptTagAdded = false;
+        function addScriptTag() {
+            if (!scriptTagAdded) {
+                scriptTagAdded = true;
+                T.addPreconnectTag('https://a.quora.com/'); 
+                T.addScriptTag('https://a.quora.com/qevents.js'); 
+            }    
+        }
+
+        if (T.consent[consentRequired]) {
+            addScriptTag();
+        }
+        else {
+            T.on('ConsentChanged',function(data){
+                if (T.consent[consentRequired]) addScriptTag();
+            });
+        }
+
+        T.on('.*',function(eventData, eventName){
+            switch(eventName) {               
+                case "QuickSearch":
+                case "SearchPage":
+                    CallTag('track', 'Search');
+                    break;
+                case "CartItemChanged":                   
+                    if(eventData.change > 0)  {
+                        CallTag('track', 'AddToCart');  
+                    }
+                    break;
+                case "CheckoutPage":
+                    CallTag('track', 'InitiateCheckout');
+                    break;
+                case "CheckoutStep4PaymentStarted":
+                    CallTag('track', 'AddPaymentInfo');
+                    break;
+                case "CheckoutStep5OrderCompleted":
+                    CallTag('track', 'Purchase');
+                    break;
+                case "AccountCreated":
+                    CallTag('track', 'CompleteRegistration');
+                    break;
+                case "ContactSuccess":
+                    CallTag('track', 'GenerateLead');
+                    break;
+                case "SubscribeSuccess":
+                    CallTag('track', 'Generic');
+                    break;
+                case "AddToWishList":
+                    CallTag('track', 'AddToWishlist');
+                    break;
+            }                    
+        });
+      
+    })
+}(window,"TagRocketDevelopment")
+</script>

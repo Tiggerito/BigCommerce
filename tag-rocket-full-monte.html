@@ -78,7 +78,7 @@
     w.realTag = w.realTag || [];
 
     var CallTag = function(arg1) {
-        if(debug) console.log('CallTag', arguments); 
+        if(debug) console.log(tagName, arguments); 
 
         // TODO: add code to send to real tag. e.g.
         w.realTag.push(arg1); // if it is an array
@@ -140,17 +140,13 @@
                     }
                     CallTag('viewItemList', tagData);
                     break;
-                case "CartItemChanged":                   
-                    for(var i = 0; i < eventData.cart.items.length; i++){
-                        var item = eventData.cart.items[i];
-
-                        if (item.quantity > 0) { 
-                            CallTag('addToCart', productInformation(item, 'ItemId'));
-                        }
-                        else {
-                            CallTag('removeFromCart', productInformation(item, 'ItemId'));
-                        }    
-                    }
+                case "CartItemChanged":  
+                    if(eventData.change > 0)  {
+                        CallTag('addToCart', productInformation(eventData.item, 'ItemId'));
+                    }  
+                    else {
+                        CallTag('removeFromCart', productInformation(eventData.item, 'ItemId'));
+                    }             
                     break;
                 case "CartPage":
                     CallTag('cart', cartInformation(eventData));
