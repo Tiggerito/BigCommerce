@@ -1,0 +1,65 @@
+<script data-cfasync="false"> 
+/*
+    Web Site Advantage: Tag Rocket Kutoku [v1.0] 
+    Kutoku click and purchase tracking
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2023 Web Site Advantage
+*/
+!function(w,t){
+    var scriptUrl = 'https://subdomain.doman.com/something.js'; // Change this to the script URL provided by Kutoku
+
+    if (w.location.search.search(/(ktk|tap_a|tap_s)=/) === -1) { return; }
+
+    function hasConcent() {
+        return true; // T.consent.analytics; // not sure what consent is required?
+    }
+
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+
+    T.init(function(){   
+        
+        var scriptTagAdded = false;
+        function addScriptTag() {
+            if (!scriptTagAdded) {
+                scriptTagAdded = true;
+                T.addScriptTag(scriptUrl+'?'+[
+                        "url=" + encodeURIComponent(w.location.href),
+                        "cid=" + encodeURIComponent(Date.now() + "_" + Math.random().toString(36).substr(2))
+                    ].join("&")
+                ); 
+            }    
+        }
+
+        if (hasConcent()) {
+            addScriptTag();
+        } 
+
+        T.on('.*',function(data, eventName){
+
+            switch(eventName) {
+                case "ConsentChanged":
+                    if (hasConcent()) {
+                        addScriptTag();
+                    }
+                    break;    
+                case "CheckoutStep5OrderCompleted":
+                    if (hasConcent()) {
+                        // not sure. was "%%ORDER_SUBTOTAL_DISCOUNTED%%" implies some value is not included, shipping, handling etc. isTaxIncluded & taxTotal?
+                        var orderSubtotalDiscounted = data.orderAmount - data.shippingCostTotal - data.handlingCostTotal;  
+                        var data = {
+                            amount: orderSubtotalDiscounted, 
+                            currency: data.currency.code,
+                            orderId:  data.orderId,
+                        };
+                        var query = [];
+                        var cid = localStorage.getItem("ylAslw");
+                        if (cid) { data.cid = cid; }
+                        Object.keys(data).forEach(function(key) { query.push(key + "=" + encodeURIComponent(data[key])); });
+                        T.addScriptTag(scriptUrl+'?'+query.join("&")); 
+                    }
+                    break;
+            }                                
+        });     
+    })
+}(window,"TagRocket")
+</script>
