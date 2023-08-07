@@ -23,7 +23,7 @@
     .then(function (result) {
         console.log('graphql test', result);
 
-        // if a categories first breadcrumb is 'Brand' then build the URL from the categories path
+        // if a categories first breadcrumb is 'Brands' then build the URL from the categories path
 
         result.data.site.product.categories.edges.forEach(function (category) {
             var breadcrumbs = category.node.breadcrumbs.edges;
