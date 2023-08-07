@@ -1,0 +1,43 @@
+<script>
+/*
+    Web Site Advantage: GraphQl Test
+    https://bigcommerce.websiteadvantage.com.au/
+    Copyright (C) 2023 Web Site Advantage
+*/ 
+    var gqlQueryString = "query productById {site {product(entityId: {{product.id}}) {categories {edges {node {name path breadcrumbs(depth: 3) {edges {node {name}}}     }}}}}}";
+    
+    fetch('/graphql', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer {{settings.storefront_api.token}}'
+        },
+        body: JSON.stringify({
+            query: gqlQueryString
+        })
+    })
+    .then(function (response) {
+        return response.json();
+    })
+    .then(function (result) {
+        console.log('graphql test', result);
+
+        // if a categories first breadcrumb is 'Brand' then build the URL from the categories path
+
+        result.data.site.product.categories.edges.forEach(function (category) {
+            var breadcrumbs = category.node.breadcrumbs.edges;
+
+            if (breadcrumbs[0].node.name == 'Brands') {
+                var path = category.node.path;
+                
+                var brand = breadcrumbs[1].node.name;
+                console.log('brand', brand);
+                console.log('url', path);
+            }
+        });
+    })
+    .catch(function (error) {
+        console.error(error);
+    })
+</script>

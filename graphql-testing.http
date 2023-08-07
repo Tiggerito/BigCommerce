@@ -1,0 +1,120 @@
+# get from Stencil object settings.storefront_api.token
+@apiToken = eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJjaWQiOjEsImNvcnMiOlsiaHR0cHM6Ly93ZWJzaXRlYWR2YW50YWdlLm15YmlnY29tbWVyY2UuY29tIl0sImVhdCI6MTY4NjY1NjQ3MSwiaWF0IjoxNjg2NDgzNjcxLCJpc3MiOiJCQyIsInNpZCI6MjI1MzM5LCJzdWIiOiJiY2FwcC5saW5rZXJkIiwic3ViX3R5cGUiOjAsInRva2VuX3R5cGUiOjF9.u2ewbXR13Bv9doWx3vawaVRmBfrkpWa5ZsJKvxFag22MjRFRRFzQHyqFkOD31vuTuz--Tlmq9AF_TzJ53O04GQ
+
+@domain = websiteadvantage.mybigcommerce.com
+
+### first try
+
+POST https://{{domain}}/graphql HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer {{apiToken}}
+
+{
+    "query": 
+        "query Products{site{products(first:25 entityIds:[4,30,33,36,37,44,29,42,39,34,46,24,28,27,26]){edges{node{entityId sku name gtin brand {name} categories{edges{node{name entityId breadcrumbs(depth:10 first:50){edges{node{name}}}}}}twoVariants:variants(first:2){edges{node{entityId sku }}}}}}}}"
+}
+
+### neater formatting
+
+POST https://{{domain}}/graphql HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer {{apiToken}}
+X-REQUEST-TYPE: GraphQL
+
+query Products{site{products(first:25 entityIds:[4,30,33,36,37,44,29,42,39,34,46,24,28,27,26]){edges{node{entityId sku name gtin brand {name} categories{edges{node{name entityId breadcrumbs(depth:10 first:50){edges{node{name}}}}}}twoVariants:variants(first:2){edges{node{entityId sku }}}}}}}}
+
+### BC example - need to remove blank lines between the fragments. parameters are specified at the end. 
+
+POST https://{{domain}}/graphql HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer {{apiToken}}
+X-REQUEST-TYPE: GraphQL
+
+# Fetch details about a product by its ID
+ # Stores in pre-launch or maintenance mode may reject queries.
+ # Access from Control Panel > Advanced Settings > Storefront API Playground
+ # or browse privately and query against https://buybutton.store/graphql
+ query productById(
+   $productId: Int!
+   # Use GraphQL Query Variables to inject your product ID
+ ) {
+   site {
+     product(entityId: $productId) {
+       id
+       entityId
+       name
+       plainTextDescription
+       defaultImage {
+         ...ImageFields
+       }
+       images {
+         edges {
+           node {
+             ...ImageFields
+           }
+         }
+       }
+       reviewSummary {
+         summationOfRatings
+         numberOfReviews
+       }
+       prices {
+         price {
+           ...MoneyFields
+         }
+         priceRange {
+           min {
+             ...MoneyFields
+           }
+           max {
+             ...MoneyFields
+           }
+         }
+         salePrice {
+           ...MoneyFields
+         }
+         retailPrice {
+           ...MoneyFields
+         }
+         saved {
+           ...MoneyFields
+         }
+         bulkPricing {
+           minimumQuantity
+           maximumQuantity
+           ... on BulkPricingFixedPriceDiscount {
+             price
+           }
+           ... on BulkPricingPercentageDiscount {
+             percentOff
+           }
+           ... on BulkPricingRelativePriceDiscount {
+             priceAdjustment
+           }
+         }
+       }
+       brand {
+         name
+       }
+     }
+   }
+ }
+ fragment ImageFields on Image {
+   url320wide: url(width: 320)
+   url640wide: url(width: 640)
+   url960wide: url(width: 960)
+   url1280wide: url(width: 1280)
+ }
+ fragment MoneyFields on Money {
+   value
+   currencyCode
+ }
+
+{
+    "productId": 4
+}
+
+### check for redirects
+
+# @no-redirect
+https://athleticmuscle.net/
