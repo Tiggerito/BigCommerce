@@ -1,0 +1,77 @@
+<script data-cfasync="false">
+/*
+    Web Site Advantage: Yotpo via API [v1.0] 
+    Gathers Yotpo reviews via their API and creates structured data for th SEO Rich Snippets app
+    https://bigcommerce.websiteadvantage.com.au/
+    Copyright (C) 2023 Web Site Advantage
+*/   
+{{#if page_type '===' 'product' }}
+!function(w,d){
+
+    var yotpoApKey = '';
+    var productId = '{{product.id}}';
+    var productUrl = '{{{product.url}}}';
+
+    var apiUrl = 'https://api-cdn.yotpo.com/v3/storefront/store/' + yotpoApKey + '/product/' + productId +'/reviews?page=1&perPage=5&sort=date,images,badge,rating';
+
+    fetch(apiUrl, {
+        method: 'GET'
+    })
+    .then(function (response) {
+        return response.json();
+    })
+    .then(function (result) {
+        if (result.reviews.length > 0) {
+    
+            let jsonLd = {
+                "@context": "https://schema.org/",
+                "@type": "Product",
+                "@id": productUrl + "#Product" + w.wsa_jsonLdIdPostfix, // add postfix
+                "aggregateRating": {
+                    "@type": "AggregateRating",
+                    "worstRating": "1",
+                    "bestRating": "5",
+                    "ratingValue": result.bottomline.averageScore,
+                    "reviewCount": result.bottomline.totalReview
+                },
+                "review": []
+            };
+    
+    
+            for (var i = 0; i < result.reviews.length; i++) {
+                var review = result.reviews[i];
+    
+                jsonLd.review.push({
+                    "@type": "Review",
+                    "author": {
+                        "@type": "Person",
+                        "name": review.user.displayName
+                    },
+                    "reviewRating": {
+                        "@type": "Rating",
+                        "ratingValue": review.score
+                    },
+                    "name": review.title,
+                    "reviewBody": review.content,
+                    "datePublished": review.createdAt
+                });
+            }
+
+            console.log('jsonLd', jsonLd);
+
+    
+            if (!webSiteAdvantage.excludeProduct) {
+                let aggregateRatingScriptElement = d.createElement('script');
+                aggregateRatingScriptElement.type = 'application/ld+json';
+                aggregateRatingScriptElement.setAttribute("id", 'wsa-rich-snippets-jsonld-yotpo-product' + w.wsa_jsonLdIdPostfix.toLowerCase());
+                let inlineScript = d.createTextNode(JSON.stringify(jsonLd));
+                aggregateRatingScriptElement.appendChild(inlineScript);
+                d.querySelector('head').appendChild(aggregateRatingScriptElement);
+
+                console.log('aggregateRatingScriptElement', aggregateRatingScriptElement);
+            }
+        }
+    });
+}(window, document)
+{{/if}}
+</script>
