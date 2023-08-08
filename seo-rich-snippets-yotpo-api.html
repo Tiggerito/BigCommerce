@@ -8,11 +8,11 @@
 {{#if page_type '===' 'product' }}
 !function(w,d){
 
-    var yotpoApKey = '';
+    var yotpoAppKey = '';
     var productId = {{{json product.id}}};
     var productUrl = {{{json product.url}}};
 
-    var apiUrl = 'https://api-cdn.yotpo.com/v3/storefront/store/' + yotpoApKey + '/product/' + productId +'/reviews?page=1&perPage=5&sort=date,images,badge,rating';
+    var apiUrl = 'https://api-cdn.yotpo.com/v3/storefront/store/' + yotpoAppKey + '/product/' + productId +'/reviews?page=1&perPage=5&sort=date,images,badge,rating';
 
     fetch(apiUrl, {
         method: 'GET'
