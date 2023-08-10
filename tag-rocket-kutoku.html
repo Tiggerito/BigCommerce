@@ -6,11 +6,11 @@
     Copyright (C) 2023 Web Site Advantage
 */
 !function(w,t){
-    var scriptUrl = 'https://subdomain.doman.com/something.js'; // Change this to the script URL provided by Kutoku
+    var scriptUrl = 'https://subdomain.domain.com/something.js'; // Change this to the script URL provided by Kutoku
 
     if (w.location.search.search(/(ktk|tap_a|tap_s)=/) === -1) { return; }
 
-    function hasConcent() {
+    function hasConsent() {
         return true; // T.consent.analytics; // not sure what consent is required?
     }
 
@@ -30,7 +30,7 @@
             }    
         }
 
-        if (hasConcent()) {
+        if (hasConsent()) {
             addScriptTag();
         } 
 
@@ -38,12 +38,12 @@
 
             switch(eventName) {
                 case "ConsentChanged":
-                    if (hasConcent()) {
+                    if (hasConsent()) {
                         addScriptTag();
                     }
                     break;    
                 case "CheckoutStep5OrderCompleted":
-                    if (hasConcent()) {
+                    if (hasConsent()) {
                         // not sure. was "%%ORDER_SUBTOTAL_DISCOUNTED%%" implies some value is not included, shipping, handling etc. isTaxIncluded & taxTotal?
                         var orderSubtotalDiscounted = data.orderAmount - data.shippingCostTotal - data.handlingCostTotal;  
                         var data = {
