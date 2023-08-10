@@ -1,12 +1,13 @@
 <script data-cfasync="false"> 
 /*
-    Web Site Advantage: Tag Rocket Kutoku [v1.0] 
+    Web Site Advantage: Tag Rocket Kutoku [v1.1] 
     Kutoku click and purchase tracking
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2023 Web Site Advantage
 */
 !function(w,t){
-    var scriptUrl = 'https://subdomain.domain.com/r/key.js'; // Change this to the script URL provided by Kutoku
+    var scriptUrl           = 'https://subdomain.domain.com/r/key.js'; // Change this to the script URL provided by Kutoku
+    var conversionScriptUrl = 'https://subdomain.domain.com/c/key.js'; // Change this to the script URL provided by Kutoku
 
     if (w.location.search.search(/(ktk|tap_a|tap_s)=/) === -1) { return; }
 
@@ -59,11 +60,11 @@
                             orderId:  data.orderId,
                         };
                         var query = [];
-                        var scriptKey = getScriptKey(scriptUrl);
+                        var scriptKey = getScriptKey(conversionScriptUrl);
                         var cid = localStorage.getItem(scriptKey);
                         if (cid) { data.cid = cid; }
                         Object.keys(data).forEach(function(key) { query.push(key + "=" + encodeURIComponent(data[key])); });
-                        T.addScriptTag(scriptUrl+'?'+query.join("&")); 
+                        T.addScriptTag(conversionScriptUrl+'?'+query.join("&")); 
                     }
                     break;
             }                                
