@@ -6,12 +6,19 @@
     Copyright (C) 2023 Web Site Advantage
 */
 !function(w,t){
-    var scriptUrl = 'https://subdomain.domain.com/something.js'; // Change this to the script URL provided by Kutoku
+    var scriptUrl = 'https://subdomain.domain.com/r/key.js'; // Change this to the script URL provided by Kutoku
 
     if (w.location.search.search(/(ktk|tap_a|tap_s)=/) === -1) { return; }
 
     function hasConsent() {
         return true; // T.consent.analytics; // not sure what consent is required?
+    }
+
+    function getScriptKey(url) {
+        var parts = url.split('/');
+        var key = parts[parts.length - 1];
+        var keyWithoutExtension = key.split('.')[0];
+        return keyWithoutExtension;
     }
 
     w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
@@ -44,7 +51,7 @@
                     break;    
                 case "CheckoutStep5OrderCompleted":
                     if (hasConsent()) {
-                        // not sure. was "%%ORDER_SUBTOTAL_DISCOUNTED%%" implies some value is not included, shipping, handling etc. isTaxIncluded & taxTotal?
+                        // Not sure. was "%%ORDER_SUBTOTAL_DISCOUNTED%%" implies some value is not included, shipping, handling etc. isTaxIncluded & taxTotal?
                         var orderSubtotalDiscounted = data.orderAmount - data.shippingCostTotal - data.handlingCostTotal;  
                         var data = {
                             amount: orderSubtotalDiscounted, 
@@ -52,7 +59,8 @@
                             orderId:  data.orderId,
                         };
                         var query = [];
-                        var cid = localStorage.getItem("ylAslw");
+                        var scriptKey = getScriptKey(scriptUrl);
+                        var cid = localStorage.getItem(scriptKey);
                         if (cid) { data.cid = cid; }
                         Object.keys(data).forEach(function(key) { query.push(key + "=" + encodeURIComponent(data[key])); });
                         T.addScriptTag(scriptUrl+'?'+query.join("&")); 
