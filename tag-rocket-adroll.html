@@ -121,9 +121,9 @@
                     if(eventData.change > 0)  {
                         CallTag('addToCart', {products:[productInformation(eventData.item, 'ItemId')]});
                     }  
-                    else {
-                        CallTag('removeFromCart', productInformation(eventData.item, 'ItemId'));
-                    }             
+                    // else {
+                    //     CallTag('removeFromCart', productInformation(eventData.item, 'ItemId'));
+                    // }             
                     break;
                 case "ProductPage":
                     CallTag('productView', {products: [productInformation(eventData, 'ItemGroupId')]});

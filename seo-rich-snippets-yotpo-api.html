@@ -6,19 +6,40 @@
     Copyright (C) 2023 Web Site Advantage
 */   
 {{#if page_type '===' 'product' }}
+
 !function(w,d){
 
-    var yotpoAppKey = ''; // if left blank the code will attempt to dicover the app key from the Yotpo widget
+    var yotpoAppKey = ''; // if left blank the code will attempt to discover the app key from the Yotpo widget
     var productId = {{{json product.id}}};
     var productUrl = {{{json product.url}}};
 
+    // let someone specify the key from outside the script
+    if (w.wsa_yotpoAppKey && !yotpoAppKey) {
+        yotpoAppKey = w.wsa_yotpoAppKey;
+    }
+
     function getYotopAppKey() {
+        // V3 script
         var scriptElement = document.querySelector('script[src*="yotpo.com/v1/loader/"]');
 
         if (scriptElement) {
             var src = scriptElement.getAttribute('src');
             return src.split('/').pop();
         }
+
+        // older script
+        var scripts = document.getElementsByTagName('script');
+        var pattern = /\/\/staticw2\.yotpo\.com\/(.*?)\/widget\.js/g;
+        
+        for (var i = 0; i < scripts.length; i++) {
+            var scriptContent = scripts[i].textContent || scripts[i].innerText;
+            var match;
+        
+            while ((match = pattern.exec(scriptContent)) !== null) {
+                var key = match[1];
+                return key;
+            }
+        }   
     }
 
     function getReviews() {
@@ -77,8 +98,6 @@
                     let inlineScript = d.createTextNode(JSON.stringify(jsonLd));
                     aggregateRatingScriptElement.appendChild(inlineScript);
                     d.querySelector('head').appendChild(aggregateRatingScriptElement);
-
-                    console.log('aggregateRatingScriptElement', aggregateRatingScriptElement);
                 }
             }
         });
