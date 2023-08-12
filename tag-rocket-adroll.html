@@ -1,0 +1,150 @@
+<script data-cfasync="false">  
+/*
+    Web Site Advantage: Tag Rocket AdRoll [v1.0] 
+    Includes conversion details
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2023 Web Site Advantage
+*/
+!function(w,t){
+    // TODO: Update settings to match the values provided by AdRoll
+    w.adroll_adv_id = "ABCDEFGD123456IJKLMNO8";
+    w.adroll_pix_id = "IHTDEFGD123456234KLMNO8";
+
+    // TODO: how products are identified. set to an appropriate default
+    var itemGroupIdFormat = "[[psku]]||P[[pid]]"; 
+
+    var debug = false;
+
+    // End of settings --------
+
+    // links to documentation
+    // https://help.adroll.com/hc/en-us/articles/360053866191 = Automatically add the code
+    // https://help.adroll.com/hc/en-us/articles/212629938-Enhanced-Conversion-Tracking
+    // https://help.adroll.com/hc/en-us/articles/360004614652-Third-Party-Cookie-Consent-Banner-CookieBot
+    // https://help.adroll.com/hc/en-us/articles/360040116252-Connect-AdRoll-to-your-site-by-installing-the-AdRoll-Pixel
+    // https://help.adroll.com/hc/en-us/articles/360024510552-Set-Up-Your-Pixel-for-Dynamic-Ads
+    // https://help.adroll.com/hc/en-us/articles/360022483111-Product-Feed-Match-Rates
+    // https://help.adroll.com/hc/en-us/articles/216673657-Set-Up-Your-Product-Feed
+    // https://gist.github.com/dennismarlowe
+
+    var tagName = 'AdRoll';
+    var consentRequired = 'targetingAdvertising'; 
+
+    var getProductId = function(item) {
+        return T.getProductId(tagName, 'ItemGroupId', item, itemGroupIdFormat)  
+    };
+
+    var productInformation = function(item) {
+        // https://help.adroll.com/hc/en-us/articles/360040116252-Connect-AdRoll-to-your-site-by-installing-the-AdRoll-Pixel
+        // TODO: they mention product_group and product_action (AddToCart, Purchased). Maybe related to an older pixel
+        var product = {
+            product_id: getProductId(item),
+            price: ''+item.price
+        };
+
+        if (item.category) product.category = item.category.name || item.category;
+
+        if (item.quantity) product.quantity = ''+item.quantity; 
+
+        return product;
+    }
+
+    var cartInformation = function(cart) {
+        var tagData = {
+            conversion_value: ''+cart.orderAmount,
+            currency: cart.currency.code,
+            products: []
+        };
+
+        if (cart.orderId) {
+            tagData.ORDER_ID = cart.orderId;
+            tagData.order_id = cart.orderId;
+        }
+
+        {{~#if customer.id}}tagData.USER_ID ='{{customer.id}}';{{~/if}}
+
+        for(var i =0; i < cart.items.length; i++) {
+            var item = cart.items[i];
+
+            tagData.products.push(productInformation(item));
+        }
+        return tagData;
+    };
+
+    // AdRoll base tag setup
+    w.adroll_version = "2.0";
+    w.__adroll_loaded = true;
+    w.adroll = w.adroll || [];
+    w.adroll.f = ['setProperties', 'identify', 'track'];
+    var roundtripUrl = "https://s.adroll.com/j/" + adroll_adv_id + "/roundtrip.js";
+    for (var a = 0; a < w.adroll.f.length; a++) {
+        w.adroll[w.adroll.f[a]] = w.adroll[w.adroll.f[a]] || (function(n) {
+            return function() {
+                w.adroll.push([n, arguments])
+            }
+        })(w.adroll.f[a])
+    };
+
+    var CallTag = function() {
+        if(debug) console.log(tagName, arguments); 
+
+        adroll.track.apply(adroll.track, arguments); 
+    }
+
+    // Establish the TagRocket tag
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+    
+    T.init(function() { 
+
+        CallTag('pageView');
+
+        var scriptTagAdded = false;
+        function addScriptTag() {
+            if (!scriptTagAdded) {
+                scriptTagAdded = true;
+                T.addScriptTag(roundtripUrl); 
+            }    
+        }
+
+        if (T.consent[consentRequired]) {
+            addScriptTag();
+        }
+        else {
+            T.on('ConsentChanged',function(data){
+                if (T.consent[consentRequired]) addScriptTag();
+            });
+        }
+
+        T.on('.*',function(eventData, eventName){
+            switch(eventName) {   
+                case "CartItemChanged":  
+                    if(eventData.change > 0)  {
+                        CallTag('addToCart', {products:[productInformation(eventData.item, 'ItemId')]});
+                    }  
+                    else {
+                        CallTag('removeFromCart', productInformation(eventData.item, 'ItemId'));
+                    }             
+                    break;
+                case "ProductPage":
+                    CallTag('productView', {products: [productInformation(eventData, 'ItemGroupId')]});
+                    break; 
+                case "ProductsVisible":         
+                    var tagData = {
+                        products: eventData.list.items.map(function(item){
+                            return productInformation(item, 'ItemGroupId');
+                        })
+                    }
+
+                    if (eventData.search) tagData.keywords = eventData.search;
+
+                    CallTag({{~#if page_type '===' 'search'}}'productSearch'{{~else}}'productView'{{/if~}}, tagData);
+                    break;           
+                case "CheckoutStep5OrderCompleted":
+                    CallTag('purchase', cartInformation(eventData));
+                    break;
+            }                    
+        });
+      
+    })
+}(window,"TagRocket")
+</script>

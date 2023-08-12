@@ -6,7 +6,7 @@
     Copyright (C) 2023 Web Site Advantage
 */
 !function(w,t){
-    // Update settings to match your setup
+    // TODO: Update settings to match your setup
     var trackingId = 'tracking-id'; 
     
     // TODO: add variables for any settings made in the tags dashboard, like for goal/conversion IDs
@@ -15,12 +15,12 @@
     var goalSubscribeSuccess = '';
     var goalAddToWishList = '';
 
-    var debug = false;
-
     // TODO: how products are identified. set to an appropriate default
     var itemGroupIdFormat = "[[psku]]||P[[pid]]"; 
     var itemIdProductFormat = "";
     var itemIdVariantFormat = "";
+
+    var debug = false;
 
     // End of settings --------
 
@@ -62,6 +62,7 @@
     var cartInformation = function(cart, type) {
         var tagData = {
             total: cart.orderAmount,
+            currency: cart.currency.code,
             items: []
         };
 
@@ -72,6 +73,7 @@
 
             tagData.items.push(productInformation(item, type));
         }
+        return tagData;
     };
 
     // TODO: add base tag here, excluding code to add the script
