@@ -1,0 +1,145 @@
+<script data-cfasync="false">  
+{{#or (if page_type '===' 'product') (if page_type '===' 'cart') (if page_type '===' 'orderconfirmation') }}
+/*
+    Web Site Advantage: Tag Rocket Search Spring [v1.0] 
+    Product, Cart and Order Confirmation events for Search Spring
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2023 Web Site Advantage
+*/
+!function(w,t){
+    var siteId = 'SITEID'; 
+
+    var itemGroupIdFormat = "[[psku]]||P[[pid]]"; // sku - needs to match core field sku in the catalog
+    var itemIdProductFormat = "[[psku]]||P[[pid]]"; // childSku
+    var itemIdVariantFormat = "[[vsku]]"; // childSku
+
+    var debug = false;
+
+    // End of settings --------
+
+    // https://help.searchspring.net/hc/en-us/articles/360056186252
+    // https://docs.searchspring.com/reference/intellisuggest_tracking
+    // https://help.searchspring.net/hc/en-us/articles/201185129-Adding-IntelliSuggest-Tracking
+
+    var tagName = 'SearchSpring';
+    var consentRequired = 'analytics';
+
+    var getProductId = function(item, type) {
+        if (type == 'ItemId' && itemIdProductFormat && itemIdVariantFormat){
+            return T.getProductId(tagName, 'ItemId', item, itemIdProductFormat, itemIdVariantFormat);
+        }
+        else {
+            return T.getProductId(tagName, 'ItemGroupId', item, itemGroupIdFormat)
+        }  
+    };
+
+    var callQueue = [];
+
+    var callIntelliSuggest = function(functionName, options) {
+        if(debug) console.log(tagName, functionName, options); 
+
+        if (IntelliSuggest) {
+            trackIntelliSuggest();
+            IntelliSuggest[functionName](options);
+        }
+        else {
+            callQueue.push({functionName: functionName, options: options});
+        }
+    }
+
+    var trackIntelliSuggest = function() {
+        callQueue.forEach(function(call) {
+            IntelliSuggest[call.functionName](call.options);
+        });
+        callQueue = [];
+    }
+
+    var cartEvents = function(eventData) {
+        var seed = eventData.items.map(function(item){
+            return getProductId(item, 'ItemGroupId');
+        });
+        callIntelliSuggest("init", {"siteId" : siteId, "context" : "Basket", "seed" : seed}); 
+
+        {{#if customer.id}}callIntelliSuggest("setShopperId", '{{customer.id}}');{{/if}} 
+
+        for(var i = 0; i < eventData.items.length; i++) {
+            var item = eventData.items[i];
+
+            var sku = getProductId(item, 'ItemGroupId');
+            var childSku = getProductId(item, 'ItemId');
+
+            var newItem = {
+                "sku" : getProductId(item, 'ItemGroupId'),
+                "qty" : item.quantity,
+                "price" : item.price
+            };
+
+            if (childSku && childSku != sku) {
+                newItem.childSku = childSku;
+            };
+
+            callIntelliSuggest("haveItem",newItem);
+        }
+        {{#if page_type '===' 'cart'}}callIntelliSuggest("inBasket",{});{{/if}} 
+        {{#if page_type '===' 'orderconfirmation'}}
+
+        var options = {
+            orderId: eventData.orderId, // The Order ID (optional)
+            total: eventData.orderAmount, // The total order amount (optional)
+        };
+
+        if (eventData.consignments && eventData.consignments.shipping && eventData.consignments.shipping.length > 0) {
+            options.city = eventData.consignments.shipping[0].city; // Customer"s shipping address City (optional)
+            options.state = eventData.consignments.shipping[0].stateOrProvince; // Customer"s shipping address State (optional)
+            options.country = eventData.consignments.shipping[0].countryCode; // Customer"s shipping address 2-letter Country Code (optional)
+        }
+
+        callIntelliSuggest("inSale",options);
+        {{/if}} 
+        
+    }
+
+    // Establish the TagRocket tag
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+    
+    T.init(function() { 
+
+        var scriptTagAdded = false;
+        function addScriptTag() {
+            if (!scriptTagAdded) {
+                scriptTagAdded = true;
+                T.addPreconnectTag('https://cdn.searchspring.net'); 
+                T.addScriptTag('https://cdn.searchspring.net/intellisuggest/is.min.js',{}, trackIntelliSuggest);
+            }    
+        }
+
+        if (T.consent[consentRequired]) {
+            addScriptTag();
+        }
+        else {
+            T.on('ConsentChanged',function(data){
+                if (T.consent[consentRequired]) addScriptTag();
+            });
+        }
+
+        T.on('.*',function(eventData, eventName){
+            switch(eventName) {               
+                case "ProductPage":
+                    var productSku = getProductId(eventData, 'ItemGroupId');
+                    callIntelliSuggest("init", {"siteId" : siteId, "context" : "Product/" + productSku, "seed" : [productSku]});
+                    {{#if customer.id}}callIntelliSuggest("setShopperId", '{{customer.id}}');{{/if}} 
+                    callIntelliSuggest("viewItem", {"sku" : productSku});
+                    break;
+                case "CartPage":
+                case "CheckoutStep5OrderCompleted":
+                    cartEvents(eventData);
+                    break;
+                case "ProductClicked": // https://help.searchspring.net/hc/en-us/articles/201185129-Adding-IntelliSuggest-Tracking#productclicks
+                        break;
+            }                    
+        });
+      
+    })
+}(window,"TagRocket")
+{{/or}}
+</script>
