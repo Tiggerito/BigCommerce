@@ -1,0 +1,54 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Tag Rocket change order amount [v1.0] 
+    This is useful on Headless sites that use the Stencil checkout
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2023 Web Site Advantage
+*/
+!function(w,t){
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+
+    T.init(function() {
+        {{#if page_type '===' 'cart'}}
+
+        var cart = {{{json cart}}};
+
+        // CartPage has cartAmount modified to include tax and shipping
+        T.on('CartPage',function(data, eventName){
+            if (!data.cartAmountOriginal) {
+                data.cartAmountOriginal = data.cartAmount;
+
+                if (cart.shipping_handling && cart.shipping_handling.shipping_cost) {
+                    data.cartAmount -= cart.shipping_handling.shipping_cost.value;
+                }
+
+                if (cart.taxes) {
+                    cart.taxes.forEach(function(tax){                       
+                        data.cartAmount -= tax.cost.value;
+                    })
+                }
+            }
+        });   
+        {{/if}}
+
+        // checkout page: these do not have the cartAmount modified to include tax or shipping, so no change needed
+
+        {{#if page_type '===' 'orderconfirmation'}}
+        T.on('CartDataGathered',function(data, eventName){
+            if (!data.cart.orderAmountOriginal) {
+                data.cart.orderAmountOriginal = data.cart.orderAmount;
+
+                if (data.cart.taxTotal) {
+                    data.cart.orderAmount -= data.cart.taxTotal;
+                }
+
+                if (data.cart.shippingCostTotal) {
+                    data.cart.orderAmount -= data.cart.shippingCostTotal;
+                }
+
+            }
+        }); 
+        {{/if}}
+    })
+}(window,"TagRocket")
+</script>

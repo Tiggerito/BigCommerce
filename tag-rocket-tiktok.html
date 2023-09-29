@@ -1,5 +1,6 @@
 <script data-cfasync="false">   
 /*
+*** A MORE ADVANCED VERSION IS NOW INTEGRATED INTO TAG ROCKET - USE THAT ***
     Web Site Advantage: Tag Rocket TikTok [v1.6] 
     TikTok pixel
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tracking-with-tiktok-on-bigcommerce/
@@ -23,6 +24,11 @@
 
         // based on the accounts instructions/examples and the following document (which does not match up)
         // https://ads.tiktok.com/help/article?aid=10028
+        // https://ads.tiktok.com/help/article/get-started-pixel
+        // https://ads.tiktok.com/help/article/standard-events-parameters
+        // https://ads.tiktok.com/help/article/about-parameters
+        // https://ads.tiktok.com/help/article/using-cookies-with-tiktok-pixel
+
         !function (w,d,t) {
             w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{}};
                      

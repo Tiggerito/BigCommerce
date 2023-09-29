@@ -1,0 +1,17 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Tag Rocket cancel CartItemChanged events [v1.0] 
+    This is useful on Headless sites that use the Stencil checkout
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2023 Web Site Advantage
+*/
+!function(w,t){
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+
+    T.init(function() {
+        T.on('CartItemChanged',function(data, eventName){
+            data.cancelBuiltInEvents = true;
+        });     
+    })
+}(window,"TagRocket")
+</script>
