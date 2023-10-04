@@ -1,0 +1,108 @@
+<script data-cfasync="false">
+/*
+    Web Site Advantage: Min Quantity Fix [v1.0] 
+    Multiplies prices by min quantity to comply with Google Merchant Centre requirements
+    https://bigcommerce.websiteadvantage.com.au/
+    Copyright (C) 2023 Web Site Advantage
+*/   
+{{#if page_type '===' 'product' }}
+
+// place this in the footer
+
+!function(w,d){
+
+    // https://support.google.com/merchants/answer/6098334
+    // https://support.google.com/merchants/answer/6386198
+    // https://support.google.com/merchants/answer/6324371
+    // https://developers.google.com/search/docs/appearance/structured-data/product#unit-pricing-example
+
+    // https://support.google.com/merchants/answer/6324455
+    var unit_pricing_measure_include = true; 
+    var unit_pricing_measure_type = "ct"; // Per unit
+
+    // https://support.google.com/merchants/answer/6324490
+    var unit_pricing_base_measure_include = true; // requires unit_pricing_measure_include to be true
+    var unit_pricing_base_measure = 1; 
+    var unit_pricing_base_measure_type = "ct"; // Per unit
+    
+    // END of settings
+
+    var element = d.getElementById('wsa-rich-snippets-jsonld-product'); // change for development server
+
+    var json = JSON.parse(element.text);
+
+    var unit_pricing_measure = null;
+
+    if (!json.offers) 
+        return;
+
+    for(var i=0; i < json.offers.length; i++) {
+        var offer = json.offers[i];
+
+        if (offer["@type"] == "Offer") {
+            var priceSpecification = offer.priceSpecification;
+
+            if (!priceSpecification || !priceSpecification.eligibleQuantity) 
+                continue;
+                
+            unit_pricing_measure = priceSpecification.eligibleQuantity.minValue;
+
+            if (!unit_pricing_measure) 
+                continue;
+
+            // fix the price
+            if (offer.price) {
+                // Docs say only put price in the priceSpecification when adding a referenceQuantity
+                delete offer.price; 
+                delete offer.priceCurrency; 
+            }
+
+            if (priceSpecification.price) {
+                priceSpecification.price *= unit_pricing_measure;
+            }
+
+            if (priceSpecification.maxPrice) {
+                priceSpecification.maxPrice *= unit_pricing_measure;
+            }
+
+            if (priceSpecification.minPrice) {
+                priceSpecification.minPrice *= unit_pricing_measure;
+            }
+
+            delete priceSpecification.eligibleQuantity;
+
+            if (!unit_pricing_measure_include) 
+                continue;
+
+            priceSpecification.referenceQuantity = {
+                "@type": "QuantitativeValue",
+                "value": unit_pricing_measure,
+                "unitCode": unit_pricing_measure_type
+            };
+
+            if (!unit_pricing_base_measure_include) 
+                continue;
+
+            priceSpecification.referenceQuantity.valueReference = {
+                "@type": "QuantitativeValue",
+                "value": unit_pricing_base_measure,
+                "unitCode": unit_pricing_base_measure_type
+            };        
+        }
+        else if (offer["@type"] == "AggregateOffer") {
+            if (unit_pricing_measure == null)   
+                continue;
+
+            if (offer.lowPrice) {
+                offer.lowPrice *= unit_pricing_measure;
+            }
+            if (offer.highPrice) {
+                offer.highPrice *= unit_pricing_measure;
+            }
+        }
+    }
+    element.text = JSON.stringify(json);
+
+}(window, document)
+{{/if}}
+</script>
