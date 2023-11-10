@@ -1,33 +1,78 @@
 <script data-cfasync="false">  
 /*
-    Web Site Advantage: Tag Rocket Piwik Pro [v1.2] 
+    Web Site Advantage: Tag Rocket Piwik Pro [v2.0] 
     Piwik Pro Analytics
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2022 Web Site Advantage
 */
 !function(w,t){ 
-    var piwikInstanceName='your-instance-name'; // e.g. from https://mymatomosubdomain.matomo.cloud/
-    var piwikSiteId = 'XXX-XXX-XXX-XXX-XXX';
-    // create goals for "Contact", "Account Created", "Subscribe" and "Add To Wish List",  then set their id here:
-    var piwikGoalContactId = 0;
-    var piwikGoalSubscribeId = 0;
-    var piwikGoalAccountCreatedId = 0;
-    var piwikGoalAddToWishListId = 0;
+    var piwikInstanceName='your-instance-name'; // e.g. admin is https://your-instance-name.piwik.pro/ then instance name is your-instance-name
+    var piwikSiteId = 'XXX-XXX-XXX-XXX-XXX'; //  Menu->Administration->Sites & apps. Select site, copy ID
+    
+    // Create manually tracked goals for "Contact", "Account Created", "Subscribe" and "Add To Wish List", then set their Goal id (integer or UUID) here:
+    var piwikGoalContactId = "";
+    var piwikGoalSubscribeId = "";
+    var piwikGoalAccountCreatedId = "";
+    var piwikGoalAddToWishListId = "";
+    // goal values can be set in admin
 
-    // create custom dimensions for "Customer Group Name" (Visit) and "Page Type" (Action) then set their id here:
+    // Create manually tracked custom dimensions for "Customer Group Name" (Session dimensions) and "Page Type" (Event dimensions) then set their Dimension ID here:
     var piwikCustomDimensionCustomerGroupNameId = 0;
     var piwikCustomDimensionPageTypeId = 0;
 
-    var productIdentifier = function(product) {return ''+product.productId}; // productId, productSku
+    var consentRequired = 'analytics'; 
 
-    // https://help.piwik.pro/support/getting-started/install-a-tracking-code/
-    // https://help.piwik.pro/support/getting-started/track-ecommerce/
-    // https://developers.piwik.pro/en/latest/data_collection/web/guides.html#e-commerce
+    var productInformation = function(item, change) {
+
+        var product = {
+            name: item.name
+        };
+
+     //   product.sku = '' + (item.variantSku || item.productSku || item.productId);  // would variant SKUs confuse things?
+        product.sku = '' + (item.productSku || item.productId);
+
+        if (item.price || item.price == 0) product.price = item.price;
+
+        if (item.brand) product.brand = item.brand;
+
+        if (item.variantName) product.variant = item.variantName;
+
+        if (item.category || item.category.breadcrumbs) product.category = item.category.breadcrumbs;
+
+        if (change) product.quantity = change;
+        else if (item.quantity) product.quantity = item.quantity;
+
+        return product;
+    }
+
+    var productListInformation = function(cart) {
+        return cart.items.map(function(item){
+            return productInformation(item);
+        })
+    };
+
+    var orderInformation = function(order) {
+        
+        var orderInfo = {
+            subTotal: order.baseAmount,
+            tax: order.taxTotal,
+            shipping: order.shippingCostTotal,
+            discount: order.totalDiscount,
+            grandTotal: order.orderAmount
+        };
+
+
+        if (order.orderId) orderInfo.orderId = order.orderId;
+
+        return orderInfo;
+    };
+
+    // https://developers.piwik.pro/en/latest/data_collection/web/javascript_tracking_client/installation.html
 
     w._paq=w._paq||[];
 
     var PaqPush = function(args) {
-        // console.log('PaqPush('+ args.join(', ')+')');
+        // console.log('PaqPush', args);
         w._paq.push(args);
     }
 
@@ -54,91 +99,66 @@
 
     {{~#if customer.id}}PaqPush(['setUserId', '{{customer.id}}']);{{~/if}}
         
-    {{~#if customer.customer_group_name}}PaqPush(['setCustomDimension', piwikCustomDimensionCustomerGroupNameId, {{{json customer.customer_group_name}}}]);{{~/if}}
+    {{~#if customer.customer_group_name}}if(piwikCustomDimensionCustomerGroupNameId)PaqPush(['setCustomDimensionValue', piwikCustomDimensionCustomerGroupNameId, {{{json customer.customer_group_name}}}]);{{~/if}}
 
     w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
     
     T.init(function() { 
 
-        T.addPreconnectTag('https://'+piwikInstanceName+'.piwik.pro/');
-        T.addScriptTag('https://'+piwikInstanceName+'.piwik.pro/ppms.js', {async:true, defer:true});
+        var scriptTagAdded = false;
+        function addScriptTag() {
+            if (!scriptTagAdded) {
+                scriptTagAdded = true;
+                T.addPreconnectTag('https://'+piwikInstanceName+'.piwik.pro/');
+                T.addScriptTag('https://'+piwikInstanceName+'.piwik.pro/ppms.js', {async:true, defer:true});
+            }
+        };
 
-        PaqPush(['setCustomDimension', piwikCustomDimensionPageTypeId, T.pageType]);
+        if (T.consent[consentRequired]) {
+            addScriptTag();
+        }
+        else {
+            T.on('ConsentChanged',function(data){
+                if (T.consent[consentRequired]) addScriptTag();
+            });
+        }
 
-        {{~#if settings.shopper_consent_tracking_enabled}}
-        PaqPush(['requireConsent']);
-        if (T.consent.analytics) PaqPush(['setConsentGiven']);
-        {{~/if}}
+        if (piwikCustomDimensionPageTypeId) {
+            PaqPush(['setCustomDimensionValue', piwikCustomDimensionPageTypeId, T.pageType]);
+        }
 
-        {{~#if page_type '===' 'category'}}
-        PaqPush(['setEcommerceView',
-            false, // Product name is not applicable for a category view.
-            false, // Product SKU is not applicable for a category view.
-            {{{json category.name}}}, // (Optional) Product category, or array of up to 5 categories
-        ]);
-        {{~/if}}
-
-        {{~#if page_type '===' 'product'}}
-        // trackPageView done later so after setEcommerceView 
-        {{~else}}
         PaqPush(['trackPageView']);
         PaqPush(['enableLinkTracking']); 
-        {{~/if}}
 
-        T.on('.*',function(data, eventName){
+        T.on('.*',function(eventData, eventName){
             switch(eventName) {
-                {{~#if settings.shopper_consent_tracking_enabled}}
-                case "ConsentChanged":
-                    if (T.consent.analytics) PaqPush(['setConsentGiven']);
-                    break;
-                {{~/if}}
                 case "QuickSearch":
                 case "SearchPage":
-                    PaqPush(['trackSiteSearch', data.term]);
+                    PaqPush(['trackSiteSearch', eventData.term]);
                     break;
                 case "ProductPage":
-                    PaqPush(['setEcommerceView',
-                        productIdentifier(data), // (Required) productSKU
-                        data.name, // (Optional) productName
-                        data.category&&data.category.name, // (Optional) categoryName
-                        data.price // (Optional) price
+                    PaqPush(['ecommerceProductDetailView',
+                        [productInformation(eventData)]
                     ]);
-                    PaqPush(['trackPageView']); // setEcommerceView requires this to send the data
-                    PaqPush(['enableLinkTracking']);
                     break;
-                case "CartItemChanged":
-                    PaqPush(['clearEcommerceCart']); 
-                    for(var i =0; i < data.cart.items.length; i++){
-                        var item = data.cart.items[i];
-                        PaqPush(['addEcommerceItem',
-                            productIdentifier(item), // (Required) productSKU
-                            item.name, // (Optional) productName
-                            item.category&&item.category.name, // (Optional) productCategory
-                            item.price, // (Recommended) price
-                            item.quantity // (Optional, defaults to 1) quantity
-                        ]);     
+                case "CartItemChanged": 
+                    if(eventData.change > 0)  {
+                        PaqPush(['ecommerceAddToCart',
+                            [productInformation(eventData.item, eventData.change)]
+                        ]);
                     }
-                    PaqPush(['trackEcommerceCartUpdate', data.cart.cartAmount]); 
+                    else {
+                        PaqPush(['ecommerceRemoveFromCart',
+                            [productInformation(eventData.item, -eventData.change)]
+                        ]);
+                    } 
                     break;
-                case "CheckoutStep5OrderCompleted":
-                    PaqPush(['clearEcommerceCart']); 
-                    for(var i =0; i < data.items.length; i++) {
-                        var item = data.items[i];
-                        PaqPush(['addEcommerceItem',
-                            productIdentifier(item), // (Required) productSKU
-                            item.name, // (Optional) productName
-                            item.category&&item.category.name, // (Optional) productCategory
-                            item.price, // (Recommended) price
-                            item.quantity // (Optional, defaults to 1) quantity
-                        ]); 
-                    }
-                    PaqPush(['trackEcommerceOrder',
-                        data.orderId, // (Required) orderId
-                        data.orderAmount, // (Required) grandTotal (revenue)
-                        // 9.99, // (Optional) subTotal
-                        // 1.5, // (optional) tax
-                        // 1, // (optional) shipping
-                        // false // (optional) discount
+                case "CheckoutStep5OrderCompleted": 
+                    PaqPush(['ecommerceOrder',
+                        eventData.items.map(function(item){
+                            return productInformation(item);
+                        }), 
+                        orderInformation(eventData)
                     ]); 
                     break;
                 case "AccountCreated":
