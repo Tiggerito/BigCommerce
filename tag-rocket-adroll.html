@@ -1,6 +1,6 @@
 <script data-cfasync="false">  
 /*
-    Web Site Advantage: Tag Rocket AdRoll [v1.0] 
+    Web Site Advantage: Tag Rocket AdRoll [v1.1] 
     Includes conversion details
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2023 Web Site Advantage
@@ -34,7 +34,7 @@
         return T.getProductId(tagName, 'ItemGroupId', item, itemGroupIdFormat)  
     };
 
-    var productInformation = function(item) {
+    var productInformation = function(item, type, change) {
         // https://help.adroll.com/hc/en-us/articles/360040116252-Connect-AdRoll-to-your-site-by-installing-the-AdRoll-Pixel
         // TODO: they mention product_group and product_action (AddToCart, Purchased). Maybe related to an older pixel
         var product = {
@@ -44,7 +44,8 @@
 
         if (item.category) product.category = item.category.name || item.category;
 
-        if (item.quantity) product.quantity = ''+item.quantity; 
+        if (change) product.quantity = ''+change;
+        else if (item.quantity) product.quantity = ''+item.quantity; 
 
         return product;
     }
@@ -119,10 +120,10 @@
             switch(eventName) {   
                 case "CartItemChanged":  
                     if(eventData.change > 0)  {
-                        CallTag('addToCart', {products:[productInformation(eventData.item, 'ItemId')]});
+                        CallTag('addToCart', {products:[productInformation(eventData.item, 'ItemId', eventData.change)]});
                     }  
                     // else {
-                    //     CallTag('removeFromCart', productInformation(eventData.item, 'ItemId'));
+                    //     CallTag('removeFromCart', productInformation(eventData.item, 'ItemId', -eventData.change));
                     // }             
                     break;
                 case "ProductPage":

@@ -1,0 +1,99 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Tag Rocket Google Ads/Meta ID Change on Currency [v1.0] 
+    Changes the IDs sent to Google Ads and Meta for a purchase based on currency
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2023 Web Site Advantage
+*/
+!function(w,t){
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+
+    T.init(function() {
+        T.on('GtagCommandPending',function(data, eventName){
+
+            var args = data.arguments;
+
+            if(args.length < 3) return;
+
+            var event = args[1];
+            var options = args[2];
+
+            // Only consider Google Ads events
+            if (!options.send_to || !options.send_to.startsWith('AW-')) return;
+
+            var conversionLabel = options.send_to.includes('/');
+
+            var currency = '{{currency_selector.active_currency_code}}';
+
+            // I think we would want all events on that domain to be directed to the appropriate conversion IDs?
+            // If so, we need to detect if the event is a purchase or conversion when adding the conversion label
+            // What other conversion labels may be on the domain? I don't think any?
+            
+            if (conversionLabel && (event == 'purchase' || event == 'conversion')) {            
+                switch (currency) {
+                    case "NZD":
+                        console.log('NZD Google Ads purchase conversion label');
+                        // options.send_to = 'AW-803944924/_AWoCJXMjNsYENzzrP8C';                       
+                        break;
+                    case "MYR":
+                        console.log('MYR Google Ads purchase conversion label');
+                        break;
+                    case "SGD":
+                        console.log('SGD Google Ads purchase conversion label');
+                        break;
+                    case "AUD":
+                        console.log('AUD Google Ads purchase conversion label');
+                        break;
+                }   
+            }       
+            else {
+                // standard event
+                switch (currency) {
+                    case "NZD":
+                        console.log('NZD Google Ads event');
+                        // options.send_to = 'AW-803944924';
+                        break;
+                    case "MYR":
+                        console.log('MYR Google Ads event');
+                        break;
+                    case "SGD":
+                        console.log('SGD Google Ads event');
+                        break;
+                    case "AUD":
+                        console.log('AUD Google Ads event');
+                        break;
+                }   
+            }                 
+        }); 
+        T.on('FbqCommandPending',function(data, eventName){
+
+            var args = data.arguments;
+
+            if(args.length < 3) return;
+
+            var event = args[0];
+
+            // init event is the one where the ID is set
+            if (event != 'init') return;
+
+            var currency = '{{currency_selector.active_currency_code}}';
+
+            switch (currency) {
+                case "NZD":
+                    console.log('NZD Meta');
+                    // args[1] = '303135300300491';
+                    break;
+                case "MYR":
+                    console.log('MYR Meta');
+                    break;
+                case "SGD":
+                    console.log('SGD Meta');
+                    break;
+                case "AUD":
+                    console.log('AUD Meta');
+                    break;
+            }                           
+        }); 
+    })
+}(window,"TagRocket")
+</script>

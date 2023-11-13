@@ -1,6 +1,6 @@
 <script data-cfasync="false">  
 /*
-    Web Site Advantage: Tag Rocket Full Monte [v1.0] 
+    Web Site Advantage: Tag Rocket Full Monte [v1.1] 
     This is a complete template to help build other tags
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2023 Web Site Advantage
@@ -40,22 +40,25 @@
     };
 
     // TODO: update to the product data format this tag expects
-    var productInformation = function(item, type) {
+    var productInformation = function(item, type, change) {
 
         var type = type || 'ItemGroupId';
 
         var product = {
             id: getProductId(item, type),
-            name: item.name,
-            price: item.price
+            name: item.name
         };
+
+        if (item.price || item.price == 0) product.price = item.price;
 
         // TODO: if there is a variant specific field
         if (item.isVariant && itemIdProductFormat && itemIdVariantFormat) product.variantId = getProductId(item, 'ItemId'); 
 
         if (item.category) product.category = item.category.name || item.category;
-        if (item.quantity) product.quantity = item.quantity; // TODO: if supporting removes, this could be negative. check the tag to see if it wants it always to be positive
 
+        if (change) product.quantity = change;
+        else if (item.quantity) product.quantity = item.quantity; // TODO: if supporting removes, this could be negative. check the tag to see if it wants it always to be positive
+    
         return product;
     }
 
@@ -144,10 +147,10 @@
                     break;
                 case "CartItemChanged":  
                     if(eventData.change > 0)  {
-                        CallTag('addToCart', productInformation(eventData.item, 'ItemId'));
+                        CallTag('addToCart', productInformation(eventData.item, 'ItemId', eventData.change));
                     }  
                     else {
-                        CallTag('removeFromCart', productInformation(eventData.item, 'ItemId'));
+                        CallTag('removeFromCart', productInformation(eventData.item, 'ItemId', -eventData.change));
                     }             
                     break;
                 case "CartPage":

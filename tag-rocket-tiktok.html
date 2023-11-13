@@ -1,7 +1,7 @@
 <script data-cfasync="false">   
 /*
 *** A MORE ADVANCED VERSION IS NOW INTEGRATED INTO TAG ROCKET - USE THAT ***
-    Web Site Advantage: Tag Rocket TikTok [v1.6] 
+    Web Site Advantage: Tag Rocket TikTok [v1.7] 
     TikTok pixel
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tracking-with-tiktok-on-bigcommerce/
     Copyright (C) 2021 Web Site Advantage
@@ -40,7 +40,7 @@
             ttq.page();
         }(w,document,ttqName);
 
-        var buildItem = function(itemData) {
+        var buildItem = function(itemData, change) {
             var item = {
                 content_id: productIdentifier(itemData),
                 content_type: 'product_group',
@@ -54,9 +54,9 @@
             if (itemData.quantity) {
                 item.quantity = itemData.quantity;
             }
-            if (itemData.change) { 
-                item.quantity = itemData.change;
-                item.value = item.quantity * item.price;
+            if (change) { 
+                item.quantity = change;
+                item.value = change * item.price;
                 item.currency = itemData.currency;
             }
             return item;
@@ -89,7 +89,7 @@
                     });
                     break;
                 case "CartItemChanged": 
-                    if (data.change > 0) send('AddToCart', buildItem(data.item));
+                    if (data.change > 0) send('AddToCart', buildItem(data.item, data.change));
                     break;
                 case "AddToWishList":
                     send('AddToWishlist', buildItem(data));
@@ -102,7 +102,7 @@
                     break;
                 case "CheckoutStep1CustomerStarted":
                     send('InitiateCheckout', {
-                        value: data.cartAmount,
+                        value: data.cart.grandTotal || data.cartAmount,
                         currency: data.currency.code,
                         content_type: 'product_group',
                         contents: data.items.map(function(item) {return buildItem(item)})

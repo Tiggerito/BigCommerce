@@ -1,6 +1,6 @@
 <script data-cfasync="false">  
 /*
-    Web Site Advantage: Tag Rocket Blotout Edgetag [v1.1] 
+    Web Site Advantage: Tag Rocket Blotout Edgetag [v1.3] 
     Blotout Edgetag 
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2023 Web Site Advantage
@@ -212,7 +212,7 @@
 
     if (userData.email) sendBigCommerceEmail(userData.email);
 
-    var buildProduct = function(item, provider, preferedType) {
+    var buildProduct = function(item, provider, preferedType, change) {
         // facebook and tiktok use the product | product_group
         // settings in admin decide if variantId is used
 
@@ -222,7 +222,7 @@
         }
 
         var product = {
-            quantity: item.quantity || 1,
+            quantity: change || item.quantity || 1,
             item_price: item.price,
             title: item.name,
             type: type
@@ -309,7 +309,7 @@
                             EdgeTag('tag', 'AddToCart', {
                                 currency: data.currency,
                                 value: data.price,
-                                contents: [buildProduct(data.item, provider, 'product')],
+                                contents: [buildProduct(data.item, provider, 'product', data.change)],
                             }, buildDestinationObject(provider), { method: 'beacon' });
                         });
                     }
@@ -322,7 +322,7 @@
                         EdgeTag('tag', 'InitiateCheckout', {
                             contents: contents,
                             currency: data.currency.code,
-                            value: data.cartAmount
+                            value: data.grandTotal || data.cartAmount
                         }, buildDestinationObject(provider)); 
                     });
                     break;
@@ -338,7 +338,7 @@
                         EdgeTag('tag', 'AddShippingInfo', {
                             contents: contents,
                             currency: data.currency.code,
-                            value: data.cartAmount
+                            value: data.grandTotal || data.cartAmount
                         }, buildDestinationObject(provider)); 
                     });
                     break;
@@ -350,7 +350,7 @@
                         EdgeTag('tag', 'AddPaymentInfo', {
                             contents: contents,
                             currency: data.currency.code,
-                            value: data.cartAmount
+                            value: data.grandTotal || data.cartAmount
                         }, buildDestinationObject(provider)); 
                     });
                     break;

@@ -1,6 +1,6 @@
 <script data-cfasync="false">   
 /*
-    Web Site Advantage: Tag Rocket SnapChat [v1.0] 
+    Web Site Advantage: Tag Rocket SnapChat [v1.2] 
     SnapChat pixel
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2022 Web Site Advantage
@@ -78,7 +78,7 @@
                     if (data.change > 0) send('track', 'ADD_CART', {
                         price: data.price,
                         currency: data.currency,
-                        number_items: data.quantity,
+                        number_items: data.change,
                         item_ids: [productIdentifier(data.item)]
                     });
                     break;
@@ -97,7 +97,7 @@
                     break;
                 case "CheckoutStep1CustomerStarted":
                     send('track', 'START_CHECKOUT', {
-                        price: data.cartAmount,
+                        price: data.cart.grandTotal || data.cartAmount,
                         currency: data.currency.code,
                         number_items: data.items.reduce(function(previousValue, currentItem) {return previousValue + currentItem.quantity},0),
                         item_ids: data.items.map(function(item) {return productIdentifier(item)})

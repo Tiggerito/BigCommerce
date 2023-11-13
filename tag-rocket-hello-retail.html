@@ -1,6 +1,6 @@
 <script data-cfasync="false"> 
 /*
-    Web Site Advantage: Tag Rocket Hello Retail [v1.4] 
+    Web Site Advantage: Tag Rocket Hello Retail [v1.5] 
     Hello Retail API support
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2021 Web Site Advantage
@@ -43,7 +43,7 @@
                     // https://apidocs.helloretail.com/cart-tracking/tracking-a-complete-cart
                     // *******************************************
                     var cartData = {
-                        total: data.cart.cartAmount,
+                        total: data.cart.grandTotal || data.cart.cartAmount,
                         url: '{{settings.base_url}}{{urls.cart}}'
                     };
 

@@ -1,0 +1,24 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Tag Rocket GA4 Fudge Accelerated [v1.0] 
+    Detects if Fudge is applying its acceleration to a page. Helpful for A/B testing
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2023 Web Site Advantage
+*/
+!function(w,t){
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+
+    var accelerated = w.__fudge__ && w.__fudge__.accelerated; 
+    
+    T.init(function() {   
+        T.on('GtagCommandPending',function(data, eventName){
+
+            if (data.arguments.length >= 3) { // could also limit to just GA4 destinations
+                var options = data.arguments[2];
+
+                options.fudge_accelerated = accelerated; // define this as a custom dimension in GA4
+            };        
+        });
+    })
+}(window,"TagRocket")
+</script>
