@@ -1,0 +1,178 @@
+<script data-cfasync="false">  
+/*
+    Web Site Advantage: Tag Rocket Reddit Ads [v1.0] 
+    Base script plus ecommerce events
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2023 Web Site Advantage
+*/
+!function(w,t){
+    var advertiserId = 'advertiser-id'; 
+    
+    var itemGroupIdFormat = "[[psku]]||P[[pid]]"; 
+
+    var enableFirstPartyCookies = true;
+    var useDecimalCurrencyValues = true;
+
+    var debug = false;
+
+    // End of settings --------
+
+    // links to documentation
+    // https://reddit.my.site.com/helpcenter/s/article/Install-the-Reddit-Pixel-on-your-website - includes a list of standard events
+    // https://reddit.my.site.com/helpcenter/s/article/Reddit-Pixel-Event-Metadata - parameters for the events
+    // https://reddit.my.site.com/helpcenter/s/article/Reddit-Pixel-Advanced-Matching
+    // https://reddit.my.site.com/helpcenter/s/article/Reddit-Pixel-Custom-Events - example is a promotion view
+    // https://reddit.my.site.com/helpcenter/s/article/Reddit-Ads-Pixel-Retargeting
+    // https://reddit.my.site.com/helpcenter/s/article/Verify-the-Reddit-Pixel-is-working-correctly
+    // https://reddit.my.site.com/helpcenter/s/article/Events-Manager
+
+    var tagName = 'Reddit';
+    var consentRequired = 'targetingAdvertising';
+
+    var getProductId = function(item) {
+        return T.getProductId(tagName, 'ItemGroupId', item, itemGroupIdFormat);
+    };
+
+    var productInformation = function(item, change) {
+        var product = {
+            id: getProductId(item),
+            name: item.name
+        };
+
+        if (item.category) 
+            product.category = item.category.name || item.category;
+        else 
+            product.category = '-No Category-'; // as it is required.
+
+        return product;
+    }
+
+    var cartInformation = function(cart) {
+        var tagData = {
+            value: cart.orderAmount,
+            currency: cart.currency.code,
+            itemCount: 0,
+            products: []
+        };
+
+        if (cart.orderId) tagData.transactionId = '' + cart.orderId;
+
+        for(var i =0; i < cart.items.length; i++) {
+            var item = cart.items[i];
+
+            tagData.itemCount += item.quantity;
+
+            tagData.products.push(productInformation(item));
+        }
+        return tagData;
+    };
+
+    if(!w.rdt){
+        var p=w.rdt=function(){
+            p.sendEvent?p.sendEvent.apply(p,arguments):p.callQueue.push(arguments) // directly send if loaded, else queue it up
+        };
+        p.callQueue=[];
+    }
+
+    var CallTag = function(arg1) {
+        if(debug) console.log(tagName, arguments); 
+
+        w.rdt.apply(w.rdt, arguments); 
+    }
+
+    // Establish the TagRocket tag
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+    
+    T.init(function() { 
+
+        var initOptions = {
+            // optOut: false, // default. opt out of retargetting
+            integration: "tagrocket",
+            useDecimalCurrencyValues: useDecimalCurrencyValues // GTM template is always true, so is suggested code
+        };
+
+        {{#if customer.email}}
+        initOptions.email = {{{json (trim customer.email)}}}.toLowerCase();
+        {{/if}}
+        {{#if customer.id}}
+        initOptions.externalId = '{{customer.id}}';
+        {{/if}}
+
+        CallTag('init', advertiserId, initOptions); 
+
+        if (!enableFirstPartyCookies) {
+            CallTag('disableFirstPartyCookies');
+        }
+
+        CallTag('track', 'PageVisit');
+
+        var scriptTagAdded = false;
+        function addScriptTag() {
+            if (!scriptTagAdded) {
+                scriptTagAdded = true;
+                T.addPreconnectTag('https://www.redditstatic.com'); 
+                T.addScriptTag('https://www.redditstatic.com/ads/pixel.js'); 
+            }    
+        }
+
+        if (T.consent[consentRequired]) {
+            addScriptTag();
+        }
+        else {
+            T.on('ConsentChanged',function(data){
+                if (T.consent[consentRequired]) addScriptTag();
+            });
+        }
+
+        T.on('.*',function(eventData, eventName){
+            switch(eventName) {               
+
+                case "ProductPage": 
+                    CallTag('track', 'ViewContent', {
+                        products: [productInformation(eventData)]
+                    });
+                    break;
+                case "ProductsVisible": 
+                    var tagData = {
+                        products: eventData.list.items.map(function(item){
+                            return productInformation(item);
+                        })
+                    }
+                    CallTag('track', eventData.search ? 'Search' : 'ViewContent', tagData);
+                    break;
+                case "CartItemChanged":  
+                    if(eventData.change > 0)  {
+                        CallTag('track', 'AddToCart', {
+                            itemCount: eventData.change,
+                            currency: eventData.currency,
+                            value: eventData.price * eventData.change,
+                            products: [productInformation(eventData.item, eventData.change)]
+                        });
+                    }               
+                    break;
+                case "CheckoutStep5OrderCompleted":
+                    CallTag('track', 'Purchase', cartInformation(eventData));
+                    break;
+                case "AccountCreated": 
+                    CallTag('track', 'SignUp');
+                    break;
+                case "ContactSuccess": 
+                    CallTag('track', 'Lead');
+                    break;
+                case "SubscribeSuccess":
+                    CallTag('track', 'Lead');
+                    break;
+                case "AddToWishList":
+                    CallTag('track', 'AddToWishlist', {
+                        itemCount: 1,
+                        currency: eventData.currency,
+                        value: eventData.price,
+                        products: [productInformation(eventData)]
+
+                    });
+                    break;
+            }                    
+        });     
+    })
+}(window,"TagRocket")
+</script>
