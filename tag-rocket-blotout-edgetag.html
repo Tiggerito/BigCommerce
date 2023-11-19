@@ -1,6 +1,6 @@
 <script data-cfasync="false">  
 /*
-    Web Site Advantage: Tag Rocket Blotout Edgetag [v1.3] 
+    Web Site Advantage: Tag Rocket Blotout Edgetag [v1.4] 
     Blotout Edgetag 
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2023 Web Site Advantage
@@ -308,7 +308,7 @@
                         forEachModifiedProvider(function(provider) {
                             EdgeTag('tag', 'AddToCart', {
                                 currency: data.currency,
-                                value: data.price,
+                                value: data.price * data.change,
                                 contents: [buildProduct(data.item, provider, 'product', data.change)],
                             }, buildDestinationObject(provider), { method: 'beacon' });
                         });

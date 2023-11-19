@@ -1,6 +1,6 @@
 <script data-cfasync="false">  
 /*
-    Web Site Advantage: Tag Rocket Piwik Pro [v2.0] 
+    Web Site Advantage: Tag Rocket Piwik Pro [v2.1] 
     Piwik Pro Analytics
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2022 Web Site Advantage
@@ -19,6 +19,12 @@
     // Create manually tracked custom dimensions for "Customer Group Name" (Session dimensions) and "Page Type" (Event dimensions) then set their Dimension ID here:
     var piwikCustomDimensionCustomerGroupNameId = 0;
     var piwikCustomDimensionPageTypeId = 0;
+
+    var enableHeartBeatTimer = true;
+    var enableLinkTracking = true;
+    var enableJSErrorTracking = true;
+
+    // End of settings --------
 
     var consentRequired = 'analytics'; 
 
@@ -61,7 +67,6 @@
             grandTotal: order.orderAmount
         };
 
-
         if (order.orderId) orderInfo.orderId = order.orderId;
 
         return orderInfo;
@@ -78,24 +83,17 @@
 
     PaqPush(['setTrackerUrl', 'https://'+piwikInstanceName+'.piwik.pro/ppms.php']);
     PaqPush(['setSiteId', piwikSiteId]); 
+
+    // For details on commands see:
+    // https://developers.piwik.pro/en/latest/data_collection/web/javascript_tracking_client/api.html
     
-    PaqPush(['enableHeartBeatTimer']); 
-
-    // Share the tracking cookie across example.com, www.example.com, subdomain.example.com, ...
-    //PaqPush(["setCookieDomain", "*.example.com"]);
-    //PaqPush(["setCookiePath", "/data/something_useful"]);
-
-    // Tell Piwik the website domain so that clicks on these domains are not tracked as "Outlinks"
-    //PaqPush(["setDomains", "*.example.com"]);
-
-    // specify which domains should be linked
-    //PaqPush(["setDomains", ["*.example.com", "otherdomain.com"]]);
-
-    // enable cross domains linking
-    //PaqPush(["enableCrossDomainLinking"]);
-
-    // measure performance on 33% of page loads
-    //PaqPush(["setTimingDataSamplingOnPageLoad", 33]);
+    if (enableHeartBeatTimer) {
+        PaqPush(['enableHeartBeatTimer']); 
+    }
+    
+    if (enableJSErrorTracking) {
+        PaqPush(["enableJSErrorTracking"]);
+    } 
 
     {{~#if customer.id}}PaqPush(['setUserId', '{{customer.id}}']);{{~/if}}
         
@@ -128,8 +126,12 @@
         }
 
         PaqPush(['trackPageView']);
-        PaqPush(['enableLinkTracking']); 
 
+        if (enableLinkTracking) {
+            // enableLinkTracking should be called right after the first trackPageView or trackEvent.
+            PaqPush(['enableLinkTracking']); 
+        }
+        
         T.on('.*',function(eventData, eventName){
             switch(eventName) {
                 case "QuickSearch":
