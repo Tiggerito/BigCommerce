@@ -1,6 +1,6 @@
 <script data-cfasync="false">   
 /*
-    Web Site Advantage: Tag Rocket Taboola [v2.0] 
+    Web Site Advantage: Tag Rocket Taboola [v2.1] 
     Taboola base pixel, conversion events and ecommevents
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tracking-with-taboola-on-bigcommerce/
     Copyright (C) 2021 Web Site Advantage
@@ -8,9 +8,9 @@
 !function(w,t){
     var taboolaAccountId = 0; // REPLACE_WITH_YOUR_ID;
 
-    var useEcommEvents = true;
+    var useEcommEvents = true; // For DCO (Dynamic Creative Optimization) accounts
 
-    var campaignIds = "";
+    var campaignIds = ""; // An optional parameter containing a list of campaign id these events are relevant to
 
     var itemGroupIdFormat = "[[psku]]||P[[pid]]"; 
 
@@ -54,7 +54,7 @@
             cartDetails: []
         };
 
-        if (cart.orderId) tagData.orderId = cart.orderId;
+        if (cart.orderId) tagData.orderId = '' + cart.orderId;
 
         for(var i =0; i < cart.items.length; i++) {
             var item = cart.items[i];
@@ -67,8 +67,6 @@
     w._tfa = w._tfa||[];
     
     var CallTag = function(eventData) {
-
-
 
         eventData.id = taboolaAccountId;
 
@@ -97,7 +95,7 @@
             }    
         }
 
-        CallTag({notify: 'event', name: 'page_view'}); // I thin name is case sensitive, with events lower case and ecevents upper case
+        CallTag({notify: 'event', name: 'page_view'}); // I think name is case sensitive, with events lower case and ecevents upper case
     
         if (T.consent[consentRequired]) {
             addScriptTag();        
@@ -142,7 +140,7 @@
                         }
 
                         if (eventData.list.id) {
-                            tagData.category = eventData.list.id;
+                            tagData.categoryId = eventData.list.id;
                         }
 
                         if (eventData.search) {
@@ -202,9 +200,12 @@
                         tagData.notify = 'ecevent';
                         tagData.name = 'PURCHASE';
 
-                        // not sure of the name for customer_type, I can't find it in the docs
-                        if (eventData.new_customer === true) tagData.customer_type = 1;
-                        if (eventData.new_customer === false) tagData.customer_type = 0;
+                        if (eventData.new_customer === true) {
+                            tagData.custType = 1;
+                        }
+                        if (eventData.new_customer === false) {
+                            tagData.custType = 0;
+                        }
 
                         CallTag(tagData);
                     }
@@ -228,6 +229,7 @@
                         });
                     }
                     break;
+                // REMOVE_FROM_WISH_LIST
             }                    
         });     
     })

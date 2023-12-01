@@ -1,0 +1,23 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Tag Rocket GA4 Language [v1.0] 
+    Send the pages language to GA4
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2023 Web Site Advantage
+*/
+!function(w,t){
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+    
+    T.init(function() { 
+      
+        T.on('GtagCommandPending',function(data, eventName){
+
+            if (data.arguments[0] === 'config' && data.arguments.length >= 3) {
+                var options = data.arguments[2];
+
+                options.lang = document.documentElement.getAttribute('lang');
+            };         
+        });
+    })
+}(window,"TagRocket")
+</script>

@@ -1,6 +1,6 @@
 <script data-cfasync="false">  
 /*
-    Web Site Advantage: Tag Rocket Piwik Pro [v2.1] 
+    Web Site Advantage: Tag Rocket Piwik Pro [v2.2] 
     Piwik Pro Analytics
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2022 Web Site Advantage
@@ -43,7 +43,7 @@
 
         if (item.variantName) product.variant = item.variantName;
 
-        if (item.category || item.category.breadcrumbs) product.category = item.category.breadcrumbs;
+        if (item.category && item.category.breadcrumbs) product.category = item.category.breadcrumbs;
 
         if (change) product.quantity = change;
         else if (item.quantity) product.quantity = item.quantity;
