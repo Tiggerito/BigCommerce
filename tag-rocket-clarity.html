@@ -1,0 +1,81 @@
+<script data-cfasync="false">  
+/*
+    Web Site Advantage: Tag Rocket Clarity [v1.0] 
+    Microsoft Clarity including custom tags, customer identification and consent management
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2024 Web Site Advantage
+*/
+!function(w,t){
+    // You can find your project ID in the Overview section of Clarity
+    var projectId = 'your-project-id';
+    
+    // If you have a consent banner, then follow these instructions to switch off Cookies until consent is given. 
+    // This script will manage informing Clarity when consent is given.
+    // https://learn.microsoft.com/en-us/clarity/setup-and-installation/cookie-consent
+
+    var basicConsent = false; // basic consent disables all tracking until consent is given.
+
+    var debug = false;
+
+    // End of settings --------
+
+    // links to documentation
+    // https://learn.microsoft.com/en-us/clarity/setup-and-installation/
+    // https://learn.microsoft.com/en-us/clarity/setup-and-installation/clarity-api
+
+    var tagName = 'Clarity'; 
+    var consentRequired = 'analytics';
+
+    w.clarity = w.clarity || function(){
+        (w.clarity.q = w.clarity.q || []).push(arguments)
+    };
+
+    var Clarity = function(arg1) {
+        if(debug) console.log(tagName, arguments); 
+
+        w.clarity.apply(w.clarity, arguments); 
+    }
+
+    // https://learn.microsoft.com/en-us/clarity/filters/custom-tags
+    Clarity("set", "Hostname", document.location.hostname);
+    Clarity("set", "Page type", '{{page_type}}');
+    Clarity("set", "Currency", '{{currency_selector.active_currency_code}}');
+
+    {{#if customer.customer_group_name}}Clarity("set", 'Customer group name', '{{customer.customer_group_name}}');{{/if}}
+
+    // https://learn.microsoft.com/en-us/clarity/setup-and-installation/identify-api
+    {{#if customer.email}}Clarity("identify", '{{customer.email}}');{{/if}}
+
+    // Establish the TagRocket tag
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+    
+    T.init(function() { 
+
+        var scriptTagAdded = false;
+        function addScriptTag() {
+            if (!scriptTagAdded) {
+                scriptTagAdded = true;
+                T.addPreconnectTag('https://www.clarity.ms'); 
+                T.addScriptTag('https://www.clarity.ms/tag/'+projectId);
+            }    
+        }
+
+        if (!basicConsent) {
+            addScriptTag();
+        }
+
+        if (T.consent[consentRequired]) {
+            Clarity('consent');
+            addScriptTag();
+        }
+        else {
+            T.on('ConsentChanged',function(data){
+                if (T.consent[consentRequired]) {
+                    Clarity('consent');
+                    addScriptTag();
+                }
+            });
+        }    
+    })
+}(window,"TagRocket")
+</script>
