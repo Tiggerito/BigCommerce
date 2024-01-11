@@ -1,6 +1,6 @@
 <script data-cfasync="false">  
 /*
-    Web Site Advantage: Tag Rocket Clarity [v1.0] 
+    Web Site Advantage: Tag Rocket Clarity [v2.0] 
     Microsoft Clarity including custom tags, customer identification and consent management
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2024 Web Site Advantage
@@ -15,6 +15,13 @@
 
     var basicConsent = false; // basic consent disables all tracking until consent is given.
 
+    // "Custom user ID" is their email address
+
+    // How products are identified in the 'Product ' custom tags. set to an appropriate default
+    var itemGroupIdFormat = "[[psku]]||P[[pid]]"; 
+    var itemIdProductFormat = "";
+    var itemIdVariantFormat = "";
+
     var debug = false;
 
     // End of settings --------
@@ -25,6 +32,15 @@
 
     var tagName = 'Clarity'; 
     var consentRequired = 'analytics';
+
+    var getProductId = function(item, type) {
+        if (type == 'ItemId' && itemIdProductFormat && itemIdVariantFormat){
+            return T.getProductId(tagName, 'ItemId', item, itemIdProductFormat, itemIdVariantFormat);
+        }
+        else {
+            return T.getProductId(tagName, 'ItemGroupId', item, itemGroupIdFormat)
+        }  
+    };
 
     w.clarity = w.clarity || function(){
         (w.clarity.q = w.clarity.q || []).push(arguments)
@@ -38,13 +54,20 @@
 
     // https://learn.microsoft.com/en-us/clarity/filters/custom-tags
     Clarity("set", "Hostname", document.location.hostname);
-    Clarity("set", "Page type", '{{page_type}}');
+    Clarity("set", "Page Type", '{{page_type}}');
     Clarity("set", "Currency", '{{currency_selector.active_currency_code}}');
+    Clarity('set', 'Page Title', document.title); 
 
-    {{#if customer.customer_group_name}}Clarity("set", 'Customer group name', '{{customer.customer_group_name}}');{{/if}}
+    {{#if customer.id}}Clarity("set", 'Customer - ID', '{{customer.id}}');{{/if}}
+
+    {{#if customer.customer_group_name}}Clarity("set", 'Customer - Group Name', {{{json customer.customer_group_name}}});{{/if}}
+
+    {{#if page_type '===' 'category'}}Clarity("set", 'Category - Viewed List', {{{json category.name}}});{{/if}}
+
+    {{#if page_type '===' 'brand'}}Clarity("set", 'Brand - Viewed List', {{{json brand.name}}});{{/if}}
 
     // https://learn.microsoft.com/en-us/clarity/setup-and-installation/identify-api
-    {{#if customer.email}}Clarity("identify", '{{customer.email}}');{{/if}}
+    {{#if customer.email}}Clarity("identify", {{{json customer.email}}});{{/if}}
 
     // Establish the TagRocket tag
     w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
@@ -75,7 +98,93 @@
                     addScriptTag();
                 }
             });
-        }    
+        }   
+        
+        // put TagRocket in debug mode to see the eventData provided in each event
+        T.on('.*',function(eventData, eventName){
+            switch(eventName) {               
+                case "QuickSearch":
+                    Clarity('set', 'Search - Quick Search', eventData.term);
+                    Clarity('set', 'Goal - Quick Search', 'Yes');
+                    break;
+                case "SearchPage":
+                    Clarity('set', 'Search - Search Page', eventData.term);
+                    Clarity('set', 'Goal - Search Page', 'Yes');
+                    break;
+                case "ProductPage":
+                    Clarity('set', 'Goal - Viewed Product Details', 'Yes');
+                    Clarity('set', 'Product - Viewed Details', getProductId(eventData, 'ItemGroupId'));
+
+                    if (eventData.categories) {
+                        Clarity('set', 'Category - Viewed Product Details', eventData.categories.map(function(category){
+                            return category.name;
+                        }));
+                    }
+
+                    if (eventData.brand) {
+                        Clarity('set', 'Brand - Viewed Product Details', eventData.brand);
+                    }
+
+                    break;
+                case "ProductsVisible":
+                    Clarity('set', 'Goal - Viewed List', 'Yes');
+                    Clarity('set', 'Product - Viewed List', eventData.list.items.map(function(item){
+                        return getProductId(item, 'ItemGroupId');
+                    }));
+                    break;
+                case "CartItemChanged":                      
+                    if(eventData.change > 0)  {
+                        Clarity('set', 'Goal - Added To Cart', 'Yes');
+                        Clarity('set', 'Product - Added To Cart', getProductId(eventData.item, 'ItemId'));
+                    }  
+                    else {
+                        Clarity('set', 'Goal - Removed From Cart', 'Yes');
+                        Clarity('set', 'Product - Removed From Cart', getProductId(eventData.item, 'ItemId'));
+                    }             
+                    break;
+                case "CartPage":
+                    Clarity('set', 'Goal - Viewed Cart', 'Yes');
+                    Clarity('set', 'Product - Viewed Cart', eventData.items.map(function(item){
+                        return getProductId(item, 'ItemGroupId');
+                    }));
+                    break;
+                case "CheckoutPage":
+                    Clarity('set', 'Goal - Started Checkout', 'Yes');
+                    Clarity('set', 'Product - Started Checkout', eventData.items.map(function(item){
+                        return getProductId(item, 'ItemGroupId');
+                    }));
+                    break;
+                case "CheckoutStep1CustomerCompleted":
+                    Clarity('set', 'Goal - Customer Completed', 'Yes');
+                    break;
+                case "CheckoutStep2ShippingCompleted":
+                    Clarity('set', 'Goal - Shipping Completed', 'Yes');
+                    break;
+                case "CheckoutStep3BillingCompleted":
+                    Clarity('set', 'Goal - Billing Completed', 'Yes');
+                    break;
+                case "CheckoutStep5OrderCompleted":
+                    Clarity('set', 'Goal - Purchased', 'Yes');
+                    Clarity('set', 'Product - Purchased', eventData.items.map(function(item){
+                        return getProductId(item, 'ItemGroupId');
+                    }));
+                    Clarity('set', 'Purchase - Order ID', ''+eventData.orderId);
+                    break;
+                case "AccountCreated":
+                    Clarity('set', 'Goal - Account Created', 'Yes');
+                    break;
+                case "ContactSuccess":
+                    Clarity('set', 'Goal - Contacted', 'Yes');
+                    break;
+                case "SubscribeSuccess":
+                    Clarity('set', 'Goal - Subscribed', 'Yes');
+                    break;
+                case "AddToWishList":
+                    Clarity('set', 'Goal - Added To Wish List', 'Yes');
+                    Clarity('set', 'Product - Added To Wish List', getProductId(eventData, 'ItemGroupId'));
+                    break;
+            }                    
+        });
     })
 }(window,"TagRocket")
 </script>
