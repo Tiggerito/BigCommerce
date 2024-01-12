@@ -1,0 +1,79 @@
+<script data-cfasync="false">  
+/*
+    Web Site Advantage: Tag Rocket Floodlight [v1.0] 
+    Base tag and conversion
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2024 Web Site Advantage
+*/
+!function(w,t){
+    // Update these settings to match your setup 
+    // https://support.google.com/sa360/answer/7562806
+    // https://support.google.com/searchads/answer/7566546
+
+    var floodlightConfigNumber = 'XXXXXXX'; // excude the DC- part, just add the number
+    var activityGroupTagString = 'activityGroupTagString';
+    var activityTagString = 'activityTagString';
+    var countingMethod = 'standard'; //  standard or transactions   
+    var customFloodlightVariable = ''; // optional
+    var usingConsentMode  = false; // Make this match the gtag Consent Mode setting in Tag Rockets Global Tag Values
+    
+    /*
+    // OPTIONAL: For JavaScript disabled tracking, add the following code to BCs Data Solutions->Affiliate Conversion Tracking script. 
+    // IMPORTANT: Replace the [Variables] with the correct values.   
+ 
+    <noscript>
+    <img src="https://ad.doubleclick.net/ddm/activity/src=[floodlightConfigNumber];type=[activityGroupTagString];cat=[activityTagString];
+    qty=1;cost=%%ORDER_AMOUNT%%;dc_lat=;dc_rdid=;tag_for_child_directed_treatment=;tfua=;npa=;
+    ord=%%ORDER_ID%%?" width="1" height="1" alt="">
+    </noscript>
+    */
+
+    // End of settings --------
+
+    // links to documentation
+    // https://support.google.com/searchads/answer/7305597
+    // https://support.google.com/sa360/answer/7562806
+    // https://support.google.com/searchads/answer/7566546
+
+    var tagName = 'Floodlight'; 
+    var consentRequired = 'targetingAdvertising'; 
+    var floodlightConfigId = 'DC-' + floodlightConfigNumber;
+    var purchaseSendTo = floodlightConfigId + '/' + activityGroupTagString + '/' + activityTagString + '+' + countingMethod; 
+
+    // Establish the TagRocket tag
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+    
+    T.init(function() { 
+
+        // if using consent mode then gtag manages if the events are sent. If not, don't run our code until consent is granted.
+        if (!usingConsentMode && !T.consent[consentRequired]) {
+            return;
+        }
+
+        // put TagRocket in debug mode to see the eventData provided in each event
+        T.on('.*',function(eventData, eventName){
+            switch(eventName) {   
+                case "GtagCommandSent":
+                    if (eventData.arguments[0] == 'js') {
+                        gtag('config', floodlightConfigId);
+                    }
+                    break;         
+                case "CheckoutStep5OrderCompleted":
+                    var purchaseData = {
+                        allow_custom_scripts: true,
+                        value: eventData.orderAmount,
+                        transaction_id: eventData.orderId,
+                        send_to: purchaseSendTo
+                    };
+
+                    if (customFloodlightVariable) {
+                        purchaseData.u1 = customFloodlightVariable;                    
+                    }
+
+                    gtag('event', 'purchase', purchaseData);
+                    break;
+            }                    
+        });   
+    })
+}(window,"TagRocket")
+</script>

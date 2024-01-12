@@ -1,9 +1,9 @@
 <script data-cfasync="false">  
 /*
-    Web Site Advantage: Tag Rocket Full Monte [v1.1] 
+    Web Site Advantage: Tag Rocket Full Monte [v1.0] 
     This is a complete template to help build other tags
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
-    Copyright (C) 2023 Web Site Advantage
+    Copyright (C) 2024 Web Site Advantage
 */
 !function(w,t){
     // TODO: Update settings to match your setup
@@ -156,11 +156,14 @@
                 case "CartPage":
                     CallTag('cart', cartInformation(eventData));
                     break;
-                case "CheckoutPage":
+                case "CheckoutPage": // Start Checkout
                     CallTag('checkout', cartInformation(eventData));
                     break;
-                case "CheckoutStep1CustomerStarted":
+                case "CheckoutStep1CustomerStarted": // Also start Checkout
                     CallTag('checkoutCustomerStarted', cartInformation(eventData));
+                    break;
+                case "CheckoutStep1CustomerCompleted": // Not often used
+                    CallTag('checkoutCustomerCompleted', cartInformation(eventData));
                     break;
                 case "CheckoutStep2ShippingCompleted":
                     CallTag('checkoutShippingCompleted', cartInformation(eventData));
