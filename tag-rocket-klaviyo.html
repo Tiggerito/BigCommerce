@@ -1,0 +1,348 @@
+<script data-cfasync="false">  
+/*
+    Web Site Advantage: Tag Rocket Klaviyo [v1.0] 
+    Supports consent, identify, Added to Cart, Viewed Product, Viewed Category, Searched Site, Clicked Banner and more
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2024 Web Site Advantage
+*/
+!function(w,t){
+    // Ensure your BigCommerce Integration has the Automatic Onsite tracking switched off
+
+    // How to find the public API key: https://help.klaviyo.com/hc/en-us/articles/115005062267
+    var publicApiKey = 'PUBLIC_API_KEY'; // TODO: change to your public API key
+   
+    var compareAtPrice = "{{product.price.rrp_without_tax.value}}";
+
+    var debug = false;
+
+    // End of settings --------
+
+    // links to documentation
+    // https://developers.klaviyo.com/en/docs/introduction_to_the_klaviyo_object#supported-methods
+    // https://developers.klaviyo.com/en/docs/guide_to_integrating_a_platform_without_a_pre_built_klaviyo_integration
+
+    var tagName = 'Klaviyo'; 
+
+    var consentRequired = 'targetingAdvertising'; 
+
+    // https://developers.klaviyo.com/en/docs/guide_to_integrating_a_platform_without_a_pre_built_klaviyo_integration#viewed-product-tracking-snippet
+    var productInformation = function(item) {
+
+        var product = {
+            ProductID: item.productId, 
+            ProductName: item.name
+        };
+
+        // https://developers.klaviyo.com/en/docs/custom_event_tracking#track-a-metric
+        if (item.categories) {
+            product.Categories = item.categories.map(function(category){
+                return category.name;
+            });
+        }
+
+        if (item.url) product.URL = item.url;
+
+        if (item.defaultImage && item.defaultImage.url) product.ImageURL = item.defaultImage.url;
+
+        if (item.brand) product.Brand = item.brand;
+
+        if (item.price || item.price == 0) product.Price = item.price;
+  
+        if (compareAtPrice) product.CompareAtPrice = compareAtPrice;
+
+        if (item.productSku) product.SKU = item.productSku;
+        
+        if (item.quantity) product.Quantity = item.quantity;
+    
+        return product;
+    }
+    var addItemInformation = function(item) {
+        var addItem = {
+            "AddedItemProductName": item.name,
+            "AddedItemProductID": item.productId
+        }
+
+        if (item.price || item.price == 0) addItem.AddedItemPrice = item.price; 
+
+        if (item.productSku) addItem.AddedItemSKU = item.productSku;
+
+        if (item.defaultImage && item.defaultImage.url) addItem.AddedItemURL = item.defaultImage.url;
+
+        if (item.url) addItem.AddedItemURL = item.url;
+
+        if (item.categories) {
+            addItem.AddedItemCategories = item.categories.map(function(category){
+                return category.name;
+            });
+        }
+  
+        // addToCartData.AddedItemDescription - unknown
+        // addToCartData.AddedItemTags
+
+        return addItem;
+    }
+    // https://help.klaviyo.com/hc/en-us/articles/360030732832#added-to-cart2
+    var addToCartInformation = function(eventData) {
+
+        // data on the new item, and then a full list of cart items
+        var item = eventData.item;
+        var cart = eventData.cart;
+
+        var addToCartData = addItemInformation(item);
+
+        addToCartData.AddedItemQuantity = eventData.change;
+
+        // cart information
+
+        addToCartData.CheckoutURL = '{{settings.base_url}}{{urls.checkout.single_address}}';
+
+        if (cart.cartAmount || cart.cartAmount == 0) addToCartData["$value"] = cart.cartAmount; // Total cart value
+
+        addToCartData["$currency_code"] = eventData.currency;
+
+        addToCartData.ItemNames = cart.items.map(function(item){
+            return item.name;
+        });
+
+        var allCategories = [];
+
+        cart.items.forEach(function(item){
+            if (item.categories) {
+                item.categories.forEach(function(category){
+                    if (!allCategories.includes(category.name)) {
+                        allCategories.push(category.name);                   
+                    }
+                });
+            }
+        });
+
+        addToCartData.Categories = allCategories;
+
+        var itemCount = 0;
+
+        addToCartData.Items = cart.items.map(function(item){
+            var product = {
+                "ProductID": item.productId,
+                "ProductName": item.name,
+                "Quantity": item.quantity,
+                "ItemPrice": item.price,
+                "RowTotal": item.price * item.quantity,
+                "ProductURL": item.url
+            };
+
+            if (item.productSku) product.SKU = item.productSku;
+
+            itemCount += item.quantity;
+
+            if (item.defaultImage && item.defaultImage.url) product.ImageURL = item.defaultImage.url;
+
+            if (item.categories) {
+                product.ProductCategories = item.categories.map(function(category){
+                    return category.name;
+                });
+            }
+            return product;
+        }); 
+
+        addToCartData.ItemCount = itemCount;
+        
+        // addToCartData.Tags
+
+        return addToCartData;
+    }
+
+    // https://developers.klaviyo.com/en/docs/guide_to_integrating_a_platform_without_a_pre_built_klaviyo_integration#viewed-product-tracking-snippet
+    var itemInformation = function(item) {
+
+        var klaviyoItem = {
+            ItemId: item.productId,
+            Title: item.name,
+            Metadata: {}
+        };
+
+        // https://developers.klaviyo.com/en/docs/custom_event_tracking#track-a-metric
+        if (item.categories) {
+            klaviyoItem.Categories = item.categories.map(function(category){
+                return category.name || category;
+            });
+        }
+
+        if (item.url) klaviyoItem.Url = item.url;
+
+        if (item.defaultImage && item.defaultImage.url) klaviyoItem.ImageUrl = item.defaultImage.url;
+
+        if (item.brand) klaviyoItem.Metadata.Brand = item.brand;
+
+        if (item.price || item.price == 0) klaviyoItem.Metadata.Price = item.price;
+
+        if (compareAtPrice) klaviyoItem.Metadata.CompareAtPrice = compareAtPrice;
+
+        return klaviyoItem;
+    }
+
+    // https://developers.klaviyo.com/en/docs/introduction_to_the_klaviyo_object
+    !function(){if(!window.klaviyo){window._klOnsite=window._klOnsite||[];try{window.klaviyo=new Proxy({},{get:function(n,i){return"push"===i?function(){var n;(n=window._klOnsite).push.apply(n,arguments)}:function(){for(var n=arguments.length,o=new Array(n),w=0;w<n;w++)o[w]=arguments[w];var t="function"==typeof o[o.length-1]?o.pop():void 0,e=new Promise((function(n){window._klOnsite.push([i].concat(o,[function(i){t&&t(i),n(i)}]))}));return e}}})}catch(n){window.klaviyo=window.klaviyo||[],window.klaviyo.push=function(){var n;(n=window._klOnsite).push.apply(n,arguments)}}}}();
+
+    var KlaviyoPush = function(arg1) {
+        if(debug) console.log(tagName, arguments); 
+
+        w.klaviyo.push(arg1);
+    }
+
+    // if we have no user data, then Klaviyo does not send events. https://developers.klaviyo.com/en/docs/javascript_api#track-events-and-actions
+    // https://developers.klaviyo.com/en/docs/javascript_api#identify-people
+    // https://developers.klaviyo.com/en/docs/custom_integration_faqs#should-i-use-emailphone-or-external-id-as-my-unique-identifier
+    var KalviyoIdentify = function() {
+        var userData = T.userData;
+
+        var identify = {};
+
+        if(userData.email) identify['$email'] = userData.email;
+
+        if(userData.phone) identify['$phone_number'] = userData.phone;
+
+        if(userData.first_name) identify['$first_name'] = userData.first_name;
+
+        if(userData.last_name) identify['$last_name'] = userData.last_name;
+
+        if(userData.customer_group_name) identify.CustomerGroupName = userData.customer_group_name;
+
+        if(userData.id) identify["$id"] = userData.id;
+
+        if (identify) {
+            KlaviyoPush(['identify', identify]);
+        }
+    }
+
+    // Establish the TagRocket tag
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+    
+    T.init(function() { 
+
+        var scriptTagAdded = false;
+        function addScriptTag() {
+            if (!scriptTagAdded) {
+                scriptTagAdded = true;
+                T.addPreconnectTag('https://static.klaviyo.com'); 
+                T.addScriptTag('https://static.klaviyo.com/onsite/js/klaviyo.js?company_id='+publicApiKey); 
+            }    
+        }
+
+        // How Klaviyo does consent. They Support Shopify
+        // https://help.klaviyo.com/hc/en-us/articles/360034666712
+        // https://help.klaviyo.com/hc/en-us/articles/115005076767
+        // Their __kla_id cookie identifies visitors.
+        // we will do basic consent for now. i.e. no script until consent is given
+        if (T.consent[consentRequired]) {
+            addScriptTag();
+        }
+        else {
+            T.on('ConsentChanged',function(data){
+                if (T.consent[consentRequired]) addScriptTag();
+            });
+        }
+
+        KalviyoIdentify();
+
+{{#if page_type '===' 'category'}}
+        // TODO: Viewed Category - https://developers.klaviyo.com/en/docs/guide_to_setting_up_api_based_website_activity_events#viewed-category
+        var viewedCategory = {
+            "CategoryName": {{{json category.name}}},
+            "CategoryID": "{{category.id}}",
+            "URL": {{{json category.url}}}
+        };
+
+        {{#if category.image.data}}viewedCategory.ImageURL = {{{json category.image.data}}};{{/if}}
+
+        KlaviyoPush(["track", "Viewed Category", viewedCategory]);
+{{/if}}
+
+        // TODO: remove or update to send the correct data to the tag based on each event
+        // put TagRocket in debug mode to see the eventData provided in each event
+        T.on('.*',function(eventData, eventName){
+            switch(eventName) {   
+                case "UserDataUpdated":
+                    KalviyoIdentify();
+                    break;            
+                case "QuickSearch":
+                    // https://developers.klaviyo.com/en/docs/guide_to_setting_up_api_based_website_activity_events#searched-site
+                    KlaviyoPush(["track", "Searched Site", {
+                        "SearchTerm": eventData.term
+                    //    "SearchTerm (autocorrected)": "Fantasy Books",
+                    //    "ReturnedResults": 54
+                    }]);
+                    break;
+                case "SearchPage":
+                    // https://developers.klaviyo.com/en/docs/guide_to_setting_up_api_based_website_activity_events#searched-site
+                    KlaviyoPush(["track", "Searched Site", {
+                        "SearchTerm": eventData.term
+                    //    "SearchTerm (autocorrected)": "Fantasy Books",
+                    //    "ReturnedResults": 54
+                    }]);
+                    break;
+                case "ProductPage":
+                    // https://developers.klaviyo.com/en/docs/custom_event_tracking#track-a-metric
+                    KlaviyoPush(["track", "Viewed Product", productInformation(eventData)]);
+                    KlaviyoPush(["trackViewedItem", itemInformation(eventData)]);
+                    break;
+                case "ProductsVisible":
+                    break;
+                case "CartItemChanged": 
+                    // https://developers.klaviyo.com/en/docs/guide_to_integrating_a_platform_without_a_pre_built_klaviyo_integration#added-to-cart-tracking-snippet
+                    if(eventData.change > 0)  {
+                        KlaviyoPush(["track", 'Added to Cart', addToCartInformation(eventData)]); 
+                    }               
+                    break;
+                case "CartPage":               
+                    KlaviyoPush(["track", 'Viewed Cart']); 
+                    break;
+                case "CheckoutPage": // Start checkout  
+                    // Started Checkout: Handled by Klaviyo server side 
+                    // https://developers.klaviyo.com/en/docs/guide_to_integrating_a_platform_without_a_pre_built_klaviyo_integration#started-checkout        
+                    break;
+                case "CheckoutStep1CustomerCompleted":              
+                    KlaviyoPush(["track", 'Checkout Customer Completed']); 
+                    break;
+                case "CheckoutStep2ShippingCompleted":              
+                    KlaviyoPush(["track", 'Checkout Shipping Completed']); 
+                    break;
+                case "CheckoutStep3BillingCompleted":              
+                    KlaviyoPush(["track", 'Checkout Billing Completed']); 
+                    break;
+                case "CheckoutStep5OrderCompleted":
+                    // Place Order: Handled by Klaviyo server side 
+                    // https://developers.klaviyo.com/en/docs/guide_to_integrating_a_platform_without_a_pre_built_klaviyo_integration#placed-order
+                    break;
+                case "AccountCreated":
+                    KlaviyoPush(["track", 'Account Created']); 
+                    break;
+                case "ContactSuccess":
+                    KlaviyoPush(["track", 'Contacted via Website Form']); 
+                    break;
+                case "SubscribeSuccess":
+                    KlaviyoPush(["track", 'Subscribed to Newsletter']); 
+                    break;
+                case "AddToWishList":
+                    KlaviyoPush(["track", 'Added to Wish List', addItemInformation(eventData)]); 
+                    break;
+                case "ProductClicked":
+                    break;
+                case "PromotionClicked":
+                    // Clicked Banner - https://developers.klaviyo.com/en/docs/guide_to_setting_up_api_based_website_activity_events#clicked-banner
+                    KlaviyoPush(["track", "Clicked Banner", {
+                        "SourceURL": '' + document.location,
+                    //    "DestinationURL": "https://www.example.com/black-friday-deals",
+                        "BannerTitle": eventData.name
+                    }]);
+                    break;
+                case "PromotionsVisible":
+                case "SiteLogin":
+                case "CheckoutLogin":
+                case "LinkClick":
+                        break;
+            }                    
+        });
+      
+    })
+}(window,"TagRocket")
+</script>
