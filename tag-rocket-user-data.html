@@ -1,0 +1,28 @@
+<script data-cfasync="false">  
+/*
+    Web Site Advantage: Tag Rocket User Data [v1.0] 
+    An example showing how user data can be accessed
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2024 Web Site Advantage
+*/
+!function(w,t){
+ 
+    // Establish the TagRocket tag
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+    
+    T.init(function() { 
+
+        // At this point we have user data if the user has logged in
+        console.log('Logged in user data', T.userData); 
+        
+        T.on('UserDataUpdated',function(eventData, eventName){
+            // The order confirmation page gathers extra user data via an API
+            // This event fires when it has been completed
+            // This fills in data gaps when the person checks out as a guest
+            // eventData is the user data, or get it from T.userData      
+            console.log('Order confirmation user data', eventData);                               
+        });
+      
+    })
+}(window,"TagRocket")
+</script>
