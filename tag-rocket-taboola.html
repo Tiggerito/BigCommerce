@@ -1,6 +1,6 @@
 <script data-cfasync="false">   
 /*
-    Web Site Advantage: Tag Rocket Taboola [v2.2] 
+    Web Site Advantage: Tag Rocket Taboola [v2.3] 
     Taboola base pixel, conversion events and ecommevents
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tracking-with-taboola-on-bigcommerce/
     Copyright (C) 2021 Web Site Advantage
@@ -190,7 +190,7 @@
                         name: 'make_purchase',
                         revenue: eventData.orderAmount, 
                         currency: eventData.currency.code, 
-                        orderid: eventData.orderId,                            
+                        orderid: ''+eventData.orderId,                            
                         quantity: eventData.items.reduce(function(p, c){return p + c.quantity}, 0)                            
                     });
 
