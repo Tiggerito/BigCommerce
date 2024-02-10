@@ -207,6 +207,7 @@
 
         if(userData.customer_group_name) identify.CustomerGroupName = userData.customer_group_name;
 
+        // Klaviyos own events use customer id, but I beleive that means they can't identify guests
         if(userData.id) identify["$id"] = userData.id;
 
         if (identify) {

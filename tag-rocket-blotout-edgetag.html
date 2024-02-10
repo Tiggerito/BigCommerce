@@ -1,6 +1,6 @@
 <script data-cfasync="false">  
 /*
-    Web Site Advantage: Tag Rocket Blotout Edgetag [v1.4] 
+    Web Site Advantage: Tag Rocket Blotout Edgetag [v1.5] 
     Blotout Edgetag 
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2023 Web Site Advantage
@@ -143,58 +143,6 @@
         return consent;
     }
 
-    {{#if settings.shopper_consent_tracking_enabled}}
-    EdgeTag('init', {
-      edgeURL: tagUrl
-    });
-    EdgeTag('consent', GetConsentObject()); 
-    {{else}}
-    EdgeTag('init', {
-      edgeURL: tagUrl,
-      disableConsentCheck: true 
-    });
-    {{/if}}
-
-    // User data
-    var userData = {};
-    {{#if customer.email}}
-    userData.email = {{{json (trim customer.email)}}}.toLowerCase();
-    {{/if}}
-    {{#if customer.phone}}
-    userData.phoneNumber = {{{json customer.phone}}};
-    {{/if}}
-    {{#if customer.name}}
-    var names = {{{json (trim customer.name)}}}.split(' ');
-    userData.firstName = names[0].trim();
-    if (names.length > 1) userData.lastName = names[names.length-1].trim();
-    {{/if}}
-    {{#if customer.shipping_address.first_name}}
-    userData.firstName = {{{json (trim customer.shipping_address.first_name)}}};
-    {{/if}}
-    {{#if customer.shipping_address.last_name}}
-    userData.lastName = {{{json (trim customer.shipping_address.last_name)}}};
-    {{/if}}
-    {{#if customer.shipping_address.address1}}
-    userData.address = {{{json (trim customer.shipping_address.address1)}}};
-    {{/if}}
-    {{#if customer.shipping_address.address2}}
-    if (userData.address) {
-        userData.address += ', ' + {{{json (trim customer.shipping_address.address2)}}};
-    }
-    else {
-        userData.address = {{{json (trim customer.shipping_address.address2)}}};
-    } 
-    {{/if}}
-    {{#if customer.shipping_address.city}}
-    userData.city = {{{json (trim customer.shipping_address.city)}}};
-    {{/if}}
-    {{#if customer.shipping_address.state}}
-    userData.state = {{{json (trim customer.shipping_address.state)}}};
-    {{/if}}
-    // country = don't have access to ISO 2 code country from here, but the order does
-
-    if (userData && Object.keys(userData).length > 0) EdgeTag('data', userData); // I'm assuming data can be updated and at any time before events
-
     // Some BigCommerce specific thing from the example BigCommerce implementation
     var sendBigCommerceEmail = function (email) {
         if (email) {
@@ -209,8 +157,6 @@
             );
         }
     };
-
-    if (userData.email) sendBigCommerceEmail(userData.email);
 
     var buildProduct = function(item, provider, preferedType, change) {
         // facebook and tiktok use the product | product_group
@@ -255,6 +201,60 @@
     };
     
     T.init(function() { 
+        {{#if settings.shopper_consent_tracking_enabled}}
+        EdgeTag('init', {
+        edgeURL: tagUrl
+        });
+        EdgeTag('consent', GetConsentObject()); 
+        {{else}}
+        EdgeTag('init', {
+        edgeURL: tagUrl,
+        disableConsentCheck: true 
+        });
+        {{/if}}
+
+        // User data
+        var userData = {};
+        {{#if customer.email}}
+        userData.email = {{{json (trim customer.email)}}}.toLowerCase();
+        {{/if}}
+        {{#if customer.phone}}
+        userData.phoneNumber = {{{json customer.phone}}};
+        {{/if}}
+        {{#if customer.name}}
+        var names = {{{json (trim customer.name)}}}.split(' ');
+        userData.firstName = names[0].trim();
+        if (names.length > 1) userData.lastName = names[names.length-1].trim();
+        {{/if}}
+        {{#if customer.shipping_address.first_name}}
+        userData.firstName = {{{json (trim customer.shipping_address.first_name)}}};
+        {{/if}}
+        {{#if customer.shipping_address.last_name}}
+        userData.lastName = {{{json (trim customer.shipping_address.last_name)}}};
+        {{/if}}
+        {{#if customer.shipping_address.address1}}
+        userData.address = {{{json (trim customer.shipping_address.address1)}}};
+        {{/if}}
+        {{#if customer.shipping_address.address2}}
+        if (userData.address) {
+            userData.address += ', ' + {{{json (trim customer.shipping_address.address2)}}};
+        }
+        else {
+            userData.address = {{{json (trim customer.shipping_address.address2)}}};
+        } 
+        {{/if}}
+        {{#if customer.shipping_address.city}}
+        userData.city = {{{json (trim customer.shipping_address.city)}}};
+        {{/if}}
+        {{#if customer.shipping_address.state}}
+        userData.state = {{{json (trim customer.shipping_address.state)}}};
+        {{/if}}
+        // country = don't have access to ISO 2 code country from here, but the order does
+
+        if (userData && Object.keys(userData).length > 0) EdgeTag('data', userData); // I'm assuming data can be updated and at any time before events
+
+
+        if (userData.email) sendBigCommerceEmail(userData.email);
 
         T.addScriptTag(tagUrl+'/load');
 
