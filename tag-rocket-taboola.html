@@ -1,6 +1,6 @@
 <script data-cfasync="false">   
 /*
-    Web Site Advantage: Tag Rocket Taboola [v2.3] 
+    Web Site Advantage: Tag Rocket Taboola [v2.4] 
     Taboola base pixel, conversion events and ecommevents
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tracking-with-taboola-on-bigcommerce/
     Copyright (C) 2021 Web Site Advantage
@@ -200,12 +200,13 @@
                         tagData.notify = 'ecevent';
                         tagData.name = 'PURCHASE';
 
-                        if (eventData.new_customer === true) {
-                            tagData.custType = 1;
-                        }
-                        if (eventData.new_customer === false) {
-                            tagData.custType = 0;
-                        }
+                        // from the tag code. custType is valid and should be a boolean, however the code rejects it and cancels the event
+                        // if (eventData.new_customer === true) {
+                        //     tagData.custType = true;
+                        // }
+                        // if (eventData.new_customer === false) {
+                        //     tagData.custType = false;
+                        // }
 
                         CallTag(tagData);
                     }
