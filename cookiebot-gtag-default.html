@@ -1,51 +1,39 @@
 
-<script data-cfasync="false">
+<script data-cfasync="false" data-cookieconsent="ignore">
 /*
-    Web Site Advantage: CookieBot gtag default [v1.0] 
-    Sets default consent states if no settings are found in the CookieBot cookie
+    Web Site Advantage: CookieBot gtag default [v1.1] 
+    Sets default consent states for manually added Coookiebot code. Don't use with GTM implementation
     https://bigcommerce.websiteadvantage.com.au/
     Copyright (C) 2024 Web Site Advantage
 */
 !function(w){
 
+    var ads_data_redaction = true;
+    var url_passthrough = true;
+
     var defaultSettings = {
-        "ad_storage": "granted",
-        "ad_user_data": "granted",
-        "ad_personalization": "granted",
-        "analytics_storage": "granted",
-        "functionality_storage": "granted",
-        "personalization_storage": "granted",
+        "ad_storage": "denied",
+        "ad_user_data": "denied",
+        "ad_personalization": "denied",
+        "analytics_storage": "denied",
+        "functionality_storage": "denied",
+        "personalization_storage": "denied",
         "security_storage": "granted",
         "wait_for_update": 2000
     };
 
-    function getCookie(cname) {
-        const name = cname + "=";
-        const decodedCookie = decodeURIComponent(document.cookie);
-        const ca = decodedCookie.split(';');
-        for(let i = 0; i <ca.length; i++) {
-        let c = ca[i];
-        while (c.charAt(0) === ' ') {
-            c = c.substring(1);
-        }
-        if (c.indexOf(name) === 0) {
-            return c.substring(name.length, c.length);
-        }
-        }
-        return null;
+    // End of settings --------
+
+    // https://support.cookiebot.com/hc/en-us/articles/360016047000-Cookiebot-and-Google-Consent-Mode
+
+    if (!w.gtag) {        
+        w.dataLayer = w.dataLayer || [];
+        w.gtag = function (){w.dataLayer.push(arguments);}
     }
 
-    var cookieValue = getCookie("CookieConsent");
+    w.gtag("consent", "default", defaultSettings);
+    if (ads_data_redaction) w.gtag("set", "ads_data_redaction", true);
+    if (ads_data_redaction) w.gtag("set", "url_passthrough", true); 
 
-    if (cookieValue == null || cookieValue == "-2") {
-        if (!w.gtag) {        
-            w.dataLayer = w.dataLayer || [];
-            w.gtag = function (){dataLayer.push(arguments);}
-            console.log("gtag not found.");
-        }
-        w.gtag("consent", "default", defaultSettings); 
-        
-        console.log("consent default",defaultSettings);
-    }
 }(window)
 </script>
