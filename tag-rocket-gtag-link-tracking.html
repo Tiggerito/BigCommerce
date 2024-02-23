@@ -1,0 +1,44 @@
+<script data-cfasync="false">
+/*
+    Web Site Advantage: Tag Rocket gtag link tracking [v1.0] 
+    Tracks links based on a CSS selector 
+    https://bigcommerce.websiteadvantage.com.au/
+    Copyright (C) 2024 Web Site Advantage
+*/
+!function(w,d){
+
+    var linkCssSelector = '.navPages-action';
+
+    var eventName = 'click_menu'; // lowercase, alphnumeric, underscores, no spaces
+
+    var sendTo = 'GoogleAnalyticsFour'; // Tag Rocket will send this to your GA4 ID
+
+    // End of settings --------
+
+    var sendEvent = function(link) {
+        gtag('event', eventName, {
+            'link_url': link.href,
+            'link_text': link.innerText,
+            'send_to': sendTo
+        });
+    };
+
+    window.onload = function() {
+        var links = d.querySelectorAll(linkCssSelector);
+
+        links.forEach(function(link) {
+            link.addEventListener('click', function(event) {
+
+                if (link.target === '_blank') {
+                    // directly send event
+                    sendEvent(link);
+                } else {
+                    w.addEventListener('beforeunload', function() {
+                        sendEvent(link);
+                    });
+                }
+            });
+        }); 
+    };
+}(window, document)
+</script>
