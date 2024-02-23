@@ -1,0 +1,51 @@
+
+<script data-cfasync="false">
+/*
+    Web Site Advantage: CookieBot gtag default [v1.0] 
+    Sets default consent states if no settings are found in the CookieBot cookie
+    https://bigcommerce.websiteadvantage.com.au/
+    Copyright (C) 2024 Web Site Advantage
+*/
+!function(w){
+
+    var defaultSettings = {
+        "ad_storage": "granted",
+        "ad_user_data": "granted",
+        "ad_personalization": "granted",
+        "analytics_storage": "granted",
+        "functionality_storage": "granted",
+        "personalization_storage": "granted",
+        "security_storage": "granted",
+        "wait_for_update": 2000
+    };
+
+    function getCookie(cname) {
+        const name = cname + "=";
+        const decodedCookie = decodeURIComponent(document.cookie);
+        const ca = decodedCookie.split(';');
+        for(let i = 0; i <ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) === ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) === 0) {
+            return c.substring(name.length, c.length);
+        }
+        }
+        return null;
+    }
+
+    var cookieValue = getCookie("CookieConsent");
+
+    if (cookieValue == null || cookieValue == "-2") {
+        if (!w.gtag) {        
+            w.dataLayer = w.dataLayer || [];
+            w.gtag = function (){dataLayer.push(arguments);}
+            console.log("gtag not found.");
+        }
+        w.gtag("consent", "default", defaultSettings); 
+        
+        console.log("consent default",defaultSettings);
+    }
+}(window)
+</script>
