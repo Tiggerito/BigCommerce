@@ -210,6 +210,11 @@
         // Klaviyos own events use customer id, but I beleive that means they can't identify guests
         if(userData.id) identify["$id"] = userData.id;
 
+        if (T.consent.current) {
+            if (T.consent.current.ad_personalization) identify.ad_personalization = T.consent.current.ad_personalization;
+            if (T.consent.current.ad_user_data) identify.ad_user_data = T.consent.current.ad_user_data;           
+        }
+
         if (identify) {
             KlaviyoPush(['identify', identify]);
         }
@@ -239,6 +244,7 @@
         }
         else {
             T.on('ConsentChanged',function(data){
+                KalviyoIdentify(); // updates consent parameters
                 if (T.consent[consentRequired]) addScriptTag();
             });
         }
