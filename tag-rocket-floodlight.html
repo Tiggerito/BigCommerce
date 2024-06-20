@@ -1,6 +1,6 @@
 <script data-cfasync="false">  
 /*
-    Web Site Advantage: Tag Rocket Floodlight [v1.0] 
+    Web Site Advantage: Tag Rocket Floodlight [v1.1] 
     Base tag and conversion
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2024 Web Site Advantage
@@ -65,6 +65,20 @@
                         transaction_id: eventData.orderId,
                         send_to: purchaseSendTo
                     };
+
+                    // https://support.google.com/campaignmanager/answer/14217426
+                    if (T.userData) {
+                        purchaseData.user_data = {address:{}};
+                        if(T.userData.email) purchaseData.user_data.email = T.userData.email;
+                        if(T.userData.phone) purchaseData.user_data.phone_number = T.userData.phone;
+                        if(T.userData.first_name) purchaseData.user_data.address.first_name = T.userData.first_name;
+                        if(T.userData.last_name) purchaseData.user_data.address.last_name = T.userData.last_name;
+                        if(T.userData.street) purchaseData.user_data.address.street = T.userData.street;
+                        if(T.userData.city) purchaseData.user_data.address.city = T.userData.city;
+                        if(T.userData.state) purchaseData.user_data.address.region = T.userData.state;
+                        if(T.userData.postal_code) purchaseData.user_data.address.postal_code = T.userData.postal_code;
+                        if(T.userData.country_code) purchaseData.user_data.address.country = T.userData.country_code;
+                    }
 
                     if (customFloodlightVariable) {
                         purchaseData.u1 = customFloodlightVariable;                    
