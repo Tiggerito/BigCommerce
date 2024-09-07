@@ -1,0 +1,86 @@
+        <!-- 
+            Web Site Advantage: Search Spring Canonical Fix [v1.0] 
+            Updates the canonical tag to match Search Spring pagination URLs
+            https://bigcommerce.websiteadvantage.com.au/
+            Copyright (C) 2024 Web Site Advantage 
+        -->
+        
+        {{!-- replace the base.html line {{{head.meta_tags}}} with this --}}
+
+        {{assignVar "ChangeCanonical" 'no'}}
+        {{#or (if page_type '===' 'category') (if page_type '===' 'brand')}}
+        {{assignVar "ChangeCanonical" 'yes'}}
+        {{/or}}
+        
+        {{#if (getVar "ChangeCanonical") '!==' 'yes'}}
+        {{{head.meta_tags}}}
+        {{else}}
+        {{{strReplace head.meta_tags "rel='canonical'" "rel='disabled'"}}}
+        <script data-cfasync="false">
+        let paginationParameter = 'p';
+        let paginationLinkSelector = '#searchspring-container .pagination-link';
+        let paginationLinkParametersToRemove = ['page', 'sort'];
+
+        function processUrl() {
+            let url = new URL(window.location.href);
+            
+            url.hash = '';
+        
+            let params = url.searchParams;
+        
+            if (params.has('sort')) {
+                params.delete('sort');
+            }
+        
+            if (params.has(paginationParameter)) {
+                if (params.has('page')) {
+                    params.delete('page');
+                }
+            }
+            else if (params.has('page')) {
+                let pageValue = params.get('page');
+                params.delete('page');
+                params.set(paginationParameter, pageValue);
+            }
+
+            if (params.has(paginationParameter)) {
+                let pageValue = params.get(paginationParameter);
+                if (pageValue == '1')
+                    params.delete(paginationParameter);
+            }
+        
+            let newUrl = url.origin + url.pathname + '?' + params.toString();
+        
+            let link = document.querySelector("link[rel='canonical']") || document.createElement('link');
+            link.rel = 'canonical';
+            link.href = newUrl;
+            document.getElementsByTagName('head')[0].appendChild(link);
+        }
+        
+        processUrl();
+
+        if (paginationLinkSelector && paginationLinkParametersToRemove) {
+            window.addEventListener('load', function () {
+                const links = document.querySelectorAll(paginationLinkSelector);
+            
+                function removeUrlParameters(url, paramsToRemove) {
+                    let modifiedUrl = new URL(url);
+                    const searchParams = modifiedUrl.searchParams;
+                    
+                    paramsToRemove.forEach(param => {
+                        searchParams.delete(param);
+                    });
+                    
+                    return modifiedUrl.origin + modifiedUrl.pathname + '?' + searchParams.toString();
+                }
+            
+                links.forEach(link => {
+                    link.href = removeUrlParameters(link.href, paginationLinkParametersToRemove);
+                });
+            });
+        }
+        </script>
+        
+        {{/if}}
+        
+        <!-- End Search Spring Canonical fix -->
