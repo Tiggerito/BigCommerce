@@ -1,6 +1,6 @@
 <script data-cfasync="false">  
 /*
-    Web Site Advantage: Tag Rocket Klaviyo [v1.1] 
+    Web Site Advantage: Tag Rocket Klaviyo [v1.2] 
     Supports consent, identify, Added to Cart, Viewed Product, Viewed Category, Searched Site, Clicked Banner and more
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2024 Web Site Advantage
@@ -8,14 +8,19 @@
 !function(w,t){
     // Ensure your BigCommerce Integration has the Automatic Onsite tracking switched off
 
-    // How to find the public API key: https://help.klaviyo.com/hc/en-us/articles/115005062267
-    var publicApiKey = 'PUBLIC_API_KEY'; // TODO: change to your public API key
-   
+    // TODO: change to your public API key -  How to find the public API key: https://help.klaviyo.com/hc/en-us/articles/115005062267
+    var publicApiKey = 'PUBLIC_API_KEY'; 
+
+    var productImageSize = '1000w';
+    var categoryImageSize = '1000w';
+
     var compareAtPrice = "{{product.price.rrp_without_tax.value}}";
 
     var debug = false;
 
     // End of settings --------
+
+    // Klaviyo ony tracks logged in users
 
     // links to documentation
     // https://developers.klaviyo.com/en/docs/introduction_to_the_klaviyo_object#supported-methods
@@ -24,6 +29,14 @@
     var tagName = 'Klaviyo'; 
 
     var consentRequired = 'targetingAdvertising'; 
+
+    var getProductImageUrl = function(item) {
+        if (!item.defaultImage) return null;
+
+        if (item.defaultImage.data && productImageSize) return item.defaultImage.data.replace('{:size}', productImageSize);
+
+        return item.defaultImage.url;
+    }
 
     // https://developers.klaviyo.com/en/docs/guide_to_integrating_a_platform_without_a_pre_built_klaviyo_integration#viewed-product-tracking-snippet
     var productInformation = function(item) {
@@ -42,7 +55,9 @@
 
         if (item.url) product.URL = item.url;
 
-        if (item.defaultImage && item.defaultImage.url) product.ImageURL = item.defaultImage.url;
+        var productImageUrl = getProductImageUrl(item);
+
+        if (productImageUrl) product.ImageURL = productImageUrl;
 
         if (item.brand) product.Brand = item.brand;
 
@@ -56,6 +71,8 @@
     
         return product;
     }
+
+    // for AddToWishList and AddToCart
     var addItemInformation = function(item) {
         var addItem = {
             "AddedItemProductName": item.name,
@@ -66,7 +83,9 @@
 
         if (item.productSku) addItem.AddedItemSKU = item.productSku;
 
-        if (item.defaultImage && item.defaultImage.url) addItem.AddedItemURL = item.defaultImage.url;
+        var productImageUrl = getProductImageUrl(item);
+
+        if (productImageUrl) addItem.AddedItemURL = productImageUrl;
 
         if (item.url) addItem.AddedItemURL = item.url;
 
@@ -76,11 +95,12 @@
             });
         }
   
-        // addToCartData.AddedItemDescription - unknown
-        // addToCartData.AddedItemTags
+        // addItem.AddedItemDescription
+        // addItem.AddedItemTags
 
         return addItem;
     }
+
     // https://help.klaviyo.com/hc/en-us/articles/360030732832#added-to-cart2
     var addToCartInformation = function(eventData) {
 
@@ -134,7 +154,9 @@
 
             itemCount += item.quantity;
 
-            if (item.defaultImage && item.defaultImage.url) product.ImageURL = item.defaultImage.url;
+            var productImageUrl = getProductImageUrl(item);
+
+            if (productImageUrl) product.ImageURL = productImageUrl;
 
             if (item.categories) {
                 product.ProductCategories = item.categories.map(function(category){
@@ -152,7 +174,7 @@
     }
 
     // https://developers.klaviyo.com/en/docs/guide_to_integrating_a_platform_without_a_pre_built_klaviyo_integration#viewed-product-tracking-snippet
-    var itemInformation = function(item) {
+    var viewedItemInformation = function(item) {
 
         var klaviyoItem = {
             ItemId: item.productId,
@@ -169,7 +191,9 @@
 
         if (item.url) klaviyoItem.Url = item.url;
 
-        if (item.defaultImage && item.defaultImage.url) klaviyoItem.ImageUrl = item.defaultImage.url;
+        var productImageUrl = getProductImageUrl(item);
+
+        if (productImageUrl) klaviyoItem.ImageUrl = productImageUrl;
 
         if (item.brand) klaviyoItem.Metadata.Brand = item.brand;
 
@@ -189,10 +213,27 @@
         w.klaviyo.push(arg1);
     }
 
+    var KlaviyoIdentify = function() {
+
+        var data = KalviyoIdentifyData();
+
+        if(debug) console.log(tagName, 'identify', data); 
+ 
+        if (data) w.klaviyo.push(['identify', data]);
+    }
+
+    // alternate way to send events is using dedicated functions. There return a promise so you can wait for them to complete
+    // https://developers.klaviyo.com/en/docs/guide_to_setting_up_api_based_website_activity_events
+    // var KlaviyoTrack = function(eventName, data) {
+    //     if(debug) console.log(tagName, 'track', arguments); 
+
+    //     w.klaviyo.track(eventName, data);
+    // }
+
     // if we have no user data, then Klaviyo does not send events. https://developers.klaviyo.com/en/docs/javascript_api#track-events-and-actions
     // https://developers.klaviyo.com/en/docs/javascript_api#identify-people
     // https://developers.klaviyo.com/en/docs/custom_integration_faqs#should-i-use-emailphone-or-external-id-as-my-unique-identifier
-    var KalviyoIdentify = function() {
+    var KalviyoIdentifyData = function() {
         var userData = T.userData;
 
         var identify = {};
@@ -215,9 +256,7 @@
             if (T.consent.current.ad_user_data) identify.ad_user_data = T.consent.current.ad_user_data;           
         }
 
-        if (identify) {
-            KlaviyoPush(['identify', identify]);
-        }
+        return identify;
     }
 
     // Establish the TagRocket tag
@@ -249,22 +288,21 @@
             });
         }
 
-        KalviyoIdentify();
+        KlaviyoIdentify();
 
 {{#if page_type '===' 'category'}}
-        // TODO: Viewed Category - https://developers.klaviyo.com/en/docs/guide_to_setting_up_api_based_website_activity_events#viewed-category
+        // https://developers.klaviyo.com/en/docs/guide_to_setting_up_api_based_website_activity_events#viewed-category
         var viewedCategory = {
             "CategoryName": {{{json category.name}}},
             "CategoryID": "{{category.id}}",
             "URL": {{{json category.url}}}
         };
 
-        {{#if category.image.data}}viewedCategory.ImageURL = {{{json category.image.data}}};{{/if}}
+        {{#if category.image.data}}viewedCategory.ImageURL = {{{json category.image.data}}}.replace('{:size}', categoryImageSize);{{/if}}
 
         KlaviyoPush(["track", "Viewed Category", viewedCategory]);
 {{/if}}
 
-        // TODO: remove or update to send the correct data to the tag based on each event
         // put TagRocket in debug mode to see the eventData provided in each event
         T.on('.*',function(eventData, eventName){
             switch(eventName) {   
@@ -290,7 +328,7 @@
                 case "ProductPage":
                     // https://developers.klaviyo.com/en/docs/custom_event_tracking#track-a-metric
                     KlaviyoPush(["track", "Viewed Product", productInformation(eventData)]);
-                    KlaviyoPush(["trackViewedItem", itemInformation(eventData)]);
+                    KlaviyoPush(["trackViewedItem", viewedItemInformation(eventData)]); // items added to the users profile of recently viewed items
                     break;
                 case "ProductsVisible":
                     break;
