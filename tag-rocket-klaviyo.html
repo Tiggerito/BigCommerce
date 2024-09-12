@@ -11,8 +11,8 @@
     // TODO: change to your public API key -  How to find the public API key: https://help.klaviyo.com/hc/en-us/articles/115005062267
     var publicApiKey = 'PUBLIC_API_KEY'; 
 
-    var productImageSize = '1000w';
-    var categoryImageSize = '1000w';
+    var productImageSize = '1000w'; // could also use 'original'
+    var categoryImageSize = '1000w'; // could also use 'original'
 
     var compareAtPrice = "{{product.price.rrp_without_tax.value}}";
 
@@ -215,7 +215,7 @@
 
     var KlaviyoIdentify = function() {
 
-        var data = KalviyoIdentifyData();
+        var data = KlaviyoIdentifyData();
 
         if(debug) console.log(tagName, 'identify', data); 
  
@@ -233,7 +233,7 @@
     // if we have no user data, then Klaviyo does not send events. https://developers.klaviyo.com/en/docs/javascript_api#track-events-and-actions
     // https://developers.klaviyo.com/en/docs/javascript_api#identify-people
     // https://developers.klaviyo.com/en/docs/custom_integration_faqs#should-i-use-emailphone-or-external-id-as-my-unique-identifier
-    var KalviyoIdentifyData = function() {
+    var KlaviyoIdentifyData = function() {
         var userData = T.userData;
 
         var identify = {};
@@ -283,7 +283,7 @@
         }
         else {
             T.on('ConsentChanged',function(data){
-                KalviyoIdentify(); // updates consent parameters
+                KlaviyoIdentify(); // updates consent parameters
                 if (T.consent[consentRequired]) addScriptTag();
             });
         }
@@ -307,7 +307,7 @@
         T.on('.*',function(eventData, eventName){
             switch(eventName) {   
                 case "UserDataUpdated":
-                    KalviyoIdentify();
+                    KlaviyoIdentify();
                     break;            
                 case "QuickSearch":
                     // https://developers.klaviyo.com/en/docs/guide_to_setting_up_api_based_website_activity_events#searched-site
