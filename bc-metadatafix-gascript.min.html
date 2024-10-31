@@ -1,0 +1,7 @@
+<!-- 
+Web Site Advantage: BigCommerce Meta Data Fix [v2.11] 
+https://websiteadvantage.com.au/Bigcommerce
+Copyright (C) 2017 Web Site Advantage
+-->
+<script data-cfasync="false">
+(function(n,t){function i(n,t,i){n.addEventListener?n.addEventListener(t,i):n.attachEvent&&n.attachEvent("on"+t,i)}i(n,"load",function(){var a=t.getElementsByTagName("title")[0],r=a.innerHTML,i="",s="",v=n.location.href,h=t.querySelector("meta[name='description']"),e,c,u,l,f,o;h&&(i=h.getAttribute("content"));e=t.querySelector("meta[name='keywords']");e&&(s=e.getAttribute("content"));c=t.querySelector("link[rel='canonical']");c&&(v=c.getAttribute("href"));i=="null"&&(i="");s=="null"&&(s="");u=n.location.href.match(/.*\/rss-syndication\//);u!=null&&u.length==1&&(i="RSS Syndication Options");u=n.location.href.match(/.*\/sitemap\.php/);u!=null&&u.length==1&&(i="Sitemap");u=n.location.href.match(/.*\/tag\/(.*)/);u!=null&&u.length==2&&(l=u[1].replace(/\+/g," "),r=l+" - "+r,i=l+": "+i);f=n.location.href.match(/[?&]page=([0-9]*).*/);f!=null&&f.length==2&&f[1]!="1"&&(r==""||r.includes(" - Page ")||(r="Page "+f[1]+" - "+r),i!=""&&(i="Page "+f[1]+": "+i));o=n.location.href.match(/[?&]sort=([a-zA-Z]*).*/);o!=null&&o.length==2&&(r!=""&&(r=r+" sorted by "+o[1]),i!=""&&(i=i+" sorted by "+o[1]));a.innerHTML=r;h&&h.setAttribute("content",i);e&&e.setAttribute("content",s)})})(window,document)</script>
