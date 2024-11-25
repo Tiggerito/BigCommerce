@@ -1,5 +1,5 @@
         <!-- 
-            Web Site Advantage: Search Spring Canonical Fix [v1.0] 
+            Web Site Advantage: Search Spring Canonical Fix [v1.1] 
             Updates the canonical tag to match Search Spring pagination URLs
             https://bigcommerce.websiteadvantage.com.au/
             Copyright (C) 2024 Web Site Advantage 
@@ -30,6 +30,10 @@
         
             if (params.has('sort')) {
                 params.delete('sort');
+            }
+
+            if (params.has('setCurrencyId')) {
+                params.delete('setCurrencyId');
             }
         
             if (params.has(paginationParameter)) {
