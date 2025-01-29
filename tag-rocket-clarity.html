@@ -1,6 +1,6 @@
 <script data-cfasync="false">  
 /*
-    Web Site Advantage: Tag Rocket Clarity [v2.0] 
+    Web Site Advantage: Tag Rocket Clarity [v2.1] 
     Microsoft Clarity including custom tags, customer identification and consent management
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2024 Web Site Advantage
@@ -106,10 +106,12 @@
                 case "QuickSearch":
                     Clarity('set', 'Search - Quick Search', eventData.term);
                     Clarity('set', 'Goal - Quick Search', 'Yes');
+                    Clarity('event', 'Quick Search');
                     break;
                 case "SearchPage":
                     Clarity('set', 'Search - Search Page', eventData.term);
                     Clarity('set', 'Goal - Search Page', 'Yes');
+                    Clarity('event', 'Search Page');
                     break;
                 case "ProductPage":
                     Clarity('set', 'Goal - Viewed Product Details', 'Yes');
@@ -125,21 +127,26 @@
                         Clarity('set', 'Brand - Viewed Product Details', eventData.brand);
                     }
 
+                    Clarity('event', 'Viewed Product Details');
+
                     break;
                 case "ProductsVisible":
                     Clarity('set', 'Goal - Viewed List', 'Yes');
                     Clarity('set', 'Product - Viewed List', eventData.list.items.map(function(item){
                         return getProductId(item, 'ItemGroupId');
                     }));
+                    Clarity('event', 'Viewed List');
                     break;
                 case "CartItemChanged":                      
                     if(eventData.change > 0)  {
                         Clarity('set', 'Goal - Added To Cart', 'Yes');
                         Clarity('set', 'Product - Added To Cart', getProductId(eventData.item, 'ItemId'));
+                        Clarity('event', 'Added To Cart');
                     }  
                     else {
                         Clarity('set', 'Goal - Removed From Cart', 'Yes');
                         Clarity('set', 'Product - Removed From Cart', getProductId(eventData.item, 'ItemId'));
+                        Clarity('event', 'Removed From Cart');
                     }             
                     break;
                 case "CartPage":
@@ -147,21 +154,26 @@
                     Clarity('set', 'Product - Viewed Cart', eventData.items.map(function(item){
                         return getProductId(item, 'ItemGroupId');
                     }));
+                    Clarity('event', 'Viewed Cart');
                     break;
                 case "CheckoutPage":
                     Clarity('set', 'Goal - Started Checkout', 'Yes');
                     Clarity('set', 'Product - Started Checkout', eventData.items.map(function(item){
                         return getProductId(item, 'ItemGroupId');
                     }));
+                    Clarity('event', 'Started Checkout');
                     break;
                 case "CheckoutStep1CustomerCompleted":
                     Clarity('set', 'Goal - Customer Completed', 'Yes');
+                    Clarity('event', 'Customer Completed');
                     break;
                 case "CheckoutStep2ShippingCompleted":
                     Clarity('set', 'Goal - Shipping Completed', 'Yes');
+                    Clarity('event', 'Shipping Completed');
                     break;
                 case "CheckoutStep3BillingCompleted":
                     Clarity('set', 'Goal - Billing Completed', 'Yes');
+                    Clarity('event', 'Billing Completed');
                     break;
                 case "CheckoutStep5OrderCompleted":
                     Clarity('set', 'Goal - Purchased', 'Yes');
@@ -169,19 +181,24 @@
                         return getProductId(item, 'ItemGroupId');
                     }));
                     Clarity('set', 'Purchase - Order ID', ''+eventData.orderId);
+                    Clarity('event', 'Purchased');
                     break;
                 case "AccountCreated":
                     Clarity('set', 'Goal - Account Created', 'Yes');
+                    Clarity('event', 'Account Created');
                     break;
                 case "ContactSuccess":
                     Clarity('set', 'Goal - Contacted', 'Yes');
+                    Clarity('event', 'Contacted');
                     break;
                 case "SubscribeSuccess":
                     Clarity('set', 'Goal - Subscribed', 'Yes');
+                    Clarity('event', 'Subscribed');
                     break;
                 case "AddToWishList":
                     Clarity('set', 'Goal - Added To Wish List', 'Yes');
                     Clarity('set', 'Product - Added To Wish List', getProductId(eventData, 'ItemGroupId'));
+                    Clarity('event', 'Added To Wish List');
                     break;
             }                    
         });
