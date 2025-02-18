@@ -1,0 +1,26 @@
+<script data-cfasync="false">   
+    /*
+        Web Site Advantage: Tag Rocket Facebook External Hit Exclusion [v1.0] 
+        Stops tracking if it is the Facebook External Hit crawler
+        https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+        Copyright (C) 2025 Web Site Advantage
+    */
+    !function(w,t){
+        w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+        
+        T.init(function() {
+            // https://developers.facebook.com/docs/sharing/webmasters/web-crawlers/
+            var blockTracking = false;
+            
+            if(window.navigator.userAgent.includes('facebookexternalhit')) blockTracking = true;
+            if(window.navigator.userAgent.includes('facebookcatalog')) blockTracking = true;
+
+            if(blockTracking) {
+                T.on('.*',function(data, eventName){               
+                    data.cancelBuiltInEvents = true;
+                    data.cancel = true;
+                });
+            }
+        })
+    }(window,"TagRocket")
+    </script>
