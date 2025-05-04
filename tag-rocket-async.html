@@ -41,7 +41,9 @@
                         var eventName = data.arguments[1];
                         var eventData = data.arguments[2];
 
-                        if (eventName == 'purchase') {
+                        if (eventName == 'purchase' && eventData.send_to && eventData.send_to.indexOf('G-') == 0) {
+                            // correct event being sent to a 'G-' ID (GA4)
+
                             console.log("TRAPI purchase before task");
 
                             const result = await asyncTaskPromise; // wait on the task to complete
