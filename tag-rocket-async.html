@@ -1,0 +1,61 @@
+<script data-cfasync="false">
+{{#if page_type '===' 'orderconfirmation'}}
+/*
+    Web Site Advantage: Tag Rocket Async [v1.0] 
+    Testing the use of async in an event
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2025 Web Site Advantage
+*/
+!function(w,t){
+    // Establish the TagRocket tag
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+    
+    // the async task to determine if its a new customer. 
+    const asyncTask = async () => {
+        console.log("TRAPI asyncTask start");
+        
+        // add a delay and make it async
+        await fetch("https://unpkg.com/web-vitals/dist/web-vitals.attribution.iife.js?t=1");
+        
+        console.log("TRAPI asyncTask half way");
+        
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        
+        console.log("TRAPI asyncTask complete");
+        
+        return false; // return not a new customer
+    }
+    
+    // start the task, but don;t wait on it yet
+    const asyncTaskPromise = asyncTask();
+
+    T.init(function() { 
+
+        // Tag Rocket needs "Browser Support" set to "Baseline widely available" for this async function to work.
+        // This means Internet Explorer is not supported.
+        T.on('.*',async function(data, eventName){
+            switch(eventName) {  
+                case "GtagCommandPending":
+                    if (data.arguments.length >=3) {
+                        var command = data.arguments[0];
+                        var eventName = data.arguments[1];
+                        var eventData = data.arguments[2];
+
+                        if (eventName == 'purchase') {
+                            console.log("TRAPI purchase before task");
+
+                            const result = await asyncTaskPromise; // wait on the task to complete
+                            
+                            eventData.new_customer = result; // alter the event
+
+                            console.log("TRAPI purchase after task");
+                        }
+                    }
+                    break;
+            }                    
+        });
+      
+    })
+}(window,"TagRocket")
+{{/if}}
+</script>
