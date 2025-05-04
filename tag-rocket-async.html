@@ -52,6 +52,13 @@
                         }
                     }
                     break;
+                case "ProductPage":
+                    console.log("TRAPI ProductPage before task");
+                    const result = await asyncTaskPromise; // wait on the task to complete
+
+                    data.new_customer2 = result; // alter the event
+                    console.log("TRAPI ProductPage after task");
+                    break;
             }                    
         });
       
