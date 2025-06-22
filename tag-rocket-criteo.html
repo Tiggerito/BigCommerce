@@ -1,6 +1,6 @@
 <script data-cfasync="false">   
 /*
-    Web Site Advantage: Tag Rocket Criteo [v1.6] 
+    Web Site Advantage: Tag Rocket Criteo [v2.0] 
     Criteo tags
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2021 Web Site Advantage
@@ -8,12 +8,17 @@
 !function(w,t){
     var CRTO_PartnerID = 'REPLACE_WITH_YOUR_PARTNER_ID';
     var productIdentifier = function(product) {return ''+product.productId}; // productId, productSku
+
+    var debug = false;
     
     // https://help.criteo.com/kb/guide/en/all-criteo-onetag-events-and-parameters-vZbzbEeY86/Steps/775825
 
     w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
     
-    T.init(function(){
+    T.init(async function(){
+        var deviceType = /iPad/.test(navigator.userAgent) ? "t" : /Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Silk/.test(navigator.userAgent) ? "m" : "d";
+
+        window.criteo_q = window.criteo_q || [];
 
         var scriptTagAdded = false;
         function addScriptTag() {
@@ -23,35 +28,71 @@
             }    
         }
 
-        var deviceType = /iPad/.test(navigator.userAgent) ? "t" : /Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Silk/.test(navigator.userAgent) ? "m" : "d";
+        // https://help.criteo.com/kb/guide/en/criteo-onetag-advanced-settings-M2TiX6m90K/Steps/886908,887075,1948827,1957333
+        async function sha256(message) {
+            // encode as UTF-8
+            const msgBuffer = new TextEncoder('utf-8').encode(message);
 
-        window.criteo_q = window.criteo_q || [];
-        window.criteo_q.push(
-            {event: "setAccount", account: CRTO_PartnerID},
-            {event: "setSiteType", type: deviceType}
-        );
-        {{#if page_type '!==' 'orderconfirmation'}}   
-        {{~#if customer.email}}
-        window.criteo_q.push({event: "setEmail", email: "{{customer.email}}".trim().toLowerCase(), hash_method: "none"});
-        {{else}}
-        window.criteo_q.push({event: "setEmail", email: "", hash_method: "none"});
-        {{~/if}}
-        {{~/if}}
+            // hash the message
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
 
-        {{!-- Can send customer ID but it must be MD5 hashed --}}
+            // convert ArrayBuffer to Array
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
 
-        {{~#if customer.shipping_address.zip}}
-        window.criteo_q.push({event: "setZipcode", zipcode: "{{customer.shipping_address.zip}}" });
-        {{~/if}}
-
-        var send = function(event) {
-            event.ecpplugin = "BigCommerce-TagRocket";
-            // console.log("Criteo "+event.event, event);
-            window.criteo_q.push(event);
+            // convert bytes to hex string
+            const hashHex = hashArray.map(b => ('00' + b.toString(16)).slice(-2)).join('');
+            return hashHex;
         }
 
+        var commonEvents = [];
+        async function setCommonEvents() {
+
+            commonEvents = [];
+           
+            commonEvents.push({event: "setAccount", account: CRTO_PartnerID});
+            commonEvents.push({event: "setSiteType", type: deviceType});
+
+            if (T.userData.email) {
+                commonEvents.push({event: "setEmail", email: await sha256(T.userData.email.trim().toLowerCase()), hash_method: "sha256"});
+            }
+            else {
+                commonEvents.push({event: "setEmail", email: "", hash_method: "none"});
+            }
+
+            if (T.userData.postal_code){
+                commonEvents.push({event: "setZipcode", zipcode: T.userData.postal_code });
+            }
+
+            if (T.userData.phone){
+                commonEvents.push({ event: "setSha256HashedPhoneNumber", phone_number: await sha256(T.userData.phone) });
+            }
+
+            if (T.userData.id){
+                commonEvents.push({ event: "setCustomerId", id: await sha256(T.userData.id) });
+            }
+
+            // setRetailerVisitorId - a cookie value that identifies a user
+        }
+
+    
+        async function sendAsync(event) {
+            event.ecpplugin = "BigCommerce-TagRocket";
+
+            // push the commonEvents and this event into the tag queue
+            const eventList = Array.from(commonEvents);
+
+            eventList.push(event);
+
+            if (debug) {
+                console.log("Criteo "+event.event, eventList);
+            } 
+            window.criteo_q.push(eventList);
+        }
+
+        await setCommonEvents();
+
         {{#if settings.request.absolute_path '===' '/'}}
-        send({event: "viewHome"});
+        await sendAsync({event: "viewHome"});
         {{else if page_type '===' 'product'}}
         // will send a viewItem
         {{else if page_type '===' 'cart'}}
@@ -61,9 +102,11 @@
         {{else if page_type '===' 'brand'}}
         // will send a viewList
         {{else if page_type '===' 'search'}}
-        // will send a viewSearchResult
+        // will send a viewList
+        {{else if page_type '===' 'orderconfirmation'}} 
+        // will send a trackTransaction 
         {{else}}
-        send({event:"viewPage"});
+        await sendAsync({event:"viewPage"});
         {{/if}}
 
         if (T.consent.targetingAdvertising) {
@@ -74,10 +117,42 @@
             T.addPreconnectTag('https://gum.criteo.com');
         }
 
-        var viewListSent  = false;
+        // https://help.criteo.com/kb/guide/en/criteo-onetag-advanced-settings-M2TiX6m90K/Steps/886908,887077
+        // Criteo wants the first 3 products
+        // search is an exception, it can be less than three
+        // Criteo will send a viewPage if no events fire for a few seconds
+        var viewListSent = false;
+        async function sendViewListAsync(data, listName, min) {
+            if (!viewListSent) {
 
-        T.on('.*',function(data, eventName){
+                // directly getting all known products. this could expand, e.g. using a dynamic search provider
+                var productIdentifiers = T.products.flat().map(function(item){return productIdentifier(item)});
+
+                if (productIdentifiers.length >= min) {
+                    viewListSent = true;
+
+                    var event = {event: "viewList", 
+                        category: listName, 
+                        item: productIdentifiers.slice(0, 3) // only send the first 3 products
+                    };
+
+                    // page_number
+                    // filters
+
+                    if (data.search) {
+                        event.keywords = data.search;
+                    }
+
+                    await sendAsync(event);
+                }
+            } 
+        }
+
+        T.on('.*',async function(data, eventName){
             switch(eventName) {
+                case "UserDataUpdated":
+                    await setCommonEvents();
+                    break;
                 case "ConsentChanged":
                     if (T.consent.targetingAdvertising) {
                         addScriptTag();
@@ -85,54 +160,27 @@
                     break;
                 {{#if page_type '===' 'product'}} 
                 case "ProductPage":
-                    send({event: "viewItem", 
+                    await sendAsync({event: "viewItem", 
                         item: productIdentifier(data),
-                        availability: "{{~#if product.stock_level '===' '0'}}0{{~else}}1{{~/if}}", 
-                        price: data.price
-                        
+                        availability: "{{~#if product.stock_level '===' '0'}}0{{~else}}1{{~/if}}", // stock_level is a string if present
+                        price: data.price,
+                        currency: data.currency                       
                     });
                     break;
                 {{/if}}
                 {{#if page_type '===' 'search'}}    
                 case "ProductsVisible":
-                    if (!viewListSent) {
-                        viewListSent = true;
-
-                        var productIdentifiers = T.products.flat().map(function(item){return productIdentifier(item)});
-
-                        send({event: "viewList", // viewSearchResult
-                            keywords: data.search,
-                            item: productIdentifiers
-                        });
-                    }        
+                    await sendViewListAsync(data, "Search", 1); // search can have less than 3 products      
                     break;
                 {{/if}}
                 {{#if page_type '===' 'category'}}    
                 case "ProductsVisible":
-                    if (!viewListSent) {
-                        viewListSent = true;
-
-                        var productIdentifiers = T.products.flat().map(function(item){return productIdentifier(item)});
-
-                        send({event: "viewList", // viewCategory
-                            category: data.list.listName,
-                            item: productIdentifiers
-                        });
-                    }                       
+                    await sendViewListAsync(data, {{{json category.name}}}, 3);                       
                     break;
                 {{/if}}
                 {{#if page_type '===' 'brand'}}    
                 case "ProductsVisible":
-                    if (!viewListSent) {
-                        viewListSent = true;
-
-                        var productIdentifiers = T.products.flat().map(function(item){return productIdentifier(item)});
-
-                        send({event: "viewList",
-                            category: data.list.listName,
-                            item: productIdentifiers
-                        });
-                    }                       
+                    await sendViewListAsync(data, {{{json brand.name}}}, 3);                        
                     break;
                 {{/if}}
                 {{#if page_type '===' 'cart'}}
@@ -145,12 +193,12 @@
                         }
                     });
 
-                    send({event: "viewBasket", item: items});
+                    await sendAsync({event: "viewBasket", currency: data.currency.code, item: items});
                     break;
                 {{/if}}
                 case "CartItemChanged": 
                     if (data.change > 0) {
-                        send({event: "addToCart", item:[
+                        await sendAsync({event: "addToCart", currency: data.currency, item:[
                             {
                                 'id': productIdentifier(data.item),
                                 'price': data.item.price,
@@ -161,17 +209,6 @@
                     break;
                 {{#if page_type '===' 'orderconfirmation'}}                        
                 case "CheckoutStep5OrderCompleted":
-
-                    if (data.billingAddress && data.billingAddress.email) {
-                        window.criteo_q.push({event: "setEmail", email: data.billingAddress.email.trim().toLowerCase(), hash_method: "none"});
-                    } else {
-                        {{#if customer.email}}
-                        window.criteo_q.push({event: "setEmail", email: "{{customer.email}}".trim().toLowerCase(), hash_method: "none"});
-                        {{else}}
-                        window.criteo_q.push({event: "setEmail", email: "", hash_method: "none"});
-                        {{/if}}
-                    }
-
                     var items = data.items.map(function(item){
                         return {
                             'id': productIdentifier(item),
@@ -180,7 +217,7 @@
                         }
                     });
 
-                    send({event: "trackTransaction", id: data.orderId, item: items});
+                    await sendAsync({event: "trackTransaction", id: data.orderId, currency: data.currency.code, item: items});
                     break;
                 {{/if}}
             }                    
