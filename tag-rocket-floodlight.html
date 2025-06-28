@@ -1,6 +1,6 @@
 <script data-cfasync="false">  
 /*
-    Web Site Advantage: Tag Rocket Floodlight [v1.1] 
+    Web Site Advantage: Tag Rocket Floodlight [v1.2] 
     Base tag and conversion
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2024 Web Site Advantage
@@ -10,12 +10,12 @@
     // https://support.google.com/sa360/answer/7562806
     // https://support.google.com/searchads/answer/7566546
 
-    var floodlightConfigNumber = 'XXXXXXX'; // excude the DC- part, just add the number
+    var floodlightConfigNumber = 'XXXXXXX'; // exclude the DC- part, just add the number
     var activityGroupTagString = 'activityGroupTagString';
     var activityTagString = 'activityTagString';
     var countingMethod = 'standard'; //  standard or transactions   
     var customFloodlightVariable = ''; // optional
-    var usingConsentMode  = false; // Make this match the gtag Consent Mode setting in Tag Rockets Global Tag Values
+    var usingAdvancedConsentMode  = false; // Make this match the gtag Consent Mode setting in Tag Rockets Global Tag Values
     
     /*
     // OPTIONAL: For JavaScript disabled tracking, add the following code to BCs Data Solutions->Affiliate Conversion Tracking script. 
@@ -46,18 +46,15 @@
     T.init(function() { 
 
         // if using consent mode then gtag manages if the events are sent. If not, don't run our code until consent is granted.
-        if (!usingConsentMode && !T.consent[consentRequired]) {
+        if (!usingAdvancedConsentMode && !T.consent[consentRequired]) {
             return;
         }
 
+        gtag('config', floodlightConfigId);
+
         // put TagRocket in debug mode to see the eventData provided in each event
         T.on('.*',function(eventData, eventName){
-            switch(eventName) {   
-                case "GtagCommandSent":
-                    if (eventData.arguments[0] == 'js') {
-                        gtag('config', floodlightConfigId);
-                    }
-                    break;         
+            switch(eventName) {           
                 case "CheckoutStep5OrderCompleted":
                     var purchaseData = {
                         allow_custom_scripts: true,
