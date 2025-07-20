@@ -1,6 +1,6 @@
 <script data-cfasync="false">   
 /*
-    Web Site Advantage: Tag Rocket Criteo [v2.0] 
+    Web Site Advantage: Tag Rocket Criteo [v2.1] 
     Criteo tags
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2021 Web Site Advantage
@@ -29,7 +29,7 @@
         }
 
         // https://help.criteo.com/kb/guide/en/criteo-onetag-advanced-settings-M2TiX6m90K/Steps/886908,887075,1948827,1957333
-        async function sha256(message) {
+        async function sha256Async(message) {
             // encode as UTF-8
             const msgBuffer = new TextEncoder('utf-8').encode(message);
 
@@ -45,7 +45,7 @@
         }
 
         var commonEvents = [];
-        async function setCommonEvents() {
+        async function setCommonEventsAsync() {
 
             commonEvents = [];
            
@@ -53,7 +53,7 @@
             commonEvents.push({event: "setSiteType", type: deviceType});
 
             if (T.userData.email) {
-                commonEvents.push({event: "setEmail", email: await sha256(T.userData.email.trim().toLowerCase()), hash_method: "sha256"});
+                commonEvents.push({event: "setEmail", email: await sha256Async(T.userData.email.trim().toLowerCase()), hash_method: "sha256"});
             }
             else {
                 commonEvents.push({event: "setEmail", email: "", hash_method: "none"});
@@ -64,18 +64,18 @@
             }
 
             if (T.userData.phone){
-                commonEvents.push({ event: "setSha256HashedPhoneNumber", phone_number: await sha256(T.userData.phone) });
+                commonEvents.push({ event: "setSha256HashedPhoneNumber", phone_number: await sha256Async(T.userData.phone) });
             }
 
             if (T.userData.id){
-                commonEvents.push({ event: "setCustomerId", id: await sha256(T.userData.id) });
+                commonEvents.push({ event: "setCustomerId", id: await sha256Async(T.userData.id) });
             }
 
             // setRetailerVisitorId - a cookie value that identifies a user
         }
 
     
-        async function sendAsync(event) {
+        function send(event) {
             event.ecpplugin = "BigCommerce-TagRocket";
 
             // push the commonEvents and this event into the tag queue
@@ -89,10 +89,10 @@
             window.criteo_q.push(eventList);
         }
 
-        await setCommonEvents();
+        await setCommonEventsAsync();
 
         {{#if settings.request.absolute_path '===' '/'}}
-        await sendAsync({event: "viewHome"});
+        send({event: "viewHome"});
         {{else if page_type '===' 'product'}}
         // will send a viewItem
         {{else if page_type '===' 'cart'}}
@@ -106,7 +106,7 @@
         {{else if page_type '===' 'orderconfirmation'}} 
         // will send a trackTransaction 
         {{else}}
-        await sendAsync({event:"viewPage"});
+        send({event:"viewPage"});
         {{/if}}
 
         if (T.consent.targetingAdvertising) {
@@ -122,7 +122,7 @@
         // search is an exception, it can be less than three
         // Criteo will send a viewPage if no events fire for a few seconds
         var viewListSent = false;
-        async function sendViewListAsync(data, listName, min) {
+        function sendViewList(data, listName, min) {
             if (!viewListSent) {
 
                 // directly getting all known products. this could expand, e.g. using a dynamic search provider
@@ -143,7 +143,7 @@
                         event.keywords = data.search;
                     }
 
-                    await sendAsync(event);
+                    send(event);
                 }
             } 
         }
@@ -151,7 +151,7 @@
         T.on('.*',async function(data, eventName){
             switch(eventName) {
                 case "UserDataUpdated":
-                    await setCommonEvents();
+                    await setCommonEventsAsync();
                     break;
                 case "ConsentChanged":
                     if (T.consent.targetingAdvertising) {
@@ -160,7 +160,7 @@
                     break;
                 {{#if page_type '===' 'product'}} 
                 case "ProductPage":
-                    await sendAsync({event: "viewItem", 
+                    send({event: "viewItem", 
                         item: productIdentifier(data),
                         availability: "{{~#if product.stock_level '===' '0'}}0{{~else}}1{{~/if}}", // stock_level is a string if present
                         price: data.price,
@@ -170,17 +170,17 @@
                 {{/if}}
                 {{#if page_type '===' 'search'}}    
                 case "ProductsVisible":
-                    await sendViewListAsync(data, "Search", 1); // search can have less than 3 products      
+                    sendViewList(data, "Search", 1); // search can have less than 3 products      
                     break;
                 {{/if}}
                 {{#if page_type '===' 'category'}}    
                 case "ProductsVisible":
-                    await sendViewListAsync(data, {{{json category.name}}}, 3);                       
+                    sendViewList(data, {{{json category.name}}}, 3);                       
                     break;
                 {{/if}}
                 {{#if page_type '===' 'brand'}}    
                 case "ProductsVisible":
-                    await sendViewListAsync(data, {{{json brand.name}}}, 3);                        
+                    sendViewList(data, {{{json brand.name}}}, 3);                        
                     break;
                 {{/if}}
                 {{#if page_type '===' 'cart'}}
@@ -193,12 +193,12 @@
                         }
                     });
 
-                    await sendAsync({event: "viewBasket", currency: data.currency.code, item: items});
+                    send({event: "viewBasket", currency: data.currency.code, item: items});
                     break;
                 {{/if}}
                 case "CartItemChanged": 
                     if (data.change > 0) {
-                        await sendAsync({event: "addToCart", currency: data.currency, item:[
+                        send({event: "addToCart", currency: data.currency, item:[
                             {
                                 'id': productIdentifier(data.item),
                                 'price': data.item.price,
@@ -217,7 +217,7 @@
                         }
                     });
 
-                    await sendAsync({event: "trackTransaction", id: data.orderId, currency: data.currency.code, item: items});
+                    send({event: "trackTransaction", id: data.orderId, currency: data.currency.code, item: items});
                     break;
                 {{/if}}
             }                    
