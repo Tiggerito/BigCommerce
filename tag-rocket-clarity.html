@@ -82,16 +82,8 @@
             }    
         }
 
-
-
         var setConsent = function() {
-
-            // doubleing up parameters due to a bug:
-            // https://github.com/microsoft/clarity/issues/924
-
             Clarity('consentv2', {
-                ad_storage: T.consent.targetingAdvertising ? "granted" : "denied",
-                analytics_storage: T.consent.analytics ? "granted" : "denied",
                 ad_Storage: T.consent.targetingAdvertising ? "granted" : "denied",
                 analytics_Storage: T.consent.analytics ? "granted" : "denied"
             });
