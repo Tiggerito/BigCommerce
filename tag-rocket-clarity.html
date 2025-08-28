@@ -1,6 +1,6 @@
 <script data-cfasync="false">  
 /*
-    Web Site Advantage: Tag Rocket Clarity [v2.1] 
+    Web Site Advantage: Tag Rocket Clarity [v2.2] 
     Microsoft Clarity including custom tags, customer identification and consent management
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2024 Web Site Advantage
@@ -13,7 +13,7 @@
     // This script will manage informing Clarity when consent is given.
     // https://learn.microsoft.com/en-us/clarity/setup-and-installation/cookie-consent
 
-    var basicConsent = false; // basic consent disables all tracking until consent is given.
+    var basicConsent = false; // basic consent disables all tracking until all consent is given.
 
     // "Custom user ID" is their email address
 
@@ -31,7 +31,6 @@
     // https://learn.microsoft.com/en-us/clarity/setup-and-installation/clarity-api
 
     var tagName = 'Clarity'; 
-    var consentRequired = 'analytics';
 
     var getProductId = function(item, type) {
         if (type == 'ItemId' && itemIdProductFormat && itemIdVariantFormat){
@@ -46,7 +45,7 @@
         (w.clarity.q = w.clarity.q || []).push(arguments)
     };
 
-    var Clarity = function(arg1) {
+    var Clarity = function() {
         if(debug) console.log(tagName, arguments); 
 
         w.clarity.apply(w.clarity, arguments); 
@@ -83,23 +82,44 @@
             }    
         }
 
-        if (!basicConsent) {
-            addScriptTag();
+
+
+        var setConsent = function() {
+
+            // doubleing up parameters due to a bug:
+            // https://github.com/microsoft/clarity/issues/924
+
+            Clarity('consentv2', {
+                ad_storage: T.consent.targetingAdvertising ? "granted" : "denied",
+                analytics_storage: T.consent.analytics ? "granted" : "denied",
+                ad_Storage: T.consent.targetingAdvertising ? "granted" : "denied",
+                analytics_Storage: T.consent.analytics ? "granted" : "denied"
+            });
         }
 
-        if (T.consent[consentRequired]) {
-            Clarity('consent');
+        if (basicConsent) {
+            if (T.consent.analytics && T.consent.targetingAdvertising) {
+                setConsent();
+                addScriptTag();
+            }
+            else {
+                T.on('ConsentChanged',function(data){
+                    if (T.consent.analytics && T.consent.targetingAdvertising) {
+                        setConsent();
+                        addScriptTag();
+                    }
+                });
+            } 
+        } else {
+            setConsent();
+
             addScriptTag();
-        }
-        else {
+
             T.on('ConsentChanged',function(data){
-                if (T.consent[consentRequired]) {
-                    Clarity('consent');
-                    addScriptTag();
-                }
+                setConsent();
             });
-        }   
-        
+        }
+
         // put TagRocket in debug mode to see the eventData provided in each event
         T.on('.*',function(eventData, eventName){
             switch(eventName) {               
