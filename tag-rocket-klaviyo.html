@@ -1,6 +1,6 @@
 <script data-cfasync="false">  
 /*
-    Web Site Advantage: Tag Rocket Klaviyo [v1.2] 
+    Web Site Advantage: Tag Rocket Klaviyo [v1.3] 
     Supports consent, identify, Added to Cart, Viewed Product, Viewed Category, Searched Site, Clicked Banner and more
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2024 Web Site Advantage
@@ -210,6 +210,21 @@
     var KlaviyoPush = function(arg1) {
         if(debug) console.log(tagName, arguments); 
 
+        if(arg1[0] == 'track'){
+            var options = arg1[2];
+            
+            if (!options){
+                options = {};
+                arg1.push(options);
+            }
+            
+            options.channelId = {{settings.channel_id}};
+        }
+
+        if(arg1[0] == 'trackViewedItem'){
+            arg1[1].channelId = {{settings.channel_id}};
+        }
+
         w.klaviyo.push(arg1);
     }
 
@@ -236,7 +251,7 @@
     var KlaviyoIdentifyData = function() {
         var userData = T.userData;
 
-        var identify = {};
+        var identify = {channelId: {{settings.channel_id}} };
 
         if(userData.email) identify['$email'] = userData.email;
 
