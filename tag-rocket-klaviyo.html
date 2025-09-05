@@ -1,6 +1,6 @@
 <script data-cfasync="false">  
 /*
-    Web Site Advantage: Tag Rocket Klaviyo [v1.3] 
+    Web Site Advantage: Tag Rocket Klaviyo [v1.4] 
     Supports consent, identify, Added to Cart, Viewed Product, Viewed Category, Searched Site, Clicked Banner and more
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2024 Web Site Advantage
@@ -15,6 +15,8 @@
     var categoryImageSize = '1000w'; // could also use 'original'
 
     var compareAtPrice = "{{product.price.rrp_without_tax.value}}";
+
+    var channelIdPropertyName = 'Channel ID';
 
     var debug = false;
 
@@ -218,11 +220,11 @@
                 arg1.push(options);
             }
             
-            options.channelId = {{settings.channel_id}};
+            options[channelIdPropertyName] = {{settings.channel_id}};
         }
 
         if(arg1[0] == 'trackViewedItem'){
-            arg1[1].channelId = {{settings.channel_id}};
+            arg1[1][channelIdPropertyName] = {{settings.channel_id}};
         }
 
         w.klaviyo.push(arg1);
@@ -251,7 +253,9 @@
     var KlaviyoIdentifyData = function() {
         var userData = T.userData;
 
-        var identify = {channelId: {{settings.channel_id}} };
+        var identify = {};
+
+        identify[channelIdPropertyName] = {{settings.channel_id}};
 
         if(userData.email) identify['$email'] = userData.email;
 
@@ -358,7 +362,8 @@
                     break;
                 case "CheckoutPage": // Start checkout  
                     // Started Checkout: Handled by Klaviyo server side 
-                    // https://developers.klaviyo.com/en/docs/guide_to_integrating_a_platform_without_a_pre_built_klaviyo_integration#started-checkout        
+                    // https://developers.klaviyo.com/en/docs/guide_to_integrating_a_platform_without_a_pre_built_klaviyo_integration#started-checkout   
+                    KlaviyoPush(["track", 'Place Order Channel ID',{}]);     
                     break;
                 case "CheckoutStep1CustomerCompleted":              
                     KlaviyoPush(["track", 'Checkout Customer Completed']); 
