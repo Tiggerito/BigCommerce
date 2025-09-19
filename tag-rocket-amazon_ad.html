@@ -1,0 +1,213 @@
+<script data-cfasync="false">  
+/*
+    Web Site Advantage: Tag Rocket Amazon Ad Tag [v1.0] 
+    Amazon Ad v2 tag including advanced matching and TCFv2 options
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2025 Web Site Advantage
+*/
+!function(w,t){
+    // TODO: update settings to match your account
+
+    var addTagId = 'tracking-id'; 
+    var region ="NA"; // NA = North America, South America, Japan and Australia, EU = Europe
+
+    // Advanced Matching options
+    var advancedMatching = false; // send email and phonenumber  
+    var ttl = 9600; // time to live in seconds for cookies and local storage
+
+    // TCFv2 (Transparency and Consent Framework) options
+    var includeTcf = false;   
+    var gdpr = 2; // 0 = not applicable, 1 = applicable, 2 = unknown
+    var TCFv2Consent = ''; // TCFv2 consent string. Required if gdpr <> 0
+    var gdpr_pd = -1; // 0 = no personal data, 1 = contains personal data, -1 = unknown
+    
+    // How products are identified. set to an appropriate default
+    var itemGroupIdFormat = "[[psku]]||P[[pid]]"; 
+    var itemIdProductFormat = "";
+    var itemIdVariantFormat = "";
+
+    var debug = false;
+
+    // End of settings --------
+
+    // links to documentation
+    // https://advertising.amazon.com/help/GLZ54GXQW773A6MG
+    // Amazon Ads GTM Template
+
+    var tagName = 'AmazonAd';
+    var consentRequired = 'targetingAdvertising';
+
+    var getProductId = function(item, type) {
+        if (type == 'ItemId' && itemIdProductFormat && itemIdVariantFormat){
+            return T.getProductId(tagName, 'ItemId', item, itemIdProductFormat, itemIdVariantFormat);
+        }
+        else {
+            return T.getProductId(tagName, 'ItemGroupId', item, itemGroupIdFormat)
+        }  
+    };
+
+    var productInformation = function(item, type, change) {
+
+        var type = type || 'ItemGroupId';
+
+        var product = {
+            productId: getProductId(item, type),
+            name: item.name
+        };
+
+        if (item.brand) product.brand = item.brand;
+
+        if (item.price || item.price == 0) product.value = item.price;
+
+        if (item.isVariant && itemIdProductFormat && itemIdVariantFormat) product.variantId = getProductId(item, 'ItemId'); 
+
+        if (item.category) product.productCategory = item.category.name || item.category;
+
+        if (change) product.quantity = change;
+        else if (item.quantity) product.quantity = item.quantity; 
+
+        if (product.quantity < 0) product.quantity = -product.quantity;
+
+        return product;
+    }
+
+    var cartInformation = function(cart, type) {
+        var tagData = {
+            value: cart.orderAmount,
+            currencyCode: cart.currency.code
+        };
+
+        if (cart.orderId) tagData.orderId = cart.orderId;
+
+        return tagData;
+    };
+
+    w.amzn=a=function(){w.amzn.q.push([arguments,(new Date).getTime()])};
+    a.q=[];
+    a.version = "0.0";
+
+    var CallTag = function(arg1) {
+        if(debug) console.log(tagName, arguments); 
+
+        w.amzn.apply(w.amzn,arguments);
+    }
+
+    var setUserData = function() {
+        if (advancedMatching) {
+            var tokenConfig = {
+                email: T.userData.email,
+                phonenumber: T.userData.phone,
+                ttl: ttl
+            };
+
+            if (includeTcf){
+                tokenConfig.gdpr = { enabled: !!gdpr, consent: TCFv2Consent};
+            }
+
+            CallTag('setUserData', tokenConfig);
+        }
+    }
+
+    // Establish the TagRocket tag
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+    
+    T.init(function() { 
+
+        setUserData();
+
+        CallTag("setRegion", region);
+        CallTag('addTag', addTagId);
+        CallTag("trackEvent", "PageView");
+
+        if (includeTcf) {
+            CallTag('addtcfv2', {
+                gdpr: gdpr, 
+                gdpr_pd: gdpr_pd, 
+                gdpr_consent: TCFv2Consent
+            });
+        }
+
+        var scriptTagAdded = false;
+        function addScriptTag() {
+            if (!scriptTagAdded) {
+                scriptTagAdded = true;
+                T.addPreconnectTag('https://c.amazon-adsystem.com'); 
+                T.addScriptTag('https://c.amazon-adsystem.com/aat/amzn.js',{id:'amzn-pixel'}); 
+            }    
+        }
+
+        if (T.consent[consentRequired]) {
+            addScriptTag();
+        }
+        else {
+            T.on('ConsentChanged',function(data){
+                if (T.consent[consentRequired]) addScriptTag();
+            });
+        }
+
+        // put TagRocket in debug mode to see the eventData provided in each event
+        T.on('.*',function(eventData, eventName){
+            switch(eventName) {  
+                case "UserDataUpdated":
+                    setUserData();                  
+                    break;             
+                case "QuickSearch":
+                    CallTag('trackEvent', 'QuickSearch', {query: eventData.term});
+                    break;
+                case "SearchPage":
+                    CallTag('trackEvent', 'Search', {query: eventData.term});
+                    break;
+                case "ProductPage":
+                    CallTag('trackEvent', 'ProductView', productInformation(eventData, 'ItemGroupId'));
+                    break;
+                case "CartItemChanged":  
+                    if(eventData.change > 0)  {
+                        CallTag('trackEvent', 'AddToCart', productInformation(eventData.item, 'ItemId', eventData.change));
+                    }  
+                    else {
+                        CallTag('trackEvent', 'RemoveFromCart', productInformation(eventData.item, 'ItemId', -eventData.change));
+                    }             
+                    break;
+                case "CartPage":
+                    CallTag('trackEvent', 'CartView', cartInformation(eventData));
+                    break;
+                case "CheckoutPage": // Start Checkout
+                    CallTag('trackEvent', 'Checkout', cartInformation(eventData));
+                    break;
+                case "CheckoutStep1CustomerStarted": // Also start Checkout
+                    CallTag('trackEvent', 'CheckoutCustomerStarted', cartInformation(eventData));
+                    break;
+                case "CheckoutStep1CustomerCompleted": // Not often used
+                    CallTag('trackEvent', 'CheckoutCustomerCompleted', cartInformation(eventData));
+                    break;
+                case "CheckoutStep2ShippingCompleted":
+                    CallTag('trackEvent', 'CheckoutShippingCompleted', cartInformation(eventData));
+                    break;
+                case "CheckoutStep3BillingCompleted":
+                    CallTag('trackEvent', 'CheckoutBillingCompleted', cartInformation(eventData));
+                    break;
+                case "CheckoutStep5OrderCompleted":
+                    CallTag("trackEvent", "Purchase", cartInformation(eventData));
+                    break;
+                case "AccountCreated":
+                    CallTag('trackEvent', 'SignUp');
+                    break;
+                case "ContactSuccess":
+                    CallTag('trackEvent', 'Contact');
+                    break;
+                case "SubscribeSuccess":
+                    CallTag('trackEvent', 'Subscription');
+                    break;
+                case "AddToWishList":
+                    CallTag('trackEvent', 'AddToWishList');
+                    break;
+                case "SiteLogin":
+                case "CheckoutLogin":
+                    CallTag('trackEvent', 'Login');
+                    break;
+            }                    
+        });
+      
+    })
+}(window,"TagRocket")
+</script>
