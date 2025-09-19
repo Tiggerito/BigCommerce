@@ -52,7 +52,8 @@
 
         var product = {
             productId: getProductId(item, type),
-            name: item.name
+            name: item.name,
+            currencyCode: item.currency
         };
 
         if (item.brand) product.brand = item.brand;
@@ -199,7 +200,7 @@
                     CallTag('trackEvent', 'Subscription');
                     break;
                 case "AddToWishList":
-                    CallTag('trackEvent', 'AddToWishList');
+                    CallTag('trackEvent', 'AddToWishList', productInformation(eventData, 'ItemGroupId'));
                     break;
                 case "SiteLogin":
                 case "CheckoutLogin":
