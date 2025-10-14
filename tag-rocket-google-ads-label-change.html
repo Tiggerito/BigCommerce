@@ -14,7 +14,7 @@
     // rule on when to change the label based on a product (item)
     var changeWord = 'free';
 
-    const changeWordRegex = new RegExp('.*'+changeWord+'.*', 'gi');
+    var changeWordRegex = new RegExp('.*'+changeWord+'.*', 'gi');
     var changeItem = function(item) {
         return item.name.match(changeWordRegex) != null;
     };

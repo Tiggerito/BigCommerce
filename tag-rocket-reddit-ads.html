@@ -1,6 +1,6 @@
 <script data-cfasync="false">  
 /*
-    Web Site Advantage: Tag Rocket Reddit Ads [v1.0] 
+    Web Site Advantage: Tag Rocket Reddit Ads [v1.1] 
     Base script plus ecommerce events
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2023 Web Site Advantage
@@ -49,11 +49,13 @@
 
     var cartInformation = function(cart) {
         var tagData = {
-            value: cart.orderAmount,
             currency: cart.currency.code,
             itemCount: 0,
             products: []
         };
+
+        if (cart.cartAmount) tagData.value = cart.cartAmount;
+        if (cart.orderAmount) tagData.value = cart.orderAmount;
 
         if (cart.orderId) tagData.transactionId = '' + cart.orderId;
 

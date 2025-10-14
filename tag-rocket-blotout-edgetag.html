@@ -78,7 +78,7 @@
     if (defaultProvider.sendVariantIdInsteadOfProductIdSet === undefined) defaultProvider.sendVariantIdInsteadOfProductIdSet = false;
 
     var modifiedProviders = {};
-    for (const providerName in providers) {
+    for (var providerName in providers) {
         var provider = providers[providerName];
 
         provider.name = providerName;
@@ -102,7 +102,7 @@
 
     // if an event uses any of the provider functions for product information then this lets us send it to each modified provider
     var forEachModifiedProvider = function(doFunction) {
-        for (const providerName in modifiedProviders) {
+        for (var providerName in modifiedProviders) {
             doFunction(providers[providerName]);
         }
     }
@@ -114,7 +114,7 @@
 
         if (provider.name == "all") {
             // do all but modified providers
-            for (const providerName in modifiedProviders) {
+            for (var providerName in modifiedProviders) {
                 destinations[providerName] = false;
             }     
             destinations.all = true;      
@@ -135,7 +135,7 @@
 
         var consent = {all: T.consent[defaultProvider.consentRequired || 'targetingAdvertising']}; // un specified providers use the default
 
-        for (const providerName in providers) {
+        for (var providerName in providers) {
             if (providerName != 'all') {
                 consent[providerName] = T.consent[providers[providerName].consentRequired || 'targetingAdvertising'] || false;
             }

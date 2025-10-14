@@ -5,7 +5,7 @@ addEventListener('fetch', event => {
 async function handleRequest(request) {
     let response = await fetch(request); // get the response, body is in a stream
 
-    const contentType = response.headers.get("Content-Type");
+    var contentType = response.headers.get("Content-Type");
 
     if (contentType.startsWith('text/html')){
         // append new preload links 

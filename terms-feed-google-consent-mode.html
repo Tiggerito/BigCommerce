@@ -1,0 +1,159 @@
+<script type="text/javascript" defer src="//www.termsfeed.com/public/cookie-consent/4.2.0/cookie-consent.js" charset="UTF-8"></script>
+<script type="text/javascript" charset="UTF-8">
+/*
+    Web Site Advantage: Terms Feed Google Consent Mode v2 [v1.0] 
+    Adds Google Consent Mode v2 support
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/
+    Copyright (C) 2025 Web Site Advantage
+*/
+document.addEventListener('DOMContentLoaded', function () {
+    cookieconsent.run({
+
+        // ## your settings
+        "notice_banner_type":"simple", // simple headline, interstitial, standalone
+        "consent_type":"express", // express (GDPR) or implied (ePrivacy)
+        "palette":"light", // light, dark
+        "language":"en", // two letter language code
+        "page_load_consent_levels":["strictly-necessary"], // strictly-necessary (GDPR + ePrivacy), functionality (ePrivacy), tracking (ePrivacy), targeting (ePrivacy)
+        "notice_banner_reject_button_hide":false,
+        "preferences_center_close_button_hide":false,
+        "page_refresh_confirmation_buttons":false
+        //,"website_privacy_policy_url": "" // URL to your privacy policy page, if you have one
+        // ## end of your settings
+
+        // also can addEventListener with cc_ and the callback namer in camel case. e.g.
+        // window.addEventListener("cc_userChangedConsent", (function() {
+
+        // data stored in cookie_consent_level cookie
+        // {"strictly-necessary":true,"functionality":true,"tracking":false,"targeting":false}
+        // cookie_consent_user_accepted cookie indicates user based. set after user makes consent choice
+
+        ,"callbacks": {
+            "notice_banner_loaded": () => {
+                // when the banner is shown
+                console.log('notice_banner_loaded', arguments);
+            },
+            "i_agree_button_clicked": () => {
+                // on accept all in the banner
+                console.log('i_agree_button_clicked', arguments);
+            },
+            "i_decline_button_clicked": () => {
+                // on decine all in the banner
+                console.log('i_decline_button_clicked', arguments);
+            },
+            "change_my_preferences_button_clicked": () => {
+                console.log('change_my_preferences_button_clicked', arguments);
+            },
+            "scripts_all_loaded": () => {
+                // on accept all in the banner
+                console.log('scripts_all_loaded', arguments);
+            },
+            "user_consent_saved": () => {
+                tfGoogleConsentModeCallback(); // ensure we do an update even if no levels are granted.
+
+                // on when they save changes, before or after the scripts_specific_loaded events
+                // delay after saved to gather all consent levels?
+                console.log('user_consent_saved', arguments);
+            },
+            "scripts_specific_loaded": (level) => {
+                tfGoogleConsentModeCallback(level);
+
+                // levels
+                // "strictly-necessary" | "functionality" | "tracking" | "targeting"
+
+                console.log('scripts_specific_loaded', level);
+            }
+        },
+        "callbacks_force": true
+    });
+});
+</script>
+<script>
+var tfTimeout = null; // timeout to wait for all levels to be set
+var tfLevels; // object to store the levels set by the events
+tfGoogleConsentModeCallback = function (level) {
+    console.log('tfGoogleConsentModeCallback', level); // contains .level
+
+    if (tfTimeout) {
+        // previous timeout is still running, so we are updating the same consent level
+        // stop it, and start a new one
+        clearTimeout(tfTimeout);
+        tfTimeout = null;
+    }
+    else {
+        // new start, so clear what we know
+        tfLevels = {};
+    };
+
+    // add the level set by this event
+    if(level) tfLevels[level] = true;
+
+    tfTimeout = setTimeout(function () {
+        // we made it meaning all levels have been set
+
+        // clear timeout so the next event starts again
+        tfTimeout = null;
+
+        console.log('tfLevels', tfLevels);
+
+        // Google Consent Mode
+        gtag('consent', 'update', {
+            "ad_storage": tfLevels.targeting ? "granted" : "denied",
+            "ad_user_data": tfLevels.targeting ? "granted" : "denied", //  V2 
+            "ad_personalization": tfLevels.targeting ? "granted" : "denied", //  V2 
+            "analytics_storage": tfLevels.tracking ? "granted" : "denied",
+            "functionality_storage": tfLevels.functionality ? "granted" : "denied",
+            "personalization_storage": tfLevels.functionality ? "granted" : "denied"
+            // security_storage
+        });
+        
+    }, 10); // 0 to yield this task is enough as all levels seem to be processed in one task. But 10 is safer.
+}
+</script>
+<script>
+!function() {
+    return;
+ //   var tfTimeout = null; // timeout to wait for all levels to be set
+  //  var tfLevels; // object to store the levels set by the events
+
+    document.addEventListener('cc_scriptsSpecificLoaded', function (event) {
+        console.log('cc_scriptsSpecificLoaded', event); // contains .level
+
+        if (tfTimeout) {
+            // previous timeout is still running, so we are updating the same consent level
+            // stop it, and start a new one
+            clearTimeout(tfTimeout);
+            tfTimeout = null;
+        }
+        else {
+            // new start, so clear what we know
+            tfLevels = {};
+        };
+
+        // add the level set by this event
+        tfLevels[event.level] = true;
+
+        tfTimeout = setTimeout(function () {
+            // we made it meaning all levels have been set
+
+            // clear timeout so the next event starts again
+            tfTimeout = null;
+
+            console.log('tfLevels', tfLevels);
+
+            // Google Consent Mode
+            gtag('consent', 'update', {
+                "ad_storage": tfLevels.targeting ? "granted" : "denied",
+                // "ad_user_data": tfLevels.targeting ? "granted" : "denied", //  V2 
+                // "ad_personalization": tfLevels.targeting ? "granted" : "denied", //  V2 
+                "analytics_storage": tfLevels.tracking ? "granted" : "denied",
+                "functionality_storage": tfLevels.functionality ? "granted" : "denied",
+                // personalization_storage ?
+                // security_storage ?
+            });
+            
+        }, 10); // 0 to yield this task is enough as all levels seem to be processed in one task. But 10 is safer.
+        
+    });
+}()
+</script>

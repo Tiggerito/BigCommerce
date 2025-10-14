@@ -1,0 +1,233 @@
+<script data-cfasync="false">  
+/*
+    Web Site Advantage: Tag Rocket Axon [v1.0] 
+    Base tag and events for Axon
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2025 Web Site Advantage
+*/
+!function(w,t){
+    // TODO: change to your own event key
+    var AXON_EVENT_KEY = 'your-event-key'; 
+    
+    // TODO: set currency and values for these goals
+    var goalCurrency = "USD";
+    var goalContactSubscribeValue = 1.00;
+    var goalSubscribeValue = 1.00;
+
+    // TODO: how products are identified. set to an appropriate default
+    var itemGroupIdFormat = "[[psku]]||P[[pid]]"; 
+    var itemIdProductFormat = "[[psku]]||P[[pid]]";
+    var itemIdVariantFormat = "[[vsku]]||V[[vid]]";
+
+    var productImageSize = '1000w'; // could also use 'original'
+
+    var debug = false;
+
+    // End of settings --------
+
+    // links to documentation
+    // https://support.axon.ai/en/growth/promoting-your-websites/axon-pixel-integration/google-tag-manager
+    // https://support.axon.ai/en/growth/promoting-your-websites/axon-pixel-integration/events-and-objects
+    // https://support.axon.ai/en/growth/promoting-your-websites/axon-pixel-integration/pixel-validation
+
+    var tagName = 'Axon'; // TODO: change the name
+    var consentRequired = 'targetingAdvertising'; // TODO: set to 'targetingAdvertising' or 'analytics'
+
+    var getProductId = function(item, type) {
+        if (type == 'ItemId' && itemIdProductFormat && itemIdVariantFormat){
+            return T.getProductId(tagName, 'ItemId', item, itemIdProductFormat, itemIdVariantFormat);
+        }
+        else {
+            return T.getProductId(tagName, 'ItemGroupId', item, itemGroupIdFormat)
+        }  
+    };
+
+    var getProductImageUrl = function(item) {
+
+        if (item.imageUrl) return item.imageUrl;
+
+        if (!item.defaultImage) return null;
+
+        if (item.defaultImage.data && productImageSize) return item.defaultImage.data.replace('{:size}', productImageSize);
+
+        return item.defaultImage.url;
+    }
+
+    var productInformation = function(item, change) {
+
+        var product = {
+            item_id: getProductId(item, 'ItemGroupId'),
+            item_name: item.name
+        };
+
+        if (item.price || item.price == 0) product.price = item.price;
+
+        var imageUrl = getProductImageUrl(item);
+
+        if (imageUrl) product.image_url = imageUrl;
+
+        if (item.isVariant && itemIdProductFormat && itemIdVariantFormat) product.item_variant_id = getProductId(item, 'ItemId'); 
+
+        // they want it to use specific IDs
+        //   if (item.category) product.category = item.category.name || item.category;
+
+        if (change) product.quantity = change;
+        else if (item.quantity) product.quantity = item.quantity;
+
+        if (item.brand) product.item_brand = item.brand;
+
+        // affiliation
+        // discount
+    
+        return product;
+    }
+
+    var cartInformation = function(cart) {
+        var tagData = {
+            currency: cart.currency.code,
+            items: []
+        };
+
+        if (cart.cartAmount) tagData.value = cart.cartAmount;
+        if (cart.orderAmount) tagData.value = cart.orderAmount;
+
+        if (cart.orderId) tagData.transaction_id = cart.orderId;
+
+        if (cart.shippingCostTotal) tagData.shipping = cart.shippingCostTotal;
+
+        if (cart.shipping_handling && cart.shipping_handling.shipping_cost) {
+            data.shipping = cart.shipping_handling.shipping_cost.value;
+        }
+
+        if (cart.taxTotal) tagData.tax = cart.taxTotal;
+        else if (cart.taxes) {
+            var taxTotal = 0;
+            cart.taxes.forEach(function(tax){   
+                if (tax.amount) 
+                    taxTotal += tax.amount;
+                else if (tax.cost)                    
+                    taxTotal += tax.cost.value;
+            });
+
+            tagData.tax = taxTotal;
+        }
+
+        for(var i =0; i < cart.items.length; i++) {
+            var item = cart.items[i];
+
+            tagData.items.push(productInformation(item));
+        }
+        return tagData;
+    };
+
+    if(!w.axon){
+        var a=w.axon=function(){
+            a.performOperation?a.performOperation.apply(a,arguments):a.operationQueue.push(arguments)
+        };
+        a.operationQueue=[],a.ts=Date.now(),a.eventKey=AXON_EVENT_KEY;
+    }
+    
+    var AxonEvent = function(eventName, eventData) {
+        if(debug) console.log(tagName, arguments); 
+
+        eventData = eventData || {};
+
+        if (T.userData.id) eventData.user_id = 'customer_'+T.userData.id;
+
+        axon("track", eventName, eventData);
+    }
+   
+    // Establish the TagRocket tag
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+    
+    T.init(function() { 
+
+        AxonEvent("init");
+
+        AxonEvent("page_view");
+
+        var scriptTagAdded = false;
+        function addScriptTag() {
+            if (!scriptTagAdded) {
+                scriptTagAdded = true;
+                T.addPreconnectTag('https://s.axon.ai');
+                T.addScriptTag('https://s.axon.ai/pixel.js'); 
+                T.addPreconnectTag('https://res4.applovin.com'); 
+                T.addScriptTag('https://res4.applovin.com/p/l/loader.iife.js'); 
+            }    
+        }
+
+        if (T.consent[consentRequired]) {
+            addScriptTag();
+        }
+        else {
+            T.on('ConsentChanged',function(data){
+                if (T.consent[consentRequired]) addScriptTag();
+            });
+        }
+
+        // put TagRocket in debug mode to see the eventData provided in each event
+        T.on('.*',function(eventData, eventName){
+            switch(eventName) {             
+                case "QuickSearch":
+                    // could add results. Maybe using the ProductsVisible event
+                    AxonEvent('search', {search_term: eventData.term, type: 'quick'});
+                    break;
+                case "SearchPage":
+                    // could add results. Maybe using the ProductsVisible event
+                    AxonEvent('search', {search_term: eventData.term, type: 'full'});
+                    break;
+                case "ProductPage":
+                    AxonEvent('view_item', {
+                        items: [productInformation(eventData)],
+                        currency: eventData.currency,
+                        value: eventData.price
+                    });
+                    break;
+                case "CartItemChanged":  
+                    if(eventData.change > 0)  {
+                        AxonEvent('add_to_cart', {
+                            items: [productInformation(eventData.item)],
+                            currency: eventData.currency,
+                            value: eventData.price
+                        });
+                    }  
+                    else {
+                        AxonEvent('remove_from_cart', {
+                            items: [productInformation(eventData.item, -eventData.change)],
+                            currency: eventData.currency,
+                            value: eventData.price
+                        });
+                    }             
+                    break;
+                case "CartPage":
+                    AxonEvent('view_cart', cartInformation(eventData));
+                    break;
+                case "CheckoutStep1CustomerStarted": // Also start Checkout
+                    AxonEvent('begin_checkout', cartInformation(eventData));
+                    break;
+                case "CheckoutStep5OrderCompleted":
+                    // could add add_payment_info but they need very specific payment_type values
+                    AxonEvent('purchase', cartInformation(eventData));
+                    break;
+                case "AccountCreated":
+                    AxonEvent('sign_up', {method: 'website'});
+                    break;
+                case "ContactSuccess":
+                    AxonEvent('generate_lead', {value: goalContactSuccessValue, currency: goalCurrency});
+                    break;
+                case "SubscribeSuccess":
+                    AxonEvent('subscribe', {value: goalContactSubscribeValue, currency: goalCurrency});
+                    break;
+                case "SiteLogin":
+                    AxonEvent('login');
+                    break;
+                case "CheckoutLogin":
+                    AxonEvent('login');
+                    break;
+            }                    
+        });
+      
+    })
+}(window,"TagRocket")
+</script>

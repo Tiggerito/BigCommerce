@@ -1,6 +1,6 @@
 <script data-cfasync="false">  
 /*
-    Web Site Advantage: Tag Rocket Amazon Ad Tag [v1.0] 
+    Web Site Advantage: Tag Rocket Amazon Ad Tag [v1.1] 
     Amazon Ad v2 tag including advanced matching and TCFv2 options
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2025 Web Site Advantage
@@ -74,9 +74,11 @@
 
     var cartInformation = function(cart, type) {
         var tagData = {
-            value: cart.orderAmount,
             currencyCode: cart.currency.code
         };
+
+        if (cart.cartAmount) tagData.value = cart.cartAmount;
+        if (cart.orderAmount) tagData.value = cart.orderAmount;
 
         if (cart.orderId) tagData.orderId = cart.orderId;
 

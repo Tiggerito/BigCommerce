@@ -1,0 +1,205 @@
+<script data-cfasync="false">  
+/*
+    Web Site Advantage: Tag Rocket Brevo [v1.2] 
+    Including the abandoned cart workflow
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2025 Web Site Advantage
+*/
+!function(w,t){
+    var brevoClientKey = 'client_key'; 
+
+    var productImageSize = '1000w'; // could also use 'original'
+    
+    var debug = false;
+
+    // End of settings --------
+
+    // links to documentation
+    // https://developers.brevo.com/docs/gettings-started-with-sendinblue-tracker
+    // https://developers.brevo.com/docs/getting-started-with-brevo-tracker
+
+    var tagName = 'Brevo'; 
+    var consentRequired = 'targetingAdvertising';
+
+    var getProductImageUrl = function(item) {
+
+        if (item.imageUrl) return item.imageUrl;
+
+        if (!item.defaultImage) return null;
+
+        if (item.defaultImage.data && productImageSize) return item.defaultImage.data.replace('{:size}', productImageSize);
+
+        return item.defaultImage.url;
+    }
+
+    var productInformation = function(item, change) {
+
+        var product = {
+            name: item.name
+        };
+
+        if (item.price || item.price == 0) product.price = item.price;
+
+        if (item.category) product.category = item.category.name || item.category;
+
+        if (change) product.quantity = change;
+        else if (item.quantity) product.quantity = item.quantity;
+
+        if (item.url) product.url = item.url;
+
+        var imageUrl = getProductImageUrl(item);
+
+        if (imageUrl) product.image = imageUrl;
+    
+        return product;
+    }
+
+    var cartInformation = function(cart) {
+
+        var eventData = {};
+
+        var tagData = {
+            currency: cart.currency.code,
+            items: []
+        };
+
+        if (cart.cartAmount) tagData.total = cart.cartAmount;
+        if (cart.orderAmount) tagData.total = cart.orderAmount;
+
+        eventData.data = tagData;
+
+        // tagData url?
+
+        if (cart.id) eventData.id = 'cart:' + cart.id;
+        if (cart.orderId) eventData.id = 'orderId:' + cart.orderId;
+
+        for(var i =0; i < cart.items.length; i++) {
+            var item = cart.items[i];
+
+            tagData.items.push(productInformation(item));
+        }
+        return eventData;
+    };
+
+    // Version: 2.0
+    w.Brevo = window.Brevo || [];
+
+    var CallTag = function(data) {
+        if(debug) console.log(tagName, data);
+        
+        Brevo.push(data);
+    }
+
+    CallTag([
+        "init",
+        {
+            client_key: brevoClientKey
+        }
+    ]);
+
+    var userProperties = {};
+
+    var Identify = function(data) {
+
+        // for custom events
+        // https://developers.brevo.com/docs/track-custom-events-js
+        if (T.userData.email) userProperties.email_id = T.userData.email;
+        if (T.userData.first_name) userProperties.FIRSTNAME = T.userData.first_name;
+        if (T.userData.last_name) userProperties.LASTNAME = T.userData.last_name;
+        if (T.userData.customer_group_name) userProperties.customer_group_name = T.userData.customer_group_name;
+        if (T.userData.customer_group_id) userProperties.customer_group_id = T.userData.customer_group_id;
+
+        // for the identify call
+        // https://developers.brevo.com/docs/identify-users-js
+        var identifiers = {};
+        var attributes = {};
+
+        if (T.userData.email) identifiers.email_id = T.userData.email;
+        if (T.userData.first_name) attributes.FIRSTNAME = T.userData.first_name;
+        if (T.userData.last_name) attributes.LASTNAME = T.userData.last_name;
+        if (T.userData.customer_group_name) attributes.customer_group_name = T.userData.customer_group_name;
+        if (T.userData.customer_group_id) attributes.customer_group_id = T.userData.customer_group_id;
+
+        if (identifiers) {
+            CallTag(function () {
+                Brevo.identify({
+                    identifiers: identifiers,
+                    attributes: attributes
+                });
+            });
+        }
+    }
+
+    var CallTagCustomEvent = function(eventName, eventData) {
+        if(debug) console.log(tagName, eventName, userProperties, eventData);
+        
+        CallTag(["track", eventName, userProperties, eventData]);
+    }
+
+    // Establish the TagRocket tag
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+    
+    T.init(function() { 
+
+        Identify();
+
+        // https://developers.brevo.com/docs/track-page-views-js
+        // seems to cause a duplicate page view at the moment
+        // CallTag([
+        //     "page",
+        //     {{{json head.title}}},
+        //     {
+        //        pageType: T.pageType
+        //     } 
+        // ]);
+
+        var scriptTagAdded = false;
+        function addScriptTag() {
+            if (!scriptTagAdded) {
+                scriptTagAdded = true;
+                T.addPreconnectTag('https://cdn.brevo.com'); 
+                T.addScriptTag("https://cdn.brevo.com/js/sdk-loader.js"); 
+            }    
+        }
+
+        if (T.consent[consentRequired]) {
+            addScriptTag();
+        }
+        else {
+            T.on('ConsentChanged',function(data){
+                if (T.consent[consentRequired]) addScriptTag();
+            });
+        }
+
+        // https://help.brevo.com/hc/en-us/articles/209506925-Product-purchase-Send-an-order-confirmation-email-after-a-purchase
+        // https://help.brevo.com/hc/en-us/articles/209465705-FAQs-What-is-the-Brevo-tracker-and-how-to-install-it
+
+        T.on('.*',function(eventData, eventName){
+            switch(eventName) {  
+                case "UserDataUpdated":  
+                    Identify();               
+                    break;             
+                case "CartItemChanged":  
+
+                    if(eventData.change > 0)  {
+                        // this sends the whole cart at the moment
+                        // or https://developers.brevo.com/reference/trackevent-2 = just added_product  ????
+                        CallTagCustomEvent('cart_updated', cartInformation(eventData.cart));
+                    }
+                    else {
+                        CallTagCustomEvent('cart_deleted', cartInformation(eventData.cart));
+                    }            
+                    break;
+                case "CheckoutStep5OrderCompleted":
+                    // https://help.brevo.com/hc/en-us/articles/209506925-Product-purchase-Send-an-order-confirmation-email-after-a-purchase
+
+                    // this has an example of the event with how to use it in admin:
+                    // https://help.brevo.com/hc/en-us/articles/4402386448530-Customize-your-emails-using-transactional-parameters#tab-content-121
+                    
+                    CallTagCustomEvent('order_completed', cartInformation(eventData));
+                    break;
+            }                    
+        });      
+    })
+}(window,"TagRocket")
+</script>

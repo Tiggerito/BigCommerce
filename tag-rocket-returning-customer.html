@@ -1,0 +1,252 @@
+<script data-cfasync="false">   
+{{#if page_type '===' 'orderconfirmation'}}
+/*
+    Web Site Advantage: Tag Rocket Returning Customer [v1.0] 
+    Get the current users past orders to determine if they are a new or returning customer
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2023 Web Site Advantage
+*/
+!function(w,t){
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+
+    // https://support.google.com/google-ads/answer/9918441
+
+    // For orders that happen after this code is added, a returning customer will have made a previous order within the look back period
+    // For EU targeted campaigns, this should be set to 390 days  
+    var lookBackDays = 540; // 0 = no limit
+
+    // Maybe only send new_customer = true until code has been present for the lookBackDays days, then also send new_customer = false
+    // App now support setting wsa-lo to the last order date. When first published with that code it sets AppSettings.StartedGatheringLastOrderDate so we know how long we have been setting the date.
+    // once AppSettings.StartedGatheringLastOrderDate < now - lookBackDays, we can start sending new_customer = false
+    var startedGatheringLastOrderDate = new Date("2022-11-05T23:50:02.1858483Z");
+
+    //// Rest is NOT RIGHT - The number would need to be continually updated until we have dates for all orders within the period.
+    // in the app version, store the date of publish where the code was added, then use that to determine when to stop using last order id. That way we become compliant after lookBackDays
+    // For orders made before the code was added, we can use the previous order ID to determine if they are a returning customer
+    // Set this to the smallest Order ID within the look back period at the point when you first install this code
+    // Previous Orders with a smaller ID will be considered new customers.   
+    // var minOrderIdForReturningCustomers = -1;  // -1 = disabled
+    
+    T.init(function() {
+
+        var new_customer = null;
+
+        T.on('CheckoutStep5OrderCompleted',function(data, eventName){
+            var now = new Date();
+            var lastOrderDateText = localStorage.getItem('wsa-lo');
+
+            var lookBackDate = new Date(now.getTime() - lookBackDays * 24 * 60 * 60 * 1000);
+
+            if (lastOrderDateText) {
+                var lastOrderDate = new Date(lastOrderDateText);
+
+                if (lookBackDays == 0 || lastOrderDate > lookBackDate) {
+                    new_customer = false; // last order was inside the look back period
+                }
+                else {
+                    new_customer = true; // last order was outside the look back period             
+                }
+            }
+            else {
+                // no known last order date.
+
+                var lastOrderIdText = localStorage.getItem('wsa-ci'); // set after this event, so is not present on first order
+                
+                if (lookBackDays == 0) { // any previous order is a returning customer
+                   
+                    if (lastOrderIdText) {
+                        new_customer = false;
+                    }
+                    else {
+                        new_customer = true; // no last order date and no last order id, so must be a new customer
+                    }
+                }
+                else {
+                    if (startedGatheringLastOrderDate < lookBackDate) {
+                        // safe to assume we should have had a last order date if they ordered within the period
+                        new_customer = true;
+                    }
+                    else {
+                        if (lastOrderIdText) {
+                            // We don't know how long ago. don't set new_customer. I presume this lets the Ads logic work it out.
+                        }
+                        else {
+                            // no last order date and no last order id, so must be a new customer, or they cleared the store
+                            new_customer = true;
+                        }
+                    }
+                }
+            }
+            // else if (minOrderIdForReturningCustomers >= 0) {
+            //     var lastOrderIdText = localStorage.getItem('wsa-ci'); // set after this event, so is not present on first order
+                
+            //     if (lastOrderIdText) {
+
+            //         if (minOrderIdForReturningCustomers) {
+            //             var lastOrderId = parseInt(lastOrderIdText);
+
+            //             if (lastOrderId >= minOrderIdForReturningCustomers) {
+            //                 new_customer = false;
+            //             }
+            //         }
+            //         else {
+            //             new_customer = false; // does not comply with the look back days
+            //         }
+
+                    
+            //     }
+            // }
+
+            localStorage.setItem('wsa-lo', now.toISOString()); // new app does this for us.
+        });
+
+        T.on('GtagCommandPending',function(data, eventName){
+
+            if (data.arguments && data.arguments.length > 2) {
+                var eventName = data.arguments[1];
+                var options = data.arguments[2];
+
+                if (eventName == 'purchase' && options.send_to && options.send_to.indexOf("AW-") === 0) {
+                    // Purchase to Ad Words 
+                    if (new_customer != null) {
+                        options.new_customer = new_customer;
+                    }
+                }
+            }
+        });
+        
+
+    //     T.on('StencilUtils',function(data, eventName){
+    //         w.stencilUtils.api.getPage('/account.php?action=order_status', options, function(err, content) {
+    //             console.log('err', err);
+    //             console.log('content', content);
+    //         });
+    //     });
+
+    //     {{#if page_type '===' 'checkout'}}
+    //     T.on('CheckoutStep4PaymentStarted',function(data, eventName){
+
+    //         if (data.customerId == 0) {
+    //             // guest
+    //             localStorage.setItem('wsa-new-customer', 'guest');
+    //             return;
+    //         }
+
+    //         var fetchOptions = {
+    //             "method": "GET",
+    //             "headers": {
+    //                 "stencil-config": "{}",
+    //                 "stencil-options": "{}",
+    //                 "x-xsrf-token": window.BCData.csrf_token,
+    //                 "x-requested-with": "stencil-utils",
+    //                 "content-type": "application/x-www-form-urlencoded; charset=UTF-8"
+    //             },
+    //             "credentials": "include"
+    //         };
+
+    //         fetch('/account.php?action=order_status', fetchOptions).then((function(t) {
+    //             return -1 !== t.headers.get("content-type").indexOf("application/json") ? t.json() : t.text()
+    //         }
+    //         )).then((function(t) {
+
+    //             var content = t;
+    //         // stencilUtils should exist by now
+    //    //     w.stencilUtils.api.getPage('/account.php?action=order_status', options, function(err, content) {
+    //       //      console.log('err', err);
+    //       //      console.log('content', content);
+
+    //             // https://support.google.com/google-ads/answer/9917012
+    //             // https://support.google.com/google-ads/answer/14005876
+
+    //             // this does not work on the order-confirmation page, so want to run it late on the checkout page
+    //             // as the current order is not completed, we only need to find one valid order in the list
+    //             // also need to detect if a guest and indicate that
+    //             // store the result in local storage and have the order-confirmation code access it
+
+    //             // Ideally need to see if any orders have been made within the last 540 days
+    //             // date format is that specified in the admin. Need to provide instructions and parse them like in the blog posting code 
+
+    //             // <div class="account-product-details">
+    //             //     <div class="account-product-detail">
+    //             //         <h6 class="account-product-detail-heading">Order Placed</h6>
+    //             //         <span>Nov 1, 2023</span>
+    //             //     </div>
+    //             //     <div class="account-product-detail">
+    //             //         <h6 class="account-product-detail-heading">Last Update</h6>
+    //             //         <span>Nov 1, 2023</span>
+    //             //     </div>
+    //             // </div>
+
+
+
+
+    //             // Parse the HTML string
+    //             const parser = new DOMParser();
+    //             const doc = parser.parseFromString(content, 'text/html');
+
+    //             // Get all elements with class 'account-product-detail'
+    //             const details = doc.querySelectorAll('.account-product-detail');
+
+    //             // Filter out elements that have a heading 'Order Placed'
+    //             const orderPlacedDetails = Array.from(details).filter(detail => {
+    //                 const heading = detail.querySelector('.account-product-detail-heading');
+    //                 return heading && heading.textContent.trim() === 'Order Placed';
+    //             });
+
+    //             if (orderPlacedDetails.length == 0) {
+    //                 localStorage.setItem('wsa-new-customer', 'false');
+    //                 return;
+    //             }
+
+    //             localStorage.setItem('wsa-new-customer', 'true'); 
+ 
+    //             // Try to Extract the dates from these elements and determine if any are within the last lookBackDays
+
+    //             // Extract the dates from these elements
+    //             const orderPlacedDates = orderPlacedDetails.map(detail => {
+    //                 const dateSpan = detail.querySelector('span');
+    //                 return dateSpan ? dateSpan.textContent.trim() : '';
+    //             });
+
+    //             // Parse the date strings into Date objects
+    //             const orderPlacedDateObjects = orderPlacedDates.map(dateString => new Date(dateString));
+
+    //             const now = new Date();
+    //             const lookBackDate = new Date(now.getTime() - lookBackDays * 24 * 60 * 60 * 1000);
+
+    //             const recentOrders = orderPlacedDateObjects.filter(dateObject => {
+    //                 return dateObject > lookBackDate;
+    //             });
+
+    //             if (recentOrders.length == 0) {
+    //                 localStorage.setItem('wsa-new-customer', 'false'); 
+    //             }
+    //         }));
+    //     });
+    //     {{/if}}
+
+    //     {{#if page_type '===' 'orderconfirmation'}}
+    //     T.on('GtagCommandPending',function(data, eventName){
+
+    //         if (data.arguments && data.arguments.length > 2) {
+    //             var eventName = data.arguments[1];
+    //             var options = data.arguments[2];
+
+    //             if (eventName == 'purchase' && options.send_to && options.send_to.indexOf("AW-") === 0) {
+    //                 // Purchase to Ad Words 
+    //                 var newCustomer = localStorage.getItem('wsa-new-customer');
+
+    //                 if (newCustomer == 'true') {
+    //                     options.new_customer = true;
+    //                 }                    
+    //                 else if (newCustomer == 'false') {
+    //                     options.new_customer = false;
+    //                 }
+    //             }
+    //         }
+    //     });
+    //     {{/if}}
+    })
+}(window,"TagRocket")
+{{/if}}
+</script>

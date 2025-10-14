@@ -1,6 +1,6 @@
 <script data-cfasync="false">  
 /*
-    Web Site Advantage: Tag Rocket AdRoll [v1.1] 
+    Web Site Advantage: Tag Rocket AdRoll [v1.2] 
     Includes conversion details
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2023 Web Site Advantage
@@ -52,10 +52,12 @@
 
     var cartInformation = function(cart) {
         var tagData = {
-            conversion_value: ''+cart.orderAmount,
             currency: cart.currency.code,
             products: []
         };
+
+        if (cart.cartAmount) tagData.conversion_value = ''+cart.orderAmount;
+        if (cart.orderAmount) tagData.conversion_value = ''+cart.orderAmount;
 
         if (cart.orderId) {
             tagData.ORDER_ID = cart.orderId;

@@ -1,0 +1,126 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Tag Rocket Northbeam [v1.0] 
+    Northbeam
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tracking-with-northwind-on-bigcommerce/
+    Copyright (C) 2022 Web Site Advantage
+*/
+
+!function(w,t){
+    var northBeamAccountID = '0fa82c17-ceb9-4939-af02-8819df1e7dad';
+
+    var productIdentifier = function(product) {return ''+(product.productSku||product.productId)}; 
+    var variantIdentifier = function(product) {return ''+(product.variantSku||product.variantId||'')}; 
+
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+
+    var firePurchaseEvents = [];
+    var firePurchaseEvent = function() {
+        if (w.Northbeam) 
+            w.Northbeam.firePurchaseEvent.apply(w.Northbeam, arguments); 
+        else 
+            firePurchaseEvents.push(arguments);
+    }
+
+    var fireEmailCaptureEvents = [];
+    var fireEmailCaptureEvent = function() {
+        if (w.Northbeam) 
+            w.Northbeam.fireEmailCaptureEvent.apply(w.Northbeam, arguments); 
+        else 
+            fireEmailCaptureEvents.push(arguments);
+    }
+
+    var fireCustomGoals = [];
+    var fireCustomGoal = function() {
+        if (w.Northbeam) 
+            w.Northbeam.fireCustomGoal.apply(w.Northbeam, arguments);
+        else 
+            fireCustomGoals.push(arguments);
+    }
+
+    var identifys = [];
+    var identify = function() {
+        if (w.Northbeam) 
+            w.Northbeam.identify.apply(w.Northbeam, arguments);
+        else 
+            identifys.push(arguments);
+    }
+    
+    T.init(function(){
+        
+        var scriptTagAdded = false;
+        function addScriptTag() {
+            if (!scriptTagAdded) {
+                scriptTagAdded = true;
+                T.addScriptTag("https://j.northbeam.io/ota-sp/"+northBeamAccountID+".js", {async:true}, function() {
+                    identifys.forEach(function(args){w.Northbeam.identify.apply(w.Northbeam, args)});
+                    fireEmailCaptureEvents.forEach(function(args){w.Northbeam.fireEmailCaptureEvent.apply(w.Northbeam, args)});
+                    fireCustomGoals.forEach(function(args){w.Northbeam.fireCustomGoal.apply(w.Northbeam, args)});
+                    firePurchaseEvents.forEach(function(args){w.Northbeam.firePurchaseEvent.apply(w.Northbeam, args)});
+                });
+            }    
+        }
+
+        if (T.consent.analytics) {
+            addScriptTag();
+
+        }
+
+        {{#if customer.email}}
+        identify("email", "{{customer.email}}".trim().toLowerCase()); // will not work as script is async.
+        {{/if}}
+
+        var buildItem = function(itemData) {
+            var item = {
+                productId: productIdentifier(itemData),
+                variantId: variantIdentifier(itemData),
+                productName: itemData.name,
+                variantName: itemData.variantName,
+                price: itemData.price
+            };
+            if (itemData.quantity) {
+                item.quantity = itemData.quantity;
+            }
+            return item;
+        };
+    
+        T.on('.*',function(data, eventName){
+            switch(eventName) {
+                case "ConsentChanged":
+                    if (T.consent.analytics) {
+                        addScriptTag();
+                    }
+                    break;
+                case "CheckoutStep5OrderCompleted":
+
+                    var coupons = '';
+
+                    if (data.coupons && data.coupons.length > 0) {
+                        coupons = data.coupons.map(function(coupon) {return coupon.code}).join(',')
+                    }
+
+                    firePurchaseEvent({
+                        id: data.orderId,  
+                        totalPrice: data.orderAmount,
+                        shippingPrice: data.shippingCostTotal,
+                        taxPrice: data.taxTotal, 
+                        coupons: coupons, // A comma separated list of discount codes used.
+                        currency: data.currency.code, // A 3-character ISO currency code describing totalPrice, taxPrice, and shippingPrice.
+                        customerId: data.customerId, // A unique identifier for the customer who made a purchase.
+                        lineItems: data.items.map(function(item) {return buildItem(item)})
+                    });
+                    break;
+                case "CartItemChanged": 
+                    // if (data.change > 0) fireCustomGoals("add_to_cart", {}); // example. need to email success@northbeam.io with any custom goals
+                    break;
+                case "ContactSuccess":
+                    fireEmailCaptureEvent(data.email, 'contact');
+                    break;
+                case "SubscribeSuccess":
+                    fireEmailCaptureEvent(data.email, 'subscribe');
+                    break;
+            }                    
+        });
+    })
+}(window,"TagRocket")
+</script>

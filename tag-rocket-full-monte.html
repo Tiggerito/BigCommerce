@@ -3,11 +3,13 @@
     Web Site Advantage: Tag Rocket Full Monte [v1.0] 
     This is a complete template to help build other tags
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
-    Copyright (C) 2024 Web Site Advantage
+    Copyright (C) 2025 Web Site Advantage
 */
 !function(w,t){
     // TODO: Update settings to match your setup
     var trackingId = 'tracking-id'; 
+
+    var productImageSize = '1000w'; // could also use 'original'
     
     // TODO: add variables for any settings made in the tags dashboard, like for goal/conversion IDs
     var goalAccountCreated = '';
@@ -39,6 +41,17 @@
         }  
     };
 
+    var getProductImageUrl = function(item) {
+
+        if (item.imageUrl) return item.imageUrl;
+
+        if (!item.defaultImage) return null;
+
+        if (item.defaultImage.data && productImageSize) return item.defaultImage.data.replace('{:size}', productImageSize);
+
+        return item.defaultImage.url;
+    }
+
     // TODO: update to the product data format this tag expects
     var productInformation = function(item, type, change) {
 
@@ -56,6 +69,12 @@
 
         if (item.category) product.category = item.category.name || item.category;
 
+        if (item.brand) product.item_brand = item.brand;
+
+        var imageUrl = getProductImageUrl(item);
+
+        if (imageUrl) product.image_url = imageUrl;
+
         if (change) product.quantity = change;
         else if (item.quantity) product.quantity = item.quantity; // TODO: if supporting removes, this could be negative. check the tag to see if it wants it always to be positive
     
@@ -64,12 +83,33 @@
 
     var cartInformation = function(cart, type) {
         var tagData = {
-            total: cart.orderAmount,
             currency: cart.currency.code,
             items: []
         };
 
+        if (cart.cartAmount) tagData.total = cart.cartAmount;
+        if (cart.orderAmount) tagData.total = cart.orderAmount;
+
         if (cart.orderId) tagData.transaction_id = cart.orderId;
+
+        if (cart.shippingCostTotal) tagData.shipping = cart.shippingCostTotal;
+
+        if (cart.shipping_handling && cart.shipping_handling.shipping_cost) {
+            data.shipping = cart.shipping_handling.shipping_cost.value;
+        }
+
+        if (cart.taxTotal) tagData.tax = cart.taxTotal;
+        else if (cart.taxes) {
+            var taxTotal = 0;
+            cart.taxes.forEach(function(tax){   
+                if (tax.amount) 
+                    taxTotal += tax.amount;
+                else if (tax.cost)                    
+                    taxTotal += tax.cost.value;
+            });
+
+            tagData.tax = taxTotal;
+        }
 
         for(var i =0; i < cart.items.length; i++) {
             var item = cart.items[i];

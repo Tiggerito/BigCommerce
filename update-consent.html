@@ -28,16 +28,16 @@
 
     // BCs mechanism to disable scripts until consent is granted
     function checkAndLoadScript(e, n=[]) {
-        const o = e.dataset.bcCookieConsent;
+        var o = e.dataset.bcCookieConsent;
         if (void 0 === o)
             return !1;
-        const t = Number(o);
+            var t = Number(o);
         if (isNaN(t))
             return !1;
         if (n.includes(t) && "text/plain" === e.type) {
-            const n = e.cloneNode(!0);
+            var n = e.cloneNode(!0);
             n.type = "text/javascript";
-            const o = e.parentElement;
+            var o = e.parentElement;
             e.remove(),
             o.appendChild(n)
         }

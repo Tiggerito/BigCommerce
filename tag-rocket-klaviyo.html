@@ -1,6 +1,6 @@
 <script data-cfasync="false">  
 /*
-    Web Site Advantage: Tag Rocket Klaviyo [v1.4] 
+    Web Site Advantage: Tag Rocket Klaviyo [v1.5] 
     Supports consent, identify, Added to Cart, Viewed Product, Viewed Category, Searched Site, Clicked Banner and more
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2024 Web Site Advantage
@@ -33,6 +33,9 @@
     var consentRequired = 'targetingAdvertising'; 
 
     var getProductImageUrl = function(item) {
+
+        if (item.imageUrl) return item.imageUrl;
+
         if (!item.defaultImage) return null;
 
         if (item.defaultImage.data && productImageSize) return item.defaultImage.data.replace('{:size}', productImageSize);

@@ -11,7 +11,7 @@
     // rule on when to exclude an item from Facebook or Pinterest
     var excludeWord = 'free';
 
-    const excludeWordRegex = new RegExp('.*'+excludeWord+'.*', 'gi');
+    var excludeWordRegex = new RegExp('.*'+excludeWord+'.*', 'gi');
     var excludeItem = function(item) {
         return item.name.match(excludeWordRegex) != null;
     };
