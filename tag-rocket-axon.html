@@ -11,7 +11,7 @@
     
     // TODO: set currency and values for these goals
     var goalCurrency = "USD";
-    var goalContactSubscribeValue = 1.00;
+    var goalContactValue = 1.00;
     var goalSubscribeValue = 1.00;
 
     // TODO: how products are identified. set to an appropriate default
@@ -214,10 +214,10 @@
                     AxonEvent('sign_up', {method: 'website'});
                     break;
                 case "ContactSuccess":
-                    AxonEvent('generate_lead', {value: goalContactSuccessValue, currency: goalCurrency});
+                    AxonEvent('generate_lead', {value: goalContactValue, currency: goalCurrency});
                     break;
                 case "SubscribeSuccess":
-                    AxonEvent('subscribe', {value: goalContactSubscribeValue, currency: goalCurrency});
+                    AxonEvent('subscribe', {value: goalSubscribeValue, currency: goalCurrency});
                     break;
                 case "SiteLogin":
                     AxonEvent('login');
