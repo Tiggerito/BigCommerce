@@ -1,6 +1,6 @@
 <script data-cfasync="false">  
 /*
-    Web Site Advantage: Tag Rocket Axon [v1.0] 
+    Web Site Advantage: Tag Rocket Axon [v1.1] 
     Base tag and events for Axon
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2025 Web Site Advantage
@@ -30,8 +30,8 @@
     // https://support.axon.ai/en/growth/promoting-your-websites/axon-pixel-integration/events-and-objects
     // https://support.axon.ai/en/growth/promoting-your-websites/axon-pixel-integration/pixel-validation
 
-    var tagName = 'Axon'; // TODO: change the name
-    var consentRequired = 'targetingAdvertising'; // TODO: set to 'targetingAdvertising' or 'analytics'
+    var tagName = 'Axon';
+    var consentRequired = 'targetingAdvertising';
 
     var getProductId = function(item, type) {
         if (type == 'ItemId' && itemIdProductFormat && itemIdVariantFormat){
@@ -69,7 +69,8 @@
         if (item.isVariant && itemIdProductFormat && itemIdVariantFormat) product.item_variant_id = getProductId(item, 'ItemId'); 
 
         // they want it to use specific IDs
-        //   if (item.category) product.category = item.category.name || item.category;
+        // Could create a mapping function. If it returns a category, it gets used
+        // if (item.category) product.category = item.category.name || item.category;
 
         if (change) product.quantity = change;
         else if (item.quantity) product.quantity = item.quantity;
@@ -142,7 +143,7 @@
     
     T.init(function() { 
 
-        AxonEvent("init");
+        axon("init");
 
         AxonEvent("page_view");
 
@@ -207,7 +208,8 @@
                     AxonEvent('begin_checkout', cartInformation(eventData));
                     break;
                 case "CheckoutStep5OrderCompleted":
-                    // could add add_payment_info but they need very specific payment_type values
+                    // Could add add_payment_info but they need very specific payment_type values
+                    // Maybe have a mapping function, if it returns a payment_type, we send the add_payment_info event
                     AxonEvent('purchase', cartInformation(eventData));
                     break;
                 case "AccountCreated":
