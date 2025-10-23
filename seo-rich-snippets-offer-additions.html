@@ -1,0 +1,31 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: SEO Rich Snippets Offer Addition [v1.0] 
+    Add a property to the main offer
+    https://bigcommerce.websiteadvantage.com.au/rich-snippets/
+    Copyright (C) 2025 Web Site Advantage
+*/
+
+{{~#if page_type '===' 'product'}}
+
+!function(d){
+
+    var availabilityStarts = "2025-12-01T08:00:00+08:00"; // TODO: calculate this
+
+    var jsonLd = {
+        "@context": "https://schema.org",
+        "@id": "#Offer",
+        "availabilityStarts": availabilityStarts
+    };
+
+    var script = d.createElement('script');
+    script.type = 'application/ld+json';
+    script.id = 'wsa-rich-snippets-jsonld-product-offer-additions';
+
+    script.text = JSON.stringify(jsonLd);
+
+    d.querySelector("head").appendChild(script);
+}(document)
+
+{{~/if}}
+</script>
