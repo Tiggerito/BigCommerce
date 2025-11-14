@@ -1,6 +1,6 @@
 <script data-cfasync="false">  
 /*
-    Web Site Advantage: Tag Rocket Klaviyo [v1.5] 
+    Web Site Advantage: Tag Rocket Klaviyo [v1.6] 
     Supports consent, identify, Added to Cart, Viewed Product, Viewed Category, Searched Site, Clicked Banner and more
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2024 Web Site Advantage
@@ -233,13 +233,16 @@
         w.klaviyo.push(arg1);
     }
 
-    var KlaviyoIdentify = function() {
+    var KlaviyoIdentify = function(eventData) {
 
-        var data = KlaviyoIdentifyData();
+        var identify = KlaviyoIdentifyData(eventData);
 
-        if(debug) console.log(tagName, 'identify', data); 
- 
-        if (data) w.klaviyo.push(['identify', data]);
+        if (identify['$email'] || identify['$id']) {
+			KlaviyoPush(['identify', identify]);
+			if (debug) console.log(tagName, 'identify sent:', identify);
+		} else if (debug) {
+			console.log(tagName, 'identify skipped — no email or id');
+		}
     }
 
     // alternate way to send events is using dedicated functions. There return a promise so you can wait for them to complete
@@ -253,30 +256,46 @@
     // if we have no user data, then Klaviyo does not send events. https://developers.klaviyo.com/en/docs/javascript_api#track-events-and-actions
     // https://developers.klaviyo.com/en/docs/javascript_api#identify-people
     // https://developers.klaviyo.com/en/docs/custom_integration_faqs#should-i-use-emailphone-or-external-id-as-my-unique-identifier
-    var KlaviyoIdentifyData = function() {
-        var userData = T.userData;
+    var KlaviyoIdentifyData = function(eventData) {
+        var userData = {};
 
-        var identify = {};
+		// 1. Only include fields that actually exist in eventData
+		if (eventData) {
+			if (eventData.email) userData.email = eventData.email;
+			if (eventData.customerId && eventData.customerId > 0) userData.id = eventData.customerId;
+		}
 
-        identify[channelIdPropertyName] = {{settings.channel_id}};
+		// 2. If any fields are still empty, supplement them with data from T.userData
+		if (T && T.userData) {
+			var base = T.userData;
+			if (!userData.email && base.email) userData.email = base.email;
+			if (!userData.phone && base.phone) userData.phone = base.phone;
+			if (!userData.first_name && base.first_name) userData.first_name = base.first_name;
+			if (!userData.last_name && base.last_name) userData.last_name = base.last_name;
+			if (!userData.id && base.id) userData.id = base.id;
+			if (!userData.customer_group_name && base.customer_group_name) userData.customer_group_name = base.customer_group_name;
+		}
 
-        if(userData.email) identify['$email'] = userData.email;
+		// 3. Build the Identify object
+		var identify = {};
 
-        if(userData.phone) identify['$phone_number'] = userData.phone;
+		if (userData.email) identify['$email'] = userData.email;
+		if (userData.phone) identify['$phone_number'] = userData.phone;
+		if (userData.first_name) identify['$first_name'] = userData.first_name;
+		if (userData.last_name) identify['$last_name'] = userData.last_name;
+		if (userData.customer_group_name) identify.CustomerGroupName = userData.customer_group_name;
+		if (userData.id) identify['$id'] = userData.id;
 
-        if(userData.first_name) identify['$first_name'] = userData.first_name;
+		var locale = document.documentElement.lang;
+		if (locale) identify['locale'] = locale;
 
-        if(userData.last_name) identify['$last_name'] = userData.last_name;
-
-        if(userData.customer_group_name) identify.CustomerGroupName = userData.customer_group_name;
-
-        // Klaviyo's own events use customer id, but I believe that means they can't identify guests
-        if(userData.id) identify["$id"] = userData.id;
-
-        if (T.consent.current) {
-            if (T.consent.current.ad_personalization) identify.ad_personalization = T.consent.current.ad_personalization;
-            if (T.consent.current.ad_user_data) identify.ad_user_data = T.consent.current.ad_user_data;           
-        }
+		// 4. Carry over consent signals
+		if (T && T.consent && T.consent.current) {
+			if (T.consent.current.ad_personalization) identify.ad_personalization = T.consent.current.ad_personalization;
+			if (T.consent.current.ad_user_data) identify.ad_user_data = T.consent.current.ad_user_data;
+			if (T.consent.current.ad_storage) identify.ad_storage = T.consent.current.ad_storage;
+			if (T.consent.current.analytics_storage) identify.analytics_storage = T.consent.current.analytics_storage;
+		}
 
         return identify;
     }
@@ -368,13 +387,15 @@
                     // https://developers.klaviyo.com/en/docs/guide_to_integrating_a_platform_without_a_pre_built_klaviyo_integration#started-checkout   
                     KlaviyoPush(["track", 'Place Order Channel ID',{}]);     
                     break;
-                case "CheckoutStep1CustomerCompleted":              
+                case "CheckoutStep1CustomerCompleted":  
+                    KlaviyoIdentify(eventData);            
                     KlaviyoPush(["track", 'Checkout Customer Completed']); 
                     break;
                 case "CheckoutStep2ShippingCompleted":              
                     KlaviyoPush(["track", 'Checkout Shipping Completed']); 
                     break;
-                case "CheckoutStep3BillingCompleted":              
+                case "CheckoutStep3BillingCompleted":   
+                    KlaviyoIdentify(eventData);           
                     KlaviyoPush(["track", 'Checkout Billing Completed']); 
                     break;
                 case "CheckoutStep5OrderCompleted":
