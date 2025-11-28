@@ -1,6 +1,6 @@
 <script data-cfasync="false">   
 /*
-    Web Site Advantage: Tag Rocket Google Customer Reviews [v1.1] 
+    Web Site Advantage: Tag Rocket Google Customer Reviews [v1.2] 
     Badge and survey opt-in module
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2021 Web Site Advantage
@@ -23,6 +23,7 @@ Script contents: this, with at least the REPLACE_WITH_YOUR_ID changed
     var OPT_IN_STYLE = "CENTER_DIALOG"; {{!-- CENTER_DIALOG, BOTTOM_RIGHT_DIALOG, BOTTOM_LEFT_DIALOG, TOP_RIGHT_DIALOG, TOP_LEFT_DIALOG, BOTTOM_TRAY --}} 
     var ESTIMATED_DELIVERY_DAYS = 5;
     var LANGUAGE = ""; {{!-- if not set, it uses browsers default language --}}
+    var SHOW_BADGE = true; 
 
     var calcEstimatedDeliveryDays = function(order) {
         return ESTIMATED_DELIVERY_DAYS;
@@ -83,16 +84,18 @@ Script contents: this, with at least the REPLACE_WITH_YOUR_ID changed
         });
 {{/if}}
 
-        w.tagRocketGoogleCustomerReviews = function() {            
-            var ratingBadgeContainer = d.createElement("div");
-            d.body.appendChild(ratingBadgeContainer);
-            w.gapi.load('ratingbadge', function() {
-                w.gapi.ratingbadge.render(
-                ratingBadgeContainer, {
-                    "merchant_id": MERCHANT_ID,
-                    "position": BADGE_POSITION
-                });           
-            });
+        w.tagRocketGoogleCustomerReviews = function() {     
+            if(SHOW_BADGE) {       
+                var ratingBadgeContainer = d.createElement("div");
+                d.body.appendChild(ratingBadgeContainer);
+                w.gapi.load('ratingbadge', function() {
+                    w.gapi.ratingbadge.render(
+                    ratingBadgeContainer, {
+                        "merchant_id": MERCHANT_ID,
+                        "position": BADGE_POSITION
+                    });           
+                });
+            }
 
 {{~#if page_type '===' 'orderconfirmation'}}
             loaded = true;
