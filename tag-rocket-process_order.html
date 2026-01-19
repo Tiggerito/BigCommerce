@@ -1,0 +1,32 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Tag Rocket Process Order [v1.0] 
+    Lets you trigger Tag Rockets order processing outside of the order confirmation page
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2026 Web Site Advantage
+*/
+!function(w,t){
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+
+    var getQueryParameter = function(name) {
+        name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+        var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+            results = regex.exec(location.search);
+        return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+    };
+    
+    T.init(function() {
+        // TODO: modify to only run on the required page and get the order ID from your desired source
+
+        // The supplied order ID has to be the last oder ID placed by the user
+        // If Tag Rocket has already processed this order ID for this user, it will not process it again
+
+        // This example gets the order ID from a query parameter called orderId
+        var orderId = getQueryParameter('orderId');
+
+        if (orderId) {
+            T.processOrder(orderId);
+        }
+    })
+}(window,"TagRocket")
+</script>
