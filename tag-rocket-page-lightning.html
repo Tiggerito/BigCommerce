@@ -1,0 +1,54 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Tag Rocket Page Lightning [v1.0] 
+    Enable Tag Rocket to tell Page Lightning when some needs are met.
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2026 Web Site Advantage
+*/
+!function(w,t){
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+
+    var adPersonalization = false;
+    var adUserData = false;
+    var analytics = false;
+    var functional = false;
+    var targetingAdvertising = false;
+
+    var P = window.PageLightning;
+
+    var consentUpdate = function(consent) {
+        if (consent.adPersonalization && !adPersonalization) {
+            adPersonalization = true;
+            P.needMet('consent-adPersonalization');
+        }
+        if (consent.adUserData && !adUserData) {
+            adUserData = true;
+            P.needMet('consent-adUserData');
+        }
+        if (consent.analytics && !analytics) {
+            analytics = true;
+            P.needMet('consent-analytics');
+        }
+        if (consent.functional && !functional) {
+            functional = true;
+            P.needMet('consent-functional');
+        }
+        if (consent.targetingAdvertising && !targetingAdvertising) {
+            targetingAdvertising = true;
+            P.needMet('consent-targetingAdvertising');
+        }
+    }
+    
+    T.init(function() {
+        consentUpdate(T.consent);
+        
+        T.on('.*',function(data, eventName){
+            switch(eventName) {
+                case "ConsentChanged":
+                    consentUpdate(T.consent);
+                    break;
+                }
+        });
+    })
+}(window,"TagRocket")
+</script>
