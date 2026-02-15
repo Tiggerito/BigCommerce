@@ -1,7 +1,7 @@
 <script data-cfasync="false">   
 /*
     Web Site Advantage: Tag Rocket Page Lightning [v1.0] 
-    Enable Tag Rocket to tell Page Lightning when some needs are met.
+    Enable Tag Rocket to tell Page Lightning when some needs are met, like consent
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2026 Web Site Advantage
 */
@@ -47,7 +47,7 @@
                 case "ConsentChanged":
                     consentUpdate(T.consent);
                     break;
-                }
+            }
         });
     })
 }(window,"TagRocket")
