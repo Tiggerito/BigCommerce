@@ -17,12 +17,13 @@
     }
 
     var consentUpdate = function(consent) {
-        window[p].needsMet(
+        window[p].needsMet(            
             consentTypeUpdate('targetingAdvertising', consent.targetingAdvertising),
             consentTypeUpdate('analytics', consent.analytics),
             consentTypeUpdate('functional', consent.functional),
             consentTypeUpdate('adPersonalization', consent.adPersonalization),
-            consentTypeUpdate('adUserData', consent.adUserData),    
+            consentTypeUpdate('adUserData', consent.adUserData), 
+            'consent-established'   
         ); 
     }
     
