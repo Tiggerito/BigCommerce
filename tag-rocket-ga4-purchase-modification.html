@@ -1,0 +1,35 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Tag Rocket GA4 Purchase Modification [v1.0] 
+    Add a custom dimension to GA4 purchase events
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2026 Web Site Advantage
+*/
+    !function(w,t){
+        w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+
+        function isAQuoteCheckout() {
+            // check if the current checkout is a quote checkout
+            // return true if it is a quote checkout, false otherwise
+        }
+        
+        T.init(function() { 
+       
+            T.on('GtagCommandPending',function(data, eventName){
+                // fires before a gtag command is sent to the dataLayer, giving you the ability to edit the parameters sent
+    
+                if (data.arguments.length >=3) {
+                    var command = data.arguments[0];
+                    var eventName = data.arguments[1];
+                    var eventData = data.arguments[2];
+
+                    // only modify purchase events sent to a GA4 property
+                    if (command === 'event' && eventName === 'purchase' && eventData.send_to && eventData.send_to.indexOf("G-") === 0) {
+                        eventData.quote_checkout = isAQuoteCheckout();
+                    }
+
+                };                
+            });
+        })
+    }(window,"TagRocket")
+    </script>
