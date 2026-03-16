@@ -1,6 +1,6 @@
 <script data-cfasync="false">   
 /*
-    Web Site Advantage: Tag Rocket Page Lightning [v1.0] 
+    Web Site Advantage: Tag Rocket Page Lightning [v1.1] 
     Enable Tag Rocket to tell Page Lightning when some needs are met, like consent
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2026 Web Site Advantage
@@ -17,6 +17,7 @@
     }
 
     var consentUpdate = function(consent) {
+        window[p].resetSpeculationRules();
         window[p].needsMet(            
             consentTypeUpdate('targetingAdvertising', consent.targetingAdvertising),
             consentTypeUpdate('analytics', consent.analytics),
