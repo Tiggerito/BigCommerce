@@ -1,6 +1,6 @@
 <script data-cfasync="false">   
 /*
-    Web Site Advantage: Tag Rocket Affiliate Conversion Example [v1.0] 
+    Web Site Advantage: Tag Rocket Affiliate Conversion Example [v1.1] 
     Track a purchase
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2022 Web Site Advantage
@@ -17,6 +17,7 @@
               
                 var orderId = order.orderId;
                 var orderAmount = order.orderAmount;
+                var newCustomer = order.new_customer; 
 
                 // add affiliate conversion code here using data from the order
 
