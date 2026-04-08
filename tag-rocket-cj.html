@@ -1,0 +1,452 @@
+<script data-cfasync="false">
+/*
+    Web Site Advantage: Tag Rocket CJ Universal Tag [v1.0]
+    CJ Advertiser Site Tracking with site-page and conversion support
+    https://developers.cj.com/docs/advertiser-site-tracking/universal-tag-integration
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2026 Web Site Advantage
+*/
+!function(w,t){
+    // Update these settings to match your CJ account.
+    var cjTagId = 'REPLACE_WITH_YOUR_TAG_ID';
+    var cjEnterpriseId = 0;
+    var cjActionTrackerId = 0; // Single-action example. Extend to cj.orders if you need multiple actions.
+    var consentRequired = 'targetingAdvertising';
+    var sendStoredCjEvent = true; // Disable if CJ already handles the Event ID entirely server-side.
+    var cjEventCookieName = 'wsa_cjevent';
+    var cjDataCookieName = 'wsa_cjdata';
+    var cjCookieDays = 30;
+    var debug = false;
+
+    // End of settings --------
+
+    var cjTagUrl = 'https://www.mczbf.com/tags/' + cjTagId + '/tag.js';
+    var currentPath = {{{json settings.request.absolute_path}}};
+    var currentPageType = '{{~#if settings.request.absolute_path '===' '/'}}homepage{{~else if page_type '===' 'product'}}productDetail{{~else if page_type '===' 'category'}}category{{~else if page_type '===' 'brand'}}category{{~else if page_type '===' 'cart'}}cart{{~else if page_type '===' 'search'}}searchResults{{~else if page_type '===' 'orderconfirmation'}}conversionConfirmation{{~else}}other{{~/if}}';
+    var customerId = '';
+    var customerEmail = '';
+    var cartTemplateData = null;
+
+    {{#if customer.id}}
+    customerId = '{{customer.id}}';
+    {{/if}}
+    {{#if customer.email}}
+    customerEmail = {{{json (trim customer.email)}}}.toLowerCase();
+    {{/if}}
+    {{#if page_type '===' 'cart'}}
+    cartTemplateData = {{{json cart}}};
+    {{/if}}
+
+    var landingParams = persistAffiliateParameters();
+
+    function log() {
+        if (debug && w.console && w.console.log) {
+            var args = Array.prototype.slice.call(arguments);
+            args.unshift('CJ');
+            w.console.log.apply(w.console, args);
+        }
+    }
+
+    function toNumber(value) {
+        if (value === null || typeof value === 'undefined' || value === '') return null;
+        var number = Number(value);
+        return isNaN(number) ? null : number;
+    }
+
+    function roundTo(number, places) {
+        if (number === null || typeof number === 'undefined' || isNaN(number)) return null;
+        var multiplier = Math.pow(10, places || 0);
+        var epsilon = Number.EPSILON || 2.220446049250313e-16;
+        return Math.round((number + epsilon) * multiplier) / multiplier;
+    }
+
+    function getNestedValue(object, path) {
+        var value = object;
+        for (var i = 0; i < path.length; i++) {
+            if (!value || typeof value !== 'object') return null;
+            value = value[path[i]];
+        }
+        return typeof value === 'undefined' ? null : value;
+    }
+
+    function getQueryParameter(name) {
+        var pattern = new RegExp('[?&]' + name.replace(/[\[\]]/g, '\\$&') + '(=([^&#]*)|&|#|$)');
+        var results = pattern.exec(w.location.href);
+        if (!results) return '';
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, ' '));
+    }
+
+    function getCookie(name) {
+        var prefix = name + '=';
+        var cookies = document.cookie.split(';');
+
+        for (var index = 0; index < cookies.length; index++) {
+            var cookie = cookies[index].trim();
+            if (cookie.indexOf(prefix) === 0) {
+                return decodeURIComponent(cookie.substring(prefix.length));
+            }
+        }
+
+        return '';
+    }
+
+    function setCookie(name, value, days) {
+        if (!value) return;
+
+        var expires = '';
+        if (days) {
+            var date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            expires = '; expires=' + date.toUTCString();
+        }
+
+        document.cookie = [
+            name + '=' + encodeURIComponent(value),
+            'path=/',
+            'SameSite=Lax' + expires + (w.location.protocol === 'https:' ? '; Secure' : '')
+        ].join('; ');
+    }
+
+    function persistAffiliateParameters() {
+        var cjdata = getQueryParameter('cjdata');
+        var cjevent = getQueryParameter('cjevent');
+
+        if (cjdata) setCookie(cjDataCookieName, cjdata, cjCookieDays);
+        if (cjevent) setCookie(cjEventCookieName, cjevent, cjCookieDays);
+
+        return {
+            cjdata: cjdata,
+            cjevent: cjevent
+        };
+    }
+
+    function sanitizeIdentifier(value, fallback) {
+        var identifier = ('' + (value || fallback || '')).trim();
+
+        if (!identifier) identifier = fallback || '';
+
+        identifier = identifier.replace(/[^A-Za-z0-9_-]/g, '_');
+
+        if (identifier.length > 100) {
+            identifier = identifier.substring(0, 100);
+        }
+
+        return identifier;
+    }
+
+    function getTaxTotal(data) {
+        var taxTotal = toNumber(data && data.taxTotal);
+        if (taxTotal !== null) return taxTotal;
+
+        var taxes = data && data.taxes;
+        if (!taxes || !taxes.length) return 0;
+
+        var total = 0;
+        taxes.forEach(function(tax) {
+            var amount = toNumber(tax.amount);
+            if (amount === null) amount = toNumber(getNestedValue(tax, ['cost', 'value']));
+            if (amount !== null) total += amount;
+        });
+
+        return total;
+    }
+
+    function getShippingTotal(data) {
+        var shippingTotal = toNumber(data && data.shippingCostTotal);
+        if (shippingTotal !== null) return shippingTotal;
+
+        shippingTotal = toNumber(getNestedValue(data, ['shipping_handling', 'shipping_cost', 'value']));
+        return shippingTotal !== null ? shippingTotal : 0;
+    }
+
+    function getOrderSubtotal(data) {
+        var subtotal = toNumber(data && data.baseAmount);
+        if (subtotal !== null) return roundTo(subtotal, 2);
+
+        subtotal = toNumber(data && data.cartAmount);
+        if (subtotal !== null) return roundTo(subtotal, 2);
+
+        subtotal = toNumber(data && data.subTotal);
+        if (subtotal !== null) return roundTo(subtotal, 2);
+
+        subtotal = toNumber(data && data.subtotal);
+        if (subtotal !== null) return roundTo(subtotal, 2);
+
+        subtotal = toNumber(data && data.orderAmount);
+        if (subtotal === null) return null;
+
+        subtotal -= getShippingTotal(data);
+        subtotal -= getTaxTotal(data);
+
+        return roundTo(Math.max(subtotal, 0), 2);
+    }
+
+    function getCartSubtotal(cart) {
+        var subtotal = toNumber(getNestedValue(cart, ['sub_total', 'value']));
+        if (subtotal !== null) return roundTo(subtotal, 2);
+
+        subtotal = toNumber(cart && cart.cartAmount);
+        if (subtotal === null) return null;
+
+        subtotal -= getShippingTotal(cart);
+        subtotal -= getTaxTotal(cart);
+
+        return roundTo(Math.max(subtotal, 0), 2);
+    }
+
+    function getCouponCode(order) {
+        if (order && order.coupons && order.coupons.length > 0 && order.coupons[0].code) {
+            return '' + order.coupons[0].code;
+        }
+
+        return '';
+    }
+
+    function getItemUnitPrice(item) {
+        var unitPrice = toNumber(item && item.price);
+        if (unitPrice !== null) return roundTo(unitPrice, 2);
+
+        unitPrice = toNumber(item && item.salePrice);
+        if (unitPrice !== null) return roundTo(unitPrice, 2);
+
+        unitPrice = toNumber(getNestedValue(item, ['sale_price', 'value']));
+        if (unitPrice !== null) return roundTo(unitPrice, 2);
+
+        unitPrice = toNumber(getNestedValue(item, ['list_price', 'value']));
+        if (unitPrice !== null) return roundTo(unitPrice, 2);
+
+        unitPrice = toNumber(getNestedValue(item, ['extended_sale_price', 'value']));
+        if (unitPrice !== null) {
+            var quantity = getItemQuantity(item);
+            return roundTo(unitPrice / quantity, 2);
+        }
+
+        return 0;
+    }
+
+    function getItemQuantity(item) {
+        var quantity = parseInt(item && item.quantity, 10);
+        return isNaN(quantity) || quantity < 1 ? 1 : quantity;
+    }
+
+    function getItemDiscount(item) {
+        var discount = toNumber(item && item.discount);
+        if (discount !== null) return roundTo(discount, 2);
+
+        discount = toNumber(item && item.discountAmount);
+        if (discount !== null) return roundTo(discount, 2);
+
+        discount = toNumber(item && item.totalDiscount);
+        if (discount !== null) return roundTo(discount, 2);
+
+        discount = toNumber(getNestedValue(item, ['discounted_amount', 'value']));
+        if (discount !== null) return roundTo(discount, 2);
+
+        return 0;
+    }
+
+    function getItemIdentifier(item) {
+        return sanitizeIdentifier(
+            item && (item.sku || item.productSku || item.product_id || item.productId || item.id),
+            item && (item.productId || item.product_id || item.id) ? '' + (item.productId || item.product_id || item.id) : 'item'
+        );
+    }
+
+    function mapItems(items) {
+        if (!items || !items.length) return undefined;
+
+        var mappedItems = items.slice(0, 100).map(function(item) {
+            var mappedItem = {
+                unitPrice: getItemUnitPrice(item),
+                itemId: getItemIdentifier(item),
+                quantity: getItemQuantity(item)
+            };
+            var discount = getItemDiscount(item);
+            if (discount) mappedItem.discount = discount;
+            return mappedItem;
+        });
+
+        return mappedItems.length ? mappedItems : undefined;
+    }
+
+    function sha256Async(message) {
+        if (!message || !w.crypto || !w.crypto.subtle || !w.TextEncoder) {
+            return Promise.resolve('');
+        }
+
+        return w.crypto.subtle.digest('SHA-256', new w.TextEncoder().encode(message))
+            .then(function(buffer) {
+                return Array.prototype.map.call(new Uint8Array(buffer), function(byte) {
+                    return byte.toString(16).padStart(2, '0');
+                }).join('');
+            })
+            .catch(function() {
+                return '';
+            });
+    }
+
+    function getUserId(source) {
+        if (source && source.userId) return '' + source.userId;
+        if (source && source.customerId) return '' + source.customerId;
+        if (source && source.id) return '' + source.id;
+        if (customerId) return customerId;
+        return '';
+    }
+
+    function getEmail(source) {
+        if (source && source.email) return ('' + source.email).trim().toLowerCase();
+        if (customerEmail) return customerEmail;
+        return '';
+    }
+
+    function buildCommonUserData(source) {
+        var userId = getUserId(source);
+        var email = getEmail(source);
+
+        return sha256Async(email).then(function(emailHash) {
+            var commonData = {};
+            if (userId) commonData.userId = userId;
+            if (emailHash) commonData.emailHash = emailHash;
+            return commonData;
+        });
+    }
+
+    function buildSitePageData() {
+        return buildCommonUserData(w.TagRocket && w.TagRocket.userData).then(function(commonData) {
+            var sitePage = {
+                enterpriseId: cjEnterpriseId,
+                pageType: currentPageType
+            };
+
+            Object.keys(commonData).forEach(function(key) {
+                sitePage[key] = commonData[key];
+            });
+
+            if (landingParams.cjdata || landingParams.cjevent) {
+                sitePage.referringChannel = 'Affiliate';
+            }
+
+            if (currentPageType === 'cart' && cartTemplateData) {
+                var cartSubtotal = getCartSubtotal(cartTemplateData);
+                if (cartSubtotal !== null) sitePage.cartSubtotal = cartSubtotal;
+
+                var cartItems = mapItems(cartTemplateData.items || []);
+                if (cartItems) sitePage.items = cartItems;
+            }
+
+            return sitePage;
+        });
+    }
+
+    function buildOrderData(order) {
+        return buildCommonUserData(order).then(function(commonData) {
+            var orderData = {
+                enterpriseId: cjEnterpriseId,
+                pageType: 'conversionConfirmation',
+                orderId: sanitizeIdentifier(order && order.orderId, 'order'),
+                actionTrackerId: cjActionTrackerId,
+                currency: order && order.currency && order.currency.code ? order.currency.code : 'USD'
+            };
+
+            Object.keys(commonData).forEach(function(key) {
+                orderData[key] = commonData[key];
+            });
+
+            var amount = getOrderSubtotal(order);
+            if (amount !== null) orderData.amount = amount;
+
+            var discount = toNumber(order && order.totalDiscount);
+            if (discount !== null) orderData.discount = roundTo(discount, 2);
+
+            var coupon = getCouponCode(order);
+            if (coupon) orderData.coupon = coupon;
+
+            var cjeventOrder = sendStoredCjEvent ? (landingParams.cjevent || getCookie(cjEventCookieName)) : '';
+            if (cjeventOrder) orderData.cjeventOrder = cjeventOrder;
+
+            var orderItems = mapItems(order && order.items ? order.items : []);
+            if (orderItems) orderData.items = orderItems;
+
+            return orderData;
+        });
+    }
+
+    function hasConsent(T) {
+        return !consentRequired || !T.consent || !!T.consent[consentRequired];
+    }
+
+    function isConfiguredForCurrentPage() {
+        if (!cjTagId || cjTagId === 'REPLACE_WITH_YOUR_TAG_ID' || !cjEnterpriseId) {
+            return false;
+        }
+
+        if (currentPageType === 'conversionConfirmation' && !cjActionTrackerId) {
+            return false;
+        }
+
+        return true;
+    }
+
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+
+    T.init(function() {
+        var scriptTagAdded = false;
+        var started = false;
+
+        function addCjScript() {
+            if (scriptTagAdded) return;
+            scriptTagAdded = true;
+            T.addPreconnectTag('https://www.mczbf.com');
+            T.addScriptTag(cjTagUrl, { id: 'cjapitag', async: true });
+            log('CJ tag loaded', cjTagUrl);
+        }
+
+        function setSitePageData() {
+            buildSitePageData().then(function(sitePage) {
+                w.cj = w.cj || {};
+                w.cj.sitePage = sitePage;
+                delete w.cj.order;
+                log('cj.sitePage', sitePage);
+                addCjScript();
+            });
+        }
+
+        function startTracking() {
+            if (started) return;
+            started = true;
+
+            if (!isConfiguredForCurrentPage()) {
+                log('CJ configuration incomplete');
+                return;
+            }
+
+            if (currentPageType === 'conversionConfirmation') {
+                T.on('CheckoutStep5OrderCompleted', function(order) {
+                    buildOrderData(order).then(function(orderData) {
+                        w.cj = w.cj || {};
+                        w.cj.order = orderData;
+                        delete w.cj.sitePage;
+                        log('cj.order', orderData);
+                        addCjScript();
+                    });
+                });
+                return;
+            }
+
+            setSitePageData();
+        }
+
+        if (hasConsent(T)) {
+            startTracking();
+        }
+        else {
+            T.on('ConsentChanged', function() {
+                if (hasConsent(T)) {
+                    startTracking();
+                }
+            });
+        }
+    });
+}(window,"TagRocket")
+</script>
