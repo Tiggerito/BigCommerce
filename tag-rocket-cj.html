@@ -1,6 +1,6 @@
 <script data-cfasync="false">
 /*
-    Web Site Advantage: Tag Rocket CJ Universal Tag [v1.0]
+    Web Site Advantage: Tag Rocket CJ Universal Tag [v1.3]
     CJ Advertiser Site Tracking with site-page and conversion support
     https://developers.cj.com/docs/advertiser-site-tracking/universal-tag-integration
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
@@ -12,7 +12,12 @@
     var cjEnterpriseId = 0;
     var cjActionTrackerId = 0; // Single-action example. Extend to cj.orders if you need multiple actions.
     var consentRequired = 'targetingAdvertising';
+    var storeAffiliateParamsBeforeConsent = false; // Set true only if your legal basis allows storing cjdata/cjevent before consent.
+    var readAffiliateParamsBeforeConsent = false; // Keep false for strict mode. Reads from cookies are blocked until consented tracking starts.
     var sendStoredCjEvent = true; // Disable if CJ already handles the Event ID entirely server-side.
+    var itemGroupIdFormat = '[[psku]]||P[[pid]]';
+    var itemIdProductFormat = '';
+    var itemIdVariantFormat = '';
     var cjEventCookieName = 'wsa_cjevent';
     var cjDataCookieName = 'wsa_cjdata';
     var cjCookieDays = 30;
@@ -20,29 +25,26 @@
 
     // End of settings --------
 
+    var tagName = 'CJ';
+
     var cjTagUrl = 'https://www.mczbf.com/tags/' + cjTagId + '/tag.js';
-    var currentPath = {{{json settings.request.absolute_path}}};
     var currentPageType = '{{~#if settings.request.absolute_path '===' '/'}}homepage{{~else if page_type '===' 'product'}}productDetail{{~else if page_type '===' 'category'}}category{{~else if page_type '===' 'brand'}}category{{~else if page_type '===' 'cart'}}cart{{~else if page_type '===' 'search'}}searchResults{{~else if page_type '===' 'orderconfirmation'}}conversionConfirmation{{~else}}other{{~/if}}';
-    var customerId = '';
-    var customerEmail = '';
-    var cartTemplateData = null;
+    var currentCartData = null;
+    var consentedTrackingStarted = false;
 
-    {{#if customer.id}}
-    customerId = '{{customer.id}}';
-    {{/if}}
-    {{#if customer.email}}
-    customerEmail = {{{json (trim customer.email)}}}.toLowerCase();
-    {{/if}}
-    {{#if page_type '===' 'cart'}}
-    cartTemplateData = {{{json cart}}};
-    {{/if}}
+    var landingParams = {
+        cjdata: getQueryParameter('cjdata'),
+        cjevent: getQueryParameter('cjevent')
+    };
 
-    var landingParams = persistAffiliateParameters();
+    if (storeAffiliateParamsBeforeConsent) {
+        persistAffiliateParameters();
+    }
 
     function log() {
         if (debug && w.console && w.console.log) {
             var args = Array.prototype.slice.call(arguments);
-            args.unshift('CJ');
+            args.unshift(tagName);
             w.console.log.apply(w.console, args);
         }
     }
@@ -109,16 +111,19 @@
     }
 
     function persistAffiliateParameters() {
-        var cjdata = getQueryParameter('cjdata');
-        var cjevent = getQueryParameter('cjevent');
+        if (landingParams.cjdata) setCookie(cjDataCookieName, landingParams.cjdata, cjCookieDays);
+        if (landingParams.cjevent) setCookie(cjEventCookieName, landingParams.cjevent, cjCookieDays);
 
-        if (cjdata) setCookie(cjDataCookieName, cjdata, cjCookieDays);
-        if (cjevent) setCookie(cjEventCookieName, cjevent, cjCookieDays);
+        return landingParams;
+    }
 
-        return {
-            cjdata: cjdata,
-            cjevent: cjevent
-        };
+    function canReadAffiliateCookies() {
+        return readAffiliateParamsBeforeConsent || consentedTrackingStarted;
+    }
+
+    function getStoredCjEvent() {
+        if (!canReadAffiliateCookies()) return '';
+        return getCookie(cjEventCookieName);
     }
 
     function sanitizeIdentifier(value, fallback) {
@@ -133,6 +138,14 @@
         }
 
         return identifier;
+    }
+
+    function getTagRocketProductId(item, type) {
+        if (type === 'ItemId' && itemIdProductFormat && itemIdVariantFormat) {
+            return T.getProductId(tagName, 'ItemId', item, itemIdProductFormat, itemIdVariantFormat);
+        }
+
+        return T.getProductId(tagName, 'ItemGroupId', item, itemGroupIdFormat);
     }
 
     function getTaxTotal(data) {
@@ -203,33 +216,6 @@
         return '';
     }
 
-    function getItemUnitPrice(item) {
-        var unitPrice = toNumber(item && item.price);
-        if (unitPrice !== null) return roundTo(unitPrice, 2);
-
-        unitPrice = toNumber(item && item.salePrice);
-        if (unitPrice !== null) return roundTo(unitPrice, 2);
-
-        unitPrice = toNumber(getNestedValue(item, ['sale_price', 'value']));
-        if (unitPrice !== null) return roundTo(unitPrice, 2);
-
-        unitPrice = toNumber(getNestedValue(item, ['list_price', 'value']));
-        if (unitPrice !== null) return roundTo(unitPrice, 2);
-
-        unitPrice = toNumber(getNestedValue(item, ['extended_sale_price', 'value']));
-        if (unitPrice !== null) {
-            var quantity = getItemQuantity(item);
-            return roundTo(unitPrice / quantity, 2);
-        }
-
-        return 0;
-    }
-
-    function getItemQuantity(item) {
-        var quantity = parseInt(item && item.quantity, 10);
-        return isNaN(quantity) || quantity < 1 ? 1 : quantity;
-    }
-
     function getItemDiscount(item) {
         var discount = toNumber(item && item.discount);
         if (discount !== null) return roundTo(discount, 2);
@@ -246,22 +232,24 @@
         return 0;
     }
 
-    function getItemIdentifier(item) {
-        return sanitizeIdentifier(
-            item && (item.sku || item.productSku || item.product_id || item.productId || item.id),
-            item && (item.productId || item.product_id || item.id) ? '' + (item.productId || item.product_id || item.id) : 'item'
-        );
-    }
-
     function mapItems(items) {
         if (!items || !items.length) return undefined;
 
         var mappedItems = items.slice(0, 100).map(function(item) {
+            var idType = (item && item.isVariant && itemIdProductFormat && itemIdVariantFormat) ? 'ItemId' : 'ItemGroupId';
+            var quantity = parseInt(item && item.quantity, 10);
+            var unitPrice = toNumber(item && item.price);
+            if (unitPrice === null) unitPrice = toNumber(item && item.salePrice);
+            if (unitPrice === null) unitPrice = toNumber(getNestedValue(item, ['sale_price', 'value']));
+            if (unitPrice === null) unitPrice = toNumber(getNestedValue(item, ['list_price', 'value']));
+            if (quantity < 1 || isNaN(quantity)) quantity = 1;
+
             var mappedItem = {
-                unitPrice: getItemUnitPrice(item),
-                itemId: getItemIdentifier(item),
-                quantity: getItemQuantity(item)
+                itemId: getTagRocketProductId(item, idType),
+                unitPrice: roundTo(unitPrice === null ? 0 : unitPrice, 2),
+                quantity: quantity
             };
+
             var discount = getItemDiscount(item);
             if (discount) mappedItem.discount = discount;
             return mappedItem;
@@ -286,23 +274,20 @@
             });
     }
 
-    function getUserId(source) {
-        if (source && source.userId) return '' + source.userId;
-        if (source && source.customerId) return '' + source.customerId;
-        if (source && source.id) return '' + source.id;
-        if (customerId) return customerId;
+    function getUserId() {
+        if (T.userData && T.userData.id) return '' + T.userData.id;
         return '';
     }
 
-    function getEmail(source) {
-        if (source && source.email) return ('' + source.email).trim().toLowerCase();
-        if (customerEmail) return customerEmail;
+    function getEmail() {
+
+        if (T.userData && T.userData.email) return ('' + T.userData.email).trim().toLowerCase();
         return '';
     }
 
-    function buildCommonUserData(source) {
-        var userId = getUserId(source);
-        var email = getEmail(source);
+    function buildCommonUserData() {
+        var userId = getUserId();
+        var email = getEmail();
 
         return sha256Async(email).then(function(emailHash) {
             var commonData = {};
@@ -313,7 +298,7 @@
     }
 
     function buildSitePageData() {
-        return buildCommonUserData(w.TagRocket && w.TagRocket.userData).then(function(commonData) {
+        return buildCommonUserData().then(function(commonData) {
             var sitePage = {
                 enterpriseId: cjEnterpriseId,
                 pageType: currentPageType
@@ -327,11 +312,11 @@
                 sitePage.referringChannel = 'Affiliate';
             }
 
-            if (currentPageType === 'cart' && cartTemplateData) {
-                var cartSubtotal = getCartSubtotal(cartTemplateData);
+            if (currentPageType === 'cart' && currentCartData) {
+                var cartSubtotal = getCartSubtotal(currentCartData);
                 if (cartSubtotal !== null) sitePage.cartSubtotal = cartSubtotal;
 
-                var cartItems = mapItems(cartTemplateData.items || []);
+                var cartItems = mapItems(currentCartData.items || []);
                 if (cartItems) sitePage.items = cartItems;
             }
 
@@ -340,7 +325,7 @@
     }
 
     function buildOrderData(order) {
-        return buildCommonUserData(order).then(function(commonData) {
+        return buildCommonUserData().then(function(commonData) {
             var orderData = {
                 enterpriseId: cjEnterpriseId,
                 pageType: 'conversionConfirmation',
@@ -362,7 +347,7 @@
             var coupon = getCouponCode(order);
             if (coupon) orderData.coupon = coupon;
 
-            var cjeventOrder = sendStoredCjEvent ? (landingParams.cjevent || getCookie(cjEventCookieName)) : '';
+            var cjeventOrder = sendStoredCjEvent ? (landingParams.cjevent || getStoredCjEvent()) : '';
             if (cjeventOrder) orderData.cjeventOrder = cjeventOrder;
 
             var orderItems = mapItems(order && order.items ? order.items : []);
@@ -415,6 +400,10 @@
         function startTracking() {
             if (started) return;
             started = true;
+            consentedTrackingStarted = true;
+
+            // Persist affiliate parameters only after the tag is allowed to run.
+            persistAffiliateParameters();
 
             if (!isConfiguredForCurrentPage()) {
                 log('CJ configuration incomplete');
@@ -434,7 +423,42 @@
                 return;
             }
 
-            setSitePageData();
+            function updateCartData(cart) {
+                if (!cart) return;
+                currentCartData = cart;
+                if (!scriptTagAdded) {
+                    setSitePageData();
+                }
+            }
+
+            if (currentPageType === 'cart') {
+                T.on('CartPage', function(cart) {
+                    updateCartData(cart);
+                });
+
+                T.on('CartDataGathered', function(data) {
+                    if (data && data.cart) {
+                        updateCartData(data.cart);
+                    }
+                });
+
+                // Fallback if cart events are delayed: still load the base tag.
+                setTimeout(function() {
+                    if (!scriptTagAdded) {
+                        setSitePageData();
+                    }
+                }, 1500);
+            }
+
+            T.on('UserDataUpdated', function() {
+                if (!scriptTagAdded) {
+                    setSitePageData();
+                }
+            });
+
+            if (currentPageType !== 'cart') {
+                setSitePageData();
+            }
         }
 
         if (hasConsent(T)) {
