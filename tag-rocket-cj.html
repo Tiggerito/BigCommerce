@@ -10,7 +10,9 @@
     // Update these settings to match your CJ account.
     var cjTagId = 'REPLACE_WITH_YOUR_TAG_ID';
     var cjEnterpriseId = 0;
-    var cjActionTrackerId = 0; // Single-action example. Extend to cj.orders if you need multiple actions.
+    var cjNewCustomerActionTrackerId = 0; // Action ID for new customers.
+    var cjReturningCustomerActionTrackerId = 0; // Action ID for returning customers.
+    var customerStatusEnabled = true; // Populates customerStatus: 'new'/'return' on the order. Can be used alongside or instead of the above split action IDs.
     var consentRequired = 'targetingAdvertising';
     var storeAffiliateParamsBeforeConsent = false; // Set true only if your legal basis allows storing cjdata/cjevent before consent.
     var readAffiliateParamsBeforeConsent = false; // Keep false for strict mode. Reads from cookies are blocked until consented tracking starts.
@@ -26,6 +28,7 @@
     // End of settings --------
 
     var tagName = 'CJ';
+    var trackingSource = 'TagRocket'; // Identifies this integration template to CJ.
 
     var cjTagUrl = 'https://www.mczbf.com/tags/' + cjTagId + '/tag.js';
     var currentPageType = '{{~#if settings.request.absolute_path '===' '/'}}homepage{{~else if page_type '===' 'product'}}productDetail{{~else if page_type '===' 'category'}}category{{~else if page_type '===' 'brand'}}category{{~else if page_type '===' 'cart'}}cart{{~else if page_type '===' 'search'}}searchResults{{~else if page_type '===' 'orderconfirmation'}}conversionConfirmation{{~else}}other{{~/if}}';
@@ -285,14 +288,21 @@
         return '';
     }
 
+    function getCountryCode() {
+        if (T.userData && T.userData.country_code) return '' + T.userData.country_code;
+        return '';
+    }
+
     function buildCommonUserData() {
         var userId = getUserId();
         var email = getEmail();
+        var countryCode = getCountryCode();
 
         return sha256Async(email).then(function(emailHash) {
             var commonData = {};
             if (userId) commonData.userId = userId;
             if (emailHash) commonData.emailHash = emailHash;
+            commonData.countryCode = countryCode;
             return commonData;
         });
     }
@@ -312,6 +322,8 @@
                 sitePage.referringChannel = 'Affiliate';
             }
 
+            if (trackingSource) sitePage.trackingSource = trackingSource;
+
             if (currentPageType === 'cart' && currentCartData) {
                 var cartSubtotal = getCartSubtotal(currentCartData);
                 if (cartSubtotal !== null) sitePage.cartSubtotal = cartSubtotal;
@@ -326,11 +338,15 @@
 
     function buildOrderData(order) {
         return buildCommonUserData().then(function(commonData) {
+            var actionTrackerId = (order && order.new_customer)
+                ? cjNewCustomerActionTrackerId
+                : cjReturningCustomerActionTrackerId;
+
             var orderData = {
                 enterpriseId: cjEnterpriseId,
                 pageType: 'conversionConfirmation',
                 orderId: sanitizeIdentifier(order && order.orderId, 'order'),
-                actionTrackerId: cjActionTrackerId,
+                actionTrackerId: actionTrackerId,
                 currency: order && order.currency && order.currency.code ? order.currency.code : 'USD'
             };
 
@@ -350,6 +366,12 @@
             var cjeventOrder = sendStoredCjEvent ? (landingParams.cjevent || getStoredCjEvent()) : '';
             if (cjeventOrder) orderData.cjeventOrder = cjeventOrder;
 
+            if (customerStatusEnabled && order && typeof order.new_customer === 'boolean') {
+                orderData.customerStatus = order.new_customer ? 'new' : 'return';
+            }
+
+            if (trackingSource) orderData.trackingSource = trackingSource;
+
             var orderItems = mapItems(order && order.items ? order.items : []);
             if (orderItems) orderData.items = orderItems;
 
@@ -363,10 +385,6 @@
 
     function isConfiguredForCurrentPage() {
         if (!cjTagId || cjTagId === 'REPLACE_WITH_YOUR_TAG_ID' || !cjEnterpriseId) {
-            return false;
-        }
-
-        if (currentPageType === 'conversionConfirmation' && !cjActionTrackerId) {
             return false;
         }
 
