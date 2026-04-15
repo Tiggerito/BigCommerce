@@ -1,6 +1,6 @@
 <script data-cfasync="false">
 /*
-    Web Site Advantage: Tag Rocket CJ Universal Tag [v1.4]
+    Web Site Advantage: Tag Rocket CJ Universal Tag [v1.5]
     CJ Advertiser Site Tracking with site-page and conversion support
     https://developers.cj.com/docs/advertiser-site-tracking/universal-tag-integration
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
@@ -212,21 +212,17 @@
     }
 
     function getCouponCode(order) {
-        if (order && order.coupons && order.coupons.length > 0 && order.coupons[0].code) {
-            return '' + order.coupons[0].code;
-        }
-
-        return '';
+        return (order && order.couponCodes) ? '' + order.couponCodes : '';
     }
 
     function getItemDiscount(item) {
-        var discount = toNumber(item && item.discount);
+        var discount = toNumber(item && item.totalDiscount);
+        if (discount !== null) return roundTo(discount, 2);
+
+        discount = toNumber(item && item.discount);
         if (discount !== null) return roundTo(discount, 2);
 
         discount = toNumber(item && item.discountAmount);
-        if (discount !== null) return roundTo(discount, 2);
-
-        discount = toNumber(item && item.totalDiscount);
         if (discount !== null) return roundTo(discount, 2);
 
         discount = toNumber(getNestedValue(item, ['discounted_amount', 'value']));
@@ -450,14 +446,9 @@
             }
 
             if (currentPageType === 'cart') {
-                T.on('CartPage', function(cart) {
-                    updateCartData(cart);
-                });
 
                 T.on('CartDataGathered', function(data) {
-                    if (data && data.cart) {
-                        updateCartData(data.cart);
-                    }
+                    updateCartData(data.cart);
                 });
 
                 // Fallback if cart events are delayed: still load the base tag.
