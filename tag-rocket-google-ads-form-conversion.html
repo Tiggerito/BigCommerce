@@ -1,0 +1,90 @@
+<script data-cfasync="false">
+/*
+    Web Site Advantage: Tag Rocket Google Ads Form Conversion [v1.0]
+    Sends a Google Ads conversion event on form submission, with labels driven by page path
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2026 Web Site Advantage
+*/
+!function(w,t){
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+
+    // --- Settings (change these) ---
+
+    // Your Google Ads Conversion ID (e.g. 'AW-123456789')
+    var conversionId = 'AW-XXXXXXXXX';
+
+    // Map page paths to conversion labels.
+    // Each entry fires when the current page URL contains the given 'path' value.
+    // Entries are evaluated in order — the first match wins.
+    var pageConversions = [
+        { path: '/contact-us/',  label: 'AAAAAAAAAAA/BBBBBBBBBBB' },
+        { path: '/get-a-quote/', label: 'CCCCCCCCCCC/DDDDDDDDDDD' }
+    ];
+
+    var debug = false;
+
+    // End of settings --------
+
+    var consentRequired = 'targetingAdvertising';
+
+    var currentPath = w.location.pathname;
+
+    var matchedLabel = null;
+    for (var i = 0; i < pageConversions.length; i++) {
+        if (currentPath.indexOf(pageConversions[i].path) !== -1) {
+            matchedLabel = pageConversions[i].label;
+            break;
+        }
+    }
+
+    // No matching page — nothing to do on this page
+    if (!matchedLabel) return;
+
+    T.init(function() {
+
+        var sendTo = conversionId + '/' + matchedLabel;
+        var fired = false;
+        var formSubmitted = false;
+
+        var fireConversion = function() {
+            if (fired) return;
+            fired = true;
+            if (debug) console.log('[Tag Rocket] Google Ads form conversion firing:', sendTo);
+            gtag('event', 'conversion', { 'send_to': sendTo });
+        };
+
+        var onConsentGranted = function() {
+            if (formSubmitted) fireConversion();
+        };
+
+        // Attach submit listeners to all forms on the page
+        var attachListeners = function() {
+            var forms = document.querySelectorAll('form');
+            for (var j = 0; j < forms.length; j++) {
+                forms[j].addEventListener('submit', function() {
+                    formSubmitted = true;
+                    if (T.consent[consentRequired]) fireConversion();
+                });
+            }
+            if (debug) console.log('[Tag Rocket] Form conversion listeners attached to', forms.length, 'form(s) for', sendTo);
+        };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', attachListeners);
+        } else {
+            attachListeners();
+        }
+
+        // Fire immediately if consent is already granted, otherwise wait for consent change
+        if (T.consent[consentRequired]) {
+            onConsentGranted();
+        } else {
+            T.on('ConsentChanged', function() {
+                if (T.consent[consentRequired]) onConsentGranted();
+            });
+        }
+
+    });
+
+}(window,'TagRocket');
+</script>
