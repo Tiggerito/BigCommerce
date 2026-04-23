@@ -28,7 +28,6 @@
 
     // End of settings --------
 
-    var consentRequired = 'targetingAdvertising';
     var currentPath = w.location.pathname;
 
     // Exclude rules that can't match this page — nothing left means nothing to do
@@ -37,7 +36,7 @@
         var rule = conversions[i];
         if (rule.path && currentPath.indexOf(rule.path) === -1) continue;
         if (rule.pageType && T.pageType !== rule.pageType) continue;
-        activeRules.push({ sendTo: rule.sendTo, event: rule.event || 'conversion', selector: rule.selector || null, submitted: false, fired: false });
+        activeRules.push({ sendTo: rule.sendTo, event: rule.event || 'conversion', selector: rule.selector || null, fired: false });
     }
 
     if (!activeRules.length) return;
@@ -47,14 +46,8 @@
         var fireRule = function(rule) {
             if (rule.fired) return;
             rule.fired = true;
-            if (debug) console.log('[Tag Rocket] Google Ads form conversion firing:', rule.event, rule.sendTo);
+            if (debug) console.log('[Tag Rocket] Form conversion firing:', rule.event, rule.sendTo);
             gtag('event', rule.event, { 'send_to': rule.sendTo });
-        };
-
-        var onConsentGranted = function() {
-            for (var f = 0; f < activeRules.length; f++) {
-                if (activeRules[f].submitted) fireRule(activeRules[f]);
-            }
         };
 
         // Attach a submit listener to a single form (guard against double-attaching)
@@ -62,13 +55,11 @@
             if (form._trListening) return;
             form._trListening = true;
             form.addEventListener('submit', function() {
-                var hasConsent = T.consent[consentRequired];
                 for (var f = 0; f < activeRules.length; f++) {
                     var rule = activeRules[f];
                     // A null selector means any form on the page matches
                     if (rule.selector && !form.matches(rule.selector)) continue;
-                    rule.submitted = true;
-                    if (hasConsent) fireRule(rule);
+                    fireRule(rule);
                 }
             });
             if (debug) console.log('[Tag Rocket] Submit listener attached to form:', form);
@@ -108,16 +99,6 @@
             document.addEventListener('DOMContentLoaded', startObserving);
         } else {
             startObserving();
-        }
-
-        // If consent was granted before a form was submitted, onConsentGranted is a no-op.
-        // It becomes relevant when consent is granted after a form submission.
-        if (T.consent[consentRequired]) {
-            onConsentGranted();
-        } else {
-            T.on('ConsentChanged', function() {
-                if (T.consent[consentRequired]) onConsentGranted();
-            });
         }
 
     });
