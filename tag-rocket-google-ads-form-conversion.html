@@ -57,22 +57,51 @@
             if (formSubmitted) fireConversion();
         };
 
-        // Attach submit listeners to all forms on the page
+        // Attach a submit listener to a single form (guard against double-attaching)
+        var attachToForm = function(form) {
+            if (form._trListening) return;
+            form._trListening = true;
+            form.addEventListener('submit', function() {
+                formSubmitted = true;
+                if (T.consent[consentRequired]) fireConversion();
+            });
+            if (debug) console.log('[Tag Rocket] Submit listener attached to form:', form);
+        };
+
+        // Scan and attach to all forms currently in the DOM
         var attachListeners = function() {
             var forms = document.querySelectorAll('form');
             for (var j = 0; j < forms.length; j++) {
-                forms[j].addEventListener('submit', function() {
-                    formSubmitted = true;
-                    if (T.consent[consentRequired]) fireConversion();
-                });
+                attachToForm(forms[j]);
             }
             if (debug) console.log('[Tag Rocket] Form conversion listeners attached to', forms.length, 'form(s) for', sendTo);
         };
 
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', attachListeners);
-        } else {
+        // Watch for forms added dynamically after page load
+        var observer = new MutationObserver(function(mutations) {
+            for (var m = 0; m < mutations.length; m++) {
+                var added = mutations[m].addedNodes;
+                for (var n = 0; n < added.length; n++) {
+                    var node = added[n];
+                    if (node.nodeType !== 1) continue;
+                    if (node.tagName === 'FORM') attachToForm(node);
+                    var nested = node.querySelectorAll('form');
+                    for (var k = 0; k < nested.length; k++) {
+                        attachToForm(nested[k]);
+                    }
+                }
+            }
+        });
+
+        var startObserving = function() {
             attachListeners();
+            observer.observe(document.body, { childList: true, subtree: true });
+        };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', startObserving);
+        } else {
+            startObserving();
         }
 
         // Fire immediately if consent is already granted, otherwise wait for consent change
