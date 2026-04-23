@@ -10,15 +10,18 @@
 
     // --- Settings (change these) ---
 
-    // Your Google Ads Conversion ID (e.g. 'AW-123456789')
-    var conversionId = 'AW-XXXXXXXXX';
-
-    // Map page paths to conversion labels.
-    // Each entry fires when the current page URL contains the given 'path' value.
-    // Entries are evaluated in order — the first match wins.
-    var pageConversions = [
-        { path: '/contact-us/',  label: 'AAAAAAAAAAA/BBBBBBBBBBB' },
-        { path: '/get-a-quote/', label: 'CCCCCCCCCCC/DDDDDDDDDDD' }
+    // Conversion rules — properties present determine matching (all specified must match):
+    //   path      → page URL contains this string
+    //   pageType  → T.pageType equals this value (e.g. 'product', 'category', 'contact')
+    //   selector  → the submitted form matches this CSS selector
+    //   event     → gtag event name (default: 'conversion' for Google Ads; use a custom name for GA4)
+    // sendTo is the Google Ads or GA4 destination: 'AW-XXXXXXXXX/label' or a GA4 stream ID
+    var conversions = [
+        { path: '/contact-us/',  sendTo: 'AW-XXXXXXXXX/AAAAAAAAAAA' },
+        { path: '/get-a-quote/', sendTo: 'AW-XXXXXXXXX/BBBBBBBBBBB' },
+        { selector: '.my-enquiry-form', sendTo: 'AW-XXXXXXXXX/CCCCCCCCCCC' },
+        { pageType: 'product', selector: '.product-enquiry-form', sendTo: 'AW-XXXXXXXXX/DDDDDDDDDDD' },
+        { path: '/contact-us/', event: 'contact_form_submit', sendTo: 'GoogleAnalyticsFour' }
     ];
 
     var debug = false;
@@ -26,35 +29,32 @@
     // End of settings --------
 
     var consentRequired = 'targetingAdvertising';
-
     var currentPath = w.location.pathname;
 
-    var matchedLabel = null;
-    for (var i = 0; i < pageConversions.length; i++) {
-        if (currentPath.indexOf(pageConversions[i].path) !== -1) {
-            matchedLabel = pageConversions[i].label;
-            break;
-        }
+    // Exclude rules that can't match this page — nothing left means nothing to do
+    var activeRules = [];
+    for (var i = 0; i < conversions.length; i++) {
+        var rule = conversions[i];
+        if (rule.path && currentPath.indexOf(rule.path) === -1) continue;
+        if (rule.pageType && T.pageType !== rule.pageType) continue;
+        activeRules.push({ sendTo: rule.sendTo, event: rule.event || 'conversion', selector: rule.selector || null, submitted: false, fired: false });
     }
 
-    // No matching page — nothing to do on this page
-    if (!matchedLabel) return;
+    if (!activeRules.length) return;
 
     T.init(function() {
 
-        var sendTo = conversionId + '/' + matchedLabel;
-        var fired = false;
-        var formSubmitted = false;
-
-        var fireConversion = function() {
-            if (fired) return;
-            fired = true;
-            if (debug) console.log('[Tag Rocket] Google Ads form conversion firing:', sendTo);
-            gtag('event', 'conversion', { 'send_to': sendTo });
+        var fireRule = function(rule) {
+            if (rule.fired) return;
+            rule.fired = true;
+            if (debug) console.log('[Tag Rocket] Google Ads form conversion firing:', rule.event, rule.sendTo);
+            gtag('event', rule.event, { 'send_to': rule.sendTo });
         };
 
         var onConsentGranted = function() {
-            if (formSubmitted) fireConversion();
+            for (var f = 0; f < activeRules.length; f++) {
+                if (activeRules[f].submitted) fireRule(activeRules[f]);
+            }
         };
 
         // Attach a submit listener to a single form (guard against double-attaching)
@@ -62,8 +62,14 @@
             if (form._trListening) return;
             form._trListening = true;
             form.addEventListener('submit', function() {
-                formSubmitted = true;
-                if (T.consent[consentRequired]) fireConversion();
+                var hasConsent = T.consent[consentRequired];
+                for (var f = 0; f < activeRules.length; f++) {
+                    var rule = activeRules[f];
+                    // A null selector means any form on the page matches
+                    if (rule.selector && !form.matches(rule.selector)) continue;
+                    rule.submitted = true;
+                    if (hasConsent) fireRule(rule);
+                }
             });
             if (debug) console.log('[Tag Rocket] Submit listener attached to form:', form);
         };
@@ -74,7 +80,7 @@
             for (var j = 0; j < forms.length; j++) {
                 attachToForm(forms[j]);
             }
-            if (debug) console.log('[Tag Rocket] Form conversion listeners attached to', forms.length, 'form(s) for', sendTo);
+            if (debug) console.log('[Tag Rocket] Form conversion listeners attached to', forms.length, 'form(s)');
         };
 
         // Watch for forms added dynamically after page load
@@ -104,7 +110,8 @@
             startObserving();
         }
 
-        // Fire immediately if consent is already granted, otherwise wait for consent change
+        // If consent was granted before a form was submitted, onConsentGranted is a no-op.
+        // It becomes relevant when consent is granted after a form submission.
         if (T.consent[consentRequired]) {
             onConsentGranted();
         } else {
