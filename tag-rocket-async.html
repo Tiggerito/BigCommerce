@@ -33,7 +33,7 @@
 
         // Tag Rocket needs "Browser Support" set to "Baseline widely available" for this async function to work.
         // This means Internet Explorer is not supported.
-        T.on('.*',async function(data, eventName){
+        T.on(/.*/,async function(data, eventName){
             switch(eventName) {  
                 case "GtagCommandPending":
                     if (data.arguments.length >=3) {

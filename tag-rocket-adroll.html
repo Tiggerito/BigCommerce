@@ -118,7 +118,7 @@
             });
         }
 
-        T.on('.*',function(eventData, eventName){
+        T.on(/.*/,function(eventData, eventName){
             switch(eventName) {   
                 case "CartItemChanged":  
                     if(eventData.change > 0)  {

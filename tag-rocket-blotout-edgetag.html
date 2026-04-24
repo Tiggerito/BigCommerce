@@ -260,7 +260,7 @@
 
         EdgeTag('tag', 'PageView'); 
 
-        T.on('.*',function(data, eventName){
+        T.on(/.*/,function(data, eventName){
             switch(eventName) {
                 {{#if settings.shopper_consent_tracking_enabled}}
                 case "ConsentChanged":

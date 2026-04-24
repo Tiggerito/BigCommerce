@@ -72,7 +72,7 @@ Script contents: this, with at least the REPLACE_WITH_YOUR_ID changed
             });
         }
                                   
-        T.on('.*',function(data, eventName){
+        T.on(/.*/,function(data, eventName){
             switch(eventName) {
                 case "CheckoutStep5OrderCompleted":                        
                     if (loaded) 

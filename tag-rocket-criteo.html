@@ -148,7 +148,7 @@
             } 
         }
 
-        T.on('.*',async function(data, eventName){
+        T.on(/.*/,async function(data, eventName){
             switch(eventName) {
                 case "UserDataUpdated":
                     await setCommonEventsAsync();

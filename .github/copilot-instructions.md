@@ -40,7 +40,7 @@ Every Tag Rocket snippet is a single `.html` file starting with `tag-rocket-` co
 - Configurable values go at the top of the IIFE, clearly grouped, ending with `// End of settings --------`.
 - Consent gate with `var consentRequired = 'targetingAdvertising'` (or `'statistics'`). Check before firing: `T.consent(consentRequired, function() { ... })`.
 - Inject third-party scripts with `T.addScriptTag(url)` — never with `document.write`.
-- Listen for events with `T.on('eventPattern', function(data, eventName) { ... })`.
+- Listen for events with `T.on('eventName', function(data) { ... })` or `T.on(/regex/, function(data, eventName) { ... })`.
 - Order confirmation logic must listen for `CheckoutStep5OrderCompleted`.
 - Scripts can use BigCommerce Handlebars expressions 
 

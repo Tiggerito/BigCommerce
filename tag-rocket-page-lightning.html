@@ -31,7 +31,7 @@
     T.init(function() {
         consentUpdate(T.consent);
         
-        T.on('.*',function(data, eventName){
+        T.on(/.*/,function(data, eventName){
             switch(eventName) {
                 case "ConsentChanged":
                     consentUpdate(T.consent);

@@ -13,7 +13,7 @@
         
         console.log("Consent",T.consent);
         
-        T.on('.*',function(data, eventName){
+        T.on(/.*/,function(data, eventName){
             console.log('OnEvent '+eventName, data);
         });
     })

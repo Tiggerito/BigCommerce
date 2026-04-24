@@ -112,7 +112,7 @@
         CallTag({notify: 'ecevent', name: 'HOME_PAGE_VISIT'});
         {{/if}}
 
-        T.on('.*',function(eventData, eventName){
+        T.on(/.*/,function(eventData, eventName){
             switch(eventName) {
                 case "QuickSearch":
                 case "SearchPage":

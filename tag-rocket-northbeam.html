@@ -84,7 +84,7 @@
             return item;
         };
     
-        T.on('.*',function(data, eventName){
+        T.on(/.*/,function(data, eventName){
             switch(eventName) {
                 case "ConsentChanged":
                     if (T.consent.analytics) {

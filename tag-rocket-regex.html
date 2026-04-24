@@ -1,0 +1,35 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Tag Rocket Regex [v1.1] 
+    Testing ways to use regular expressions with Tag Rocket events
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2026 Web Site Advantage
+*/
+!function(w,t){
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+    
+    T.init(function() {
+
+        T.on('WebVitalsPending',function(data, eventName){
+            console.log('OnEvent WebVitalsPending',eventName, data);
+        });
+
+        T.on('WebVitals',function(data, eventName){
+            // should never fire
+            console.log('OnEvent WebVitals',eventName, data);
+        });
+
+        T.on('.*WebVitals.*',function(data, eventName){
+            console.log('OnEvent .*WebVitals.*',eventName, data);
+        });
+
+        T.on(/WebVitals/,function(data, eventName){
+            console.log('OnEvent /WebVitals/',eventName, data);
+        });
+
+        T.on(/WebVitals.*/,function(data, eventName){
+            console.log('OnEvent /WebVitals.*/',eventName, data);
+        });
+    })
+}(window,"TagRocket")
+</script>

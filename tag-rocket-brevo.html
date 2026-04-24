@@ -174,7 +174,7 @@
         // https://help.brevo.com/hc/en-us/articles/209506925-Product-purchase-Send-an-order-confirmation-email-after-a-purchase
         // https://help.brevo.com/hc/en-us/articles/209465705-FAQs-What-is-the-Brevo-tracker-and-how-to-install-it
 
-        T.on('.*',function(eventData, eventName){
+        T.on(/.*/,function(eventData, eventName){
             switch(eventName) {  
                 case "UserDataUpdated":  
                     Identify();               

@@ -16,7 +16,7 @@
             if(window.navigator.userAgent.includes('facebookcatalog')) blockTracking = true;
 
             if(blockTracking) {
-                T.on('.*',function(data, eventName){               
+                T.on(/.*/,function(data, eventName){               
                     data.cancelBuiltInEvents = true;
                     data.cancel = true;
                 });
