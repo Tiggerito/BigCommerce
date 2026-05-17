@@ -1,6 +1,6 @@
 <script data-cfasync="false">
 /*
-    Web Site Advantage: Tag Rocket CJ Universal Tag [v1.5]
+    Web Site Advantage: Tag Rocket CJ Universal Tag [v1.6]
     CJ Advertiser Site Tracking with site-page and conversion support
     https://developers.cj.com/docs/advertiser-site-tracking/universal-tag-integration
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
@@ -215,21 +215,21 @@
         return (order && order.couponCodes) ? '' + order.couponCodes : '';
     }
 
-    function getItemDiscount(item) {
-        var discount = toNumber(item && item.totalDiscount);
-        if (discount !== null) return roundTo(discount, 2);
+    // function getItemDiscount(item) {
+    //     var discount = toNumber(item && item.totalDiscount);
+    //     if (discount !== null) return roundTo(discount, 2);
 
-        discount = toNumber(item && item.discount);
-        if (discount !== null) return roundTo(discount, 2);
+    //     discount = toNumber(item && item.discount);
+    //     if (discount !== null) return roundTo(discount, 2);
 
-        discount = toNumber(item && item.discountAmount);
-        if (discount !== null) return roundTo(discount, 2);
+    //     discount = toNumber(item && item.discountAmount);
+    //     if (discount !== null) return roundTo(discount, 2);
 
-        discount = toNumber(getNestedValue(item, ['discounted_amount', 'value']));
-        if (discount !== null) return roundTo(discount, 2);
+    //     discount = toNumber(getNestedValue(item, ['discounted_amount', 'value']));
+    //     if (discount !== null) return roundTo(discount, 2);
 
-        return 0;
-    }
+    //     return 0;
+    // }
 
     function mapItems(items) {
         if (!items || !items.length) return undefined;
@@ -249,8 +249,8 @@
                 quantity: quantity
             };
 
-            var discount = getItemDiscount(item);
-            if (discount) mappedItem.discount = discount;
+            // var discount = getItemDiscount(item);
+            // if (discount) mappedItem.discount = discount;
             return mappedItem;
         });
 
@@ -298,7 +298,7 @@
             var commonData = {};
             if (userId) commonData.userId = userId;
             if (emailHash) commonData.emailHash = emailHash;
-            commonData.countryCode = countryCode;
+            commonData.customerCountry = countryCode;
             return commonData;
         });
     }
