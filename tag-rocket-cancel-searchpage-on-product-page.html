@@ -1,0 +1,25 @@
+<script data-cfasync="false">
+{{~#if page_type '!==' 'search'}}
+/*
+    Web Site Advantage: Tag Rocket Cancel SearchPage on Non-Search Pages [v1.0]
+    Cancels SearchPage events when running on pages other than search.
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2026 Web Site Advantage
+*/
+!function(w,t){
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+
+    var debug = false;
+    // End of settings --------
+
+    T.init(function() {
+        T.on('SearchPage', function(data) {
+            data.cancelBuiltInEvents = true;
+            if (debug) {
+                console.log('Tag Rocket: SearchPage canceled on non-search page.');
+            }
+        });
+    });
+}(window,'TagRocket');
+{{/if}}
+</script>
