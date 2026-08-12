@@ -1,0 +1,21 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Tag Rocket Console Logger [v1.1] 
+    Log Tag Rocket Events to the Console
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2021 Web Site Advantage
+*/
+!function(w,t){
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+    
+    T.init(function() {
+        console.log("Tag Rocket is initialized");
+        
+        console.log("Consent",T.consent);
+        
+        T.on(/.*/,function(data, eventName){
+            console.log('OnEvent '+eventName, data);
+        });
+    })
+}(window,"TagRocket")
+</script>
