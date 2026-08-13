@@ -1,21 +1,30 @@
 <script data-cfasync="false">   
 /*
-    Web Site Advantage: Tag Rocket Console Logger [v1.1] 
-    Log Tag Rocket Events to the Console
+    Web Site Advantage: Tag Rocket Blocker [v1.0] 
+    Block Tag Rocket Events from being sent to the server
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
-    Copyright (C) 2021 Web Site Advantage
+    Copyright (C) 2026 Web Site Advantage
 */
 !function(w,t){
     w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
     
     T.init(function() {
-        console.log("Tag Rocket is initialized");
-        
-        console.log("Consent",T.consent);
-        
-        T.on(/.*/,function(data, eventName){
-            console.log('OnEvent '+eventName, data);
-        });
+        {{#if settings.country_code '===' 'SG'}}
+            var ua = navigator.userAgent || '';
+            var lang = navigator.language || '';
+            var width = screen.width;
+            var height = screen.height;
+
+            if (
+                /Macintosh/i.test(ua) &&
+                /Chrome/i.test(ua) &&
+                /^en-US$/i.test(lang) &&
+                width === 1366 &&
+                height === 1366
+            ) {
+                T.block = true;
+            }
+        {{/if}}
     })
 }(window,"TagRocket")
 </script>
