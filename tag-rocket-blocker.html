@@ -1,7 +1,7 @@
 <script data-cfasync="false">   
 /*
     Web Site Advantage: Tag Rocket Blocker [v1.0] 
-    Block Tag Rocket Events from being sent to the server
+    Disable Tag Rocket for specific bots
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     Copyright (C) 2026 Web Site Advantage
 */
@@ -9,6 +9,8 @@
     w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
     
     T.init(function() {
+
+        // Singapore bot blocker
         {{#if settings.country_code '===' 'SG'}}
             var ua = navigator.userAgent || '';
             var lang = navigator.language || '';
