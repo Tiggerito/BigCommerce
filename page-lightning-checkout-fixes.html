@@ -1,0 +1,29 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Page Lightning Checkout Fixes [v1.0] 
+    Log Tag Rocket Events to the Console
+    https://bigcommerce.websiteadvantage.com.au/page-lightning/
+    Copyright (C) 2026 Web Site Advantage
+
+    Add to the script manager: head, checkout page only, essential. 
+*/
+</script>
+<script></script >
+<style>
+    {{!--
+        Sometimes the logo can be large - this limits its size
+        The size chosen here is to stop the header from expanding and causing a layout shift
+        The headers initial size is 9.2307692308rem (.checkoutHeader {min-height}) with 3rem border (.checkoutHeader-content {padding}) 
+    --}}
+    #logoImage {
+        max-height: calc(9.2307692308rem - 3rem - 3rem);
+    }
+
+	{{!--
+        The initial skeleton (placeholder) is narrower than a replacement skeleton and the content - this changes it to use the same values as the replacement/content so no shift happens. 
+    --}}
+    .checkout-skeleton .layout { max-width: 92.3076923077rem !important; }
+    .checkout-skeleton-desktop .layout-main { width: 66.6666666667% !important; }
+    .checkout-skeleton-desktop .layout-cart { width: 33.3333333333% !important; }
+</style>
+</script>
