@@ -1,0 +1,23 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Page Lightning Order Confirmation Fixes [v1.0] 
+    Fix performance issues on the order confirmation page
+    https://bigcommerce.websiteadvantage.com.au/page-lightning/
+    Copyright (C) 2026 Web Site Advantage  
+*/
+    {{!--
+        Add to the script manager: head, order confirmation page only, essential.
+    --}} 
+</script>
+<script></script >
+<style>
+    {{!--
+        Sometimes the logo can be large - this limits its size
+        The size chosen here is to stop the header from expanding and causing a layout shift
+        The headers initial size is 9.2307692308rem (.checkoutHeader {min-height}) with 3rem border (.checkoutHeader-content {padding}) 
+    --}}
+    #logoImage {
+        max-height: calc(9.2307692308rem - 3rem - 3rem);
+    }
+</style>
+</script>
