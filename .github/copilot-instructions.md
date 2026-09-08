@@ -1,7 +1,7 @@
-# GitHub Copilot Instructions — Web Site Advantage / Tag Rocket
+# GitHub Copilot Instructions — Web Site Advantage / Tag Rocket / SEO Rich Snppets / Page Lightning
 
 ## Repository purpose
-This repo contains Tag Rocket integration snippets for BigCommerce stores, as well as other scripts and html files related to BigCommerce. All Tag Rocket scripts target the Tag Rocket API published at https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/.
+This repo contains Tag Rocket, SEO Rich Snppets and Page Lightning integration snippets for BigCommerce stores, as well as other scripts and html files related to BigCommerce. All Tag Rocket scripts target the Tag Rocket API published at https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/.
 
 ## BigCommerce API and schema sources
 - For any BigCommerce-related API usage (endpoints, request/response shapes, fields, enums, constraints, and versioning), use the bigcommerce-docs MCP as the primary source of truth.
@@ -9,46 +9,7 @@ This repo contains Tag Rocket integration snippets for BigCommerce stores, as we
 - When MCP output conflicts with existing code/comments, treat bigcommerce-docs MCP as authoritative and update code accordingly, unless project-specific behavior explicitly requires otherwise.
 - If bigcommerce-docs MCP is unavailable, clearly note that limitation and fall back to official BigCommerce documentation links, then re-validate with MCP when available.
 
----
-
-## Tag Rocket HTML snippets
-
-### File structure
-Every Tag Rocket snippet is a single `.html` file starting with `tag-rocket-` containing one `<script>` block. No wrapping HTML boilerplate.
-
-### Script wrapper
-```html
-<script data-cfasync="false">
-/*
-    Web Site Advantage: Tag Rocket [Tag Name] [vX.Y]
-    [One-line description]
-    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
-    Copyright (C) [year] Web Site Advantage
-*/
-!function(w,t){
-    // Bootstrap TagRocket
-    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
-
-    // --- Settings (change these) ---
-    var setting1 = 'value';
-    var debug = false;
-    // End of settings --------
-
-    T.init(function() {
-        // implementation
-    });
-}(window,'TagRocket');
-</script>
-```
-
-### Key conventions
-- The IIFE always uses `!function(w,t){...}(window,'TagRocket')`. Use `T` as the short alias: `var T=w[t]`.
-- Configurable values go at the top of the IIFE, clearly grouped, ending with `// End of settings --------`.
-- Consent gate with `var consentRequired = 'targetingAdvertising'` (or `'statistics'`). Check before firing: `T.consent(consentRequired, function() { ... })`.
-- Inject third-party scripts with `T.addScriptTag(url)` — never with `document.write`.
-- Listen for events with `T.on('eventName', function(data) { ... })` or `T.on(/regex/, function(data, eventName) { ... })`.
-- Order confirmation logic must listen for `CheckoutStep5OrderCompleted`.
-- Scripts can use BigCommerce Handlebars expressions 
+> **Note:** Tag Rocket snippet conventions (files starting with `tag-rocket-`) live in [instructions/tag-rocket.instructions.md](instructions/tag-rocket.instructions.md).
 
 ---
 
@@ -66,5 +27,4 @@ Follow these patterns:
 ---
 
 ## General rules
-- Do not add `console.log` unless `debug === true` is checked first, or unless the script already uses an unconditional debug mode.
 - Copyright header must always say "Web Site Advantage" — do not change the company name.

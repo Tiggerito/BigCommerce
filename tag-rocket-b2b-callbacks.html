@@ -1,0 +1,18 @@
+<script data-cfasync="false">   
+/*
+    Web Site Advantage: Tag Rocket B2B Callbacks [v1.0] 
+    Log B2B Callbacks to the Console
+    https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    Copyright (C) 2025 Web Site Advantage
+*/
+!function(w,t){
+    w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+    
+  
+    T.init(function() {
+        T.on('B2BCallback',function(data, eventName){
+            console.log('B2B Callback', data);
+        });
+    })
+}(window,"TagRocket")
+</script>
