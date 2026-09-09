@@ -3,15 +3,30 @@
     Web Site Advantage: Tag Rocket Taboola [v2.5] 
     Taboola base pixel, conversion events and ecommevents
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tracking-with-taboola-on-bigcommerce/
+    https://github.com/Tiggerito/BigCommerce/blob/main/tag-rocket-taboola.html
     Copyright (C) 2021 Web Site Advantage
+    {{!-- 
+    Add this script to the BigCommerce Script Manager using the following settings:
+
+    Placement: Header
+    Location: All pages
+    Script category: Essential
+    Script type: Script
+    Script contents: this file, review any TODOs in the script and make modifications as needed
+    --}}
 */
 !function(w,t){
-    var taboolaAccountId = 0; // REPLACE_WITH_YOUR_ID; If you have a DCO account, use the associated SC accounts ID here.
 
-    var useEcommEvents = true; // For DCO (Dynamic Creative Optimization) accounts
+    // TODO: Update the Taboola account ID to match your setup. If you have a DCO account, use the associated SC accounts ID here.
+    var taboolaAccountId = 0;  
 
-    var campaignIds = ""; // An optional parameter containing a list of campaign id these events are relevant to
+    // TODO: Set to true if using Taboola's Dynamic Creative Optimization (DCO) features.
+    var useEcommEvents = true; 
 
+    // Optional: A list of campaign IDs these events are relevant to.
+    var campaignIds = ""; 
+
+    // Format for the item group ID used in Taboola events.
     var itemGroupIdFormat = "[[psku]]||P[[pid]]"; 
 
     var debug = false;

@@ -3,7 +3,17 @@
     Web Site Advantage: Tag Rocket B2B Callbacks [v1.0] 
     Log B2B Callbacks to the Console
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    https://github.com/Tiggerito/BigCommerce/blob/main/tag-rocket-b2b-callbacks.html
     Copyright (C) 2025 Web Site Advantage
+    {{!-- 
+    Add this script to the BigCommerce Script Manager using the following settings:
+
+    Placement: Header
+    Location: All pages
+    Script category: Essential
+    Script type: Script
+    Script contents: this file, review any TODOs in the script and make modifications as needed
+    --}}
 */
 !function(w,t){
     w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
@@ -12,6 +22,8 @@
     T.init(function() {
         T.on('B2BCallback',function(data, eventName){
             console.log('B2B Callback', data);
+
+            // TODO: Do something
         });
     })
 }(window,"TagRocket")

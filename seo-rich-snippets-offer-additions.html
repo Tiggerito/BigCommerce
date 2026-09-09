@@ -3,14 +3,24 @@
     Web Site Advantage: SEO Rich Snippets Offer Addition [v1.0] 
     Add a property to the main offer
     https://bigcommerce.websiteadvantage.com.au/rich-snippets/
+    https://github.com/Tiggerito/BigCommerce/blob/main/seo-rich-snippets-offer-additions.html
     Copyright (C) 2025 Web Site Advantage
+    {{!-- 
+    Add this script to the BigCommerce Script Manager using the following settings:
+
+    Placement: Footer
+    Location: Storefront pages
+    Script category: Essential
+    Script type: Script
+    Script contents: this file, review any TODOs in the script and make modifications as needed
+    --}}
 */
 
 {{~#if page_type '===' 'product'}}
 
 !function(d){
-
-    var availabilityStarts = "2025-12-01T08:00:00+08:00"; // TODO: calculate this
+    // TODO: calculate this
+    var availabilityStarts = "2025-12-01T08:00:00+08:00"; 
 
     var jsonLd = {
         "@context": "https://schema.org",

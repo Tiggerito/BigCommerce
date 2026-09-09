@@ -3,13 +3,25 @@
     Web Site Advantage: Tag Rocket Klaviyo [v1.6] 
     Supports consent, identify, Added to Cart, Viewed Product, Viewed Category, Searched Site, Clicked Banner and more
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    https://github.com/Tiggerito/BigCommerce/blob/main/tag-rocket-klaviyo.html
     Copyright (C) 2024 Web Site Advantage
+    {{!-- 
+    Add this script to the BigCommerce Script Manager using the following settings:
+
+    Placement: Header
+    Location: All pages
+    Script category: Essential
+    Script type: Script
+    Script contents: this file, review any TODOs in the script and make modifications as needed
+    --}}
 */
 !function(w,t){
-    // Ensure your BigCommerce Integration has the Automatic Onsite tracking switched off
+    // TODO: Ensure your BigCommerce Integration has the Automatic Onsite tracking switched off
 
     // TODO: change to your public API key -  How to find the public API key: https://help.klaviyo.com/hc/en-us/articles/115005062267
     var publicApiKey = 'PUBLIC_API_KEY'; 
+
+    // TODO: Update the settings as required.
 
     var productImageSize = '1000w'; // could also use 'original'
     var categoryImageSize = '1000w'; // could also use 'original'

@@ -3,12 +3,26 @@
     Web Site Advantage: Tag Rocket Google Ads Product Removal [v1.1] 
     Remove certain products from events
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    https://github.com/Tiggerito/BigCommerce/blob/main/tag-rocket-google-ads-product-removal.html
     Copyright (C) 2023 Web Site Advantage
+    {{!-- 
+    Add this script to the BigCommerce Script Manager using the following settings:
+
+    Placement: Header
+    Location: All pages
+    Script category: Essential
+    Script type: Script
+    Script contents: this file, review any TODOs in the script and make modifications as needed
+    --}}
 */
 !function(w,t){
     w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
 
-    var idsToExclude = []; // enter the IDs that you don't want to be sent to Google Ads as strings
+    // TODO: enter the IDs that you don't want to be sent to Google Ads as strings
+    
+    var idsToExclude = []; 
+
+    // End of settings --------
 
     T.init(function() {
 

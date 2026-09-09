@@ -3,10 +3,20 @@
     Web Site Advantage: Tag Rocket Floodlight [v1.2] 
     Base tag and conversion
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    https://github.com/Tiggerito/BigCommerce/blob/main/tag-rocket-floodlight.html
     Copyright (C) 2024 Web Site Advantage
+    {{!-- 
+    Add this script to the BigCommerce Script Manager using the following settings:
+
+    Placement: Header
+    Location: All pages
+    Script category: Essential
+    Script type: Script
+    Script contents: this file, review any TODOs in the script and make modifications as needed
+    --}}
 */
 !function(w,t){
-    // Update these settings to match your setup 
+    // TODO: Update these settings to match your setup 
     // https://support.google.com/sa360/answer/7562806
     // https://support.google.com/searchads/answer/7566546
 
@@ -17,7 +27,7 @@
     var customFloodlightVariable = ''; // optional
     var usingAdvancedConsentMode  = false; // Make this match the gtag Consent Mode setting in Tag Rockets Global Tag Values
     
-    /*
+    {{!--
     // OPTIONAL: For JavaScript disabled tracking, add the following code to BCs Data Solutions->Affiliate Conversion Tracking script. 
     // IMPORTANT: Replace the [Variables] with the correct values.   
  
@@ -26,7 +36,7 @@
     qty=1;cost=%%ORDER_AMOUNT%%;dc_lat=;dc_rdid=;tag_for_child_directed_treatment=;tfua=;npa=;
     ord=%%ORDER_ID%%?" width="1" height="1" alt="">
     </noscript>
-    */
+    --}}
 
     // End of settings --------
 

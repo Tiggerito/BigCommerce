@@ -3,12 +3,25 @@
     Web Site Advantage: Tag Rocket Affiliate Future [v1.0] 
     Affiliate Future tags
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    https://github.com/Tiggerito/BigCommerce/blob/main/tag-rocket-affiliate-future.html
     Copyright (C) 2022 Web Site Advantage
+    {{!-- 
+    Add this script to the BigCommerce Script Manager using the following settings:
+
+    Placement: Header
+    Location: All pages
+    Script category: Essential
+    Script type: Script
+    Script contents: this file, review any TODOs in the script and make modifications as needed
+    --}}
 */   
 !function(w,t){
     w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
 
-    var AffiliateFuture_MerchantID = 0000000000000; // REPLACE WITH YOUR MERCHANT ID. You can check your ID by looking in the top left of your Advertiser account
+    // TODO: REPLACE WITH YOUR MERCHANT ID. You can check your ID by looking in the top left of your Advertiser account
+    var AffiliateFuture_MerchantID = 0000000000000; 
+
+    // End of settings --------
 
     var productIdentifier = function(product) {return ''+product.productId}; // productId, productSku
 
@@ -24,7 +37,6 @@
         if (!info)return '';
         return info.replace(/\|/, '?');
     }
-
 
     T.init(function() { 
 

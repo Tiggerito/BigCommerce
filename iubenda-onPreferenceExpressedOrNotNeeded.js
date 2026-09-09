@@ -3,6 +3,7 @@ function (preference) {
     Web Site Advantage: Iubenda Google Consent Mode [v1.0] 
     Implements Google Consent Mode for use in the onPreferenceExpressedOrNotNeeded callback
     https://bigcommerce.websiteadvantage.com.au/
+    https://github.com/Tiggerito/BigCommerce/blob/main/iubenda-onPreferenceExpressedOrNotNeeded.js
     Copyright (C) 2024 Web Site Advantage
 */
 	if (!preference) {

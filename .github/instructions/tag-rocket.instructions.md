@@ -3,7 +3,7 @@ applyTo: "**/tag-rocket-*"
 ---
 # Tag Rocket HTML snippets
 
-All Tag Rocket scripts target the Tag Rocket API (TRAPI) published at https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/.
+All Tag Rocket scripts target the Tag Rocket API (TRAPI) documented at https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/.
 
 ## File structure
 Every Tag Rocket snippet is a single `.html` file starting with `tag-rocket-` containing one `<script>` block. No wrapping HTML boilerplate.
@@ -15,13 +15,23 @@ Every Tag Rocket snippet is a single `.html` file starting with `tag-rocket-` co
     Web Site Advantage: Tag Rocket [Tag Name] [vX.Y]
     [One-line description]
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    https://github.com/Tiggerito/BigCommerce/blob/main/[File Name]
     Copyright (C) [year] Web Site Advantage
+    {{!-- 
+    Add this script to the BigCommerce Script Manager using the following settings:
+
+    Placement: Header
+    Location: All pages
+    Script category: Essential
+    Script type: Script
+    Script contents: this file, review any TODOs in the script and make modifications as needed
+    --}}
 */
 !function(w,t){
     // Bootstrap TagRocket
     w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
 
-    // --- Settings (change these) ---
+    // TODO: Update these settings to match your account.
     var setting1 = 'value';
     var debug = false;
     // End of settings --------

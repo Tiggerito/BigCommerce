@@ -3,14 +3,29 @@
     Web Site Advantage: Tag Rocket Northbeam [v1.0] 
     Northbeam
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tracking-with-northwind-on-bigcommerce/
+    https://github.com/Tiggerito/BigCommerce/blob/main/tag-rocket-northbeam.html
     Copyright (C) 2022 Web Site Advantage
+    {{!-- 
+    Add this script to the BigCommerce Script Manager using the following settings:
+
+    Placement: Header
+    Location: All pages
+    Script category: Essential
+    Script type: Script
+    Script contents: this file, review any TODOs in the script and make modifications as needed
+    --}}
 */
 
 !function(w,t){
-    var northBeamAccountID = '0fa82c17-ceb9-4939-af02-8819df1e7dad';
+
+    // TODO: Update the Northbeam account ID.
+
+    var northBeamAccountID = 'xxxxxxxxxxxxxxxxxxxxxxxxx';
 
     var productIdentifier = function(product) {return ''+(product.productSku||product.productId)}; 
     var variantIdentifier = function(product) {return ''+(product.variantSku||product.variantId||'')}; 
+
+    // End of settings --------
 
     w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
 

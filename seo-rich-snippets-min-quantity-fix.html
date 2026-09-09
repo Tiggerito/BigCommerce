@@ -1,23 +1,26 @@
 <script data-cfasync="false">
 /*
+***** The fix is now in the Tag Rocket app, so this script is no longer required *****
     Web Site Advantage: Min Quantity Fix [v1.1] 
     Multiplies prices by min quantity to comply with Google Merchant Centre requirements
     https://bigcommerce.websiteadvantage.com.au/
+    https://github.com/Tiggerito/BigCommerce/blob/main/seo-rich-snippets-min-quantity-fix.html
     Copyright (C) 2023 Web Site Advantage
+    {{!-- 
+    Add this script to the BigCommerce Script Manager using the following settings:
+
+    Placement: Footer
+    Location: Storefront pages
+    Script category: Essential
+    Script type: Script
+    Script contents: this file, review any TODOs in the script and make modifications as needed
+    --}}
 */   
 {{#if page_type '===' 'product' }}
 
-// Fix is now in the Tag Rocket app, so this is no longer required. However you could use it to customise referenceQuantity and referenceQuantity.valueReference values.
-
-// place this in the footer
-
 !function(w,d){
 
-    // https://support.google.com/merchants/answer/6098334
-    // https://support.google.com/merchants/answer/6386198
-    // https://support.google.com/merchants/answer/6324371
-    // https://developers.google.com/search/docs/appearance/structured-data/product#unit-pricing-example
-
+    // TODO: Update the unit pricing settings as needed for your store
     // https://support.google.com/merchants/answer/6324455
     var unit_pricing_measure_include = false; 
     var unit_pricing_measure_type = "ct"; // Per unit
@@ -27,7 +30,12 @@
     var unit_pricing_base_measure = 1; 
     var unit_pricing_base_measure_type = "ct"; // Per unit
     
-    // END of settings
+    // End of settings --------
+
+    // https://support.google.com/merchants/answer/6098334
+    // https://support.google.com/merchants/answer/6386198
+    // https://support.google.com/merchants/answer/6324371
+    // https://developers.google.com/search/docs/appearance/structured-data/product#unit-pricing-example
 
     var element = d.getElementById('wsa-rich-snippets-jsonld-product'); // change for development server
 

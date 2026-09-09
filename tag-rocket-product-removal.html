@@ -3,7 +3,17 @@
     Web Site Advantage: Tag Rocket Product Removal [v1.0] 
     Remove products that match a characteristic
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    https://github.com/Tiggerito/BigCommerce/blob/main/tag-rocket-product-removal.html
     Copyright (C) 2023 Web Site Advantage
+    {{!-- 
+    Add this script to the BigCommerce Script Manager using the following settings:
+
+    Placement: Header
+    Location: All pages
+    Script category: Essential
+    Script type: Script
+    Script contents: this file, review any TODOs in the script and make modifications as needed
+    --}}
 */
 !function(w,t){
     w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
@@ -14,9 +24,14 @@
             // data.items - the products in a cart. they can be modified or items can be replaced with a subset
             // data.reason = List, Details, AddToWishList, Order, Related, Similar, CheckoutPage (repeatedly done for steps and login), CheckCart (for multiple cart related activities including add/remove to/from cart)
  
+            // TODO: Update the characteristic and filtering logic as required.
+
             // filter out cheap products from certain places so they don't get remarketed so much
             var reasonList = ['List', 'Related', 'Similar', 'AddToWishList'];
             var cheap = 10;
+
+            // End of settings --------
+
             var inList = false;
             for(var index=0; index<reasonList.length; index++){
                 if(reasonList[index]===data.reason) inList = true;

@@ -3,27 +3,31 @@
     Web Site Advantage: Tag Rocket Google Customer Reviews [v1.2] 
     Badge and survey opt-in module
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    https://github.com/Tiggerito/BigCommerce/blob/main/tag-rocket-google-customer-reviews.html
     Copyright (C) 2021 Web Site Advantage
+    {{!-- 
+    Add this script to the BigCommerce Script Manager using the following settings:
+
+    Placement: Header
+    Location: All pages
+    Script category: Essential
+    Script type: Script
+    Script contents: this file, review any TODOs in the script and make modifications as needed
+    --}}
 */
-{{!-- 
-Add this to the BigCommerce Script Manager using the following settings:
-
-Name: Tag Rocket Google Customer Reviews
-Description: Badge and survey opt-in module
-Placement: Footer
-Location: All pages
-Script category: Functional
-Script type: Script
-Script contents: this, with at least the REPLACE_WITH_YOUR_ID changed
---}}
-
+    
 !function(w,d,t){
+    
+    // TODO: Update these settings to match your account.
+
     var MERCHANT_ID = REPLACE_WITH_YOUR_ID;
     var BADGE_POSITION = "BOTTOM_RIGHT"; {{!-- BOTTOM_LEFT, BOTTOM_RIGHT --}} 
     var OPT_IN_STYLE = "CENTER_DIALOG"; {{!-- CENTER_DIALOG, BOTTOM_RIGHT_DIALOG, BOTTOM_LEFT_DIALOG, TOP_RIGHT_DIALOG, TOP_LEFT_DIALOG, BOTTOM_TRAY --}} 
     var ESTIMATED_DELIVERY_DAYS = 5;
     var LANGUAGE = ""; {{!-- if not set, it uses browsers default language --}}
     var SHOW_BADGE = true; 
+
+    // End of settings --------
 
     var calcEstimatedDeliveryDays = function(order) {
         return ESTIMATED_DELIVERY_DAYS;

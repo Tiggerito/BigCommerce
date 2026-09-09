@@ -3,9 +3,22 @@
     Web Site Advantage: Tag Rocket Linkedin [v1.0] 
     Linkedin Insight tag and conversions
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    https://github.com/Tiggerito/BigCommerce/blob/main/tag-rocket-linkedin.html
     Copyright (C) 2022 Web Site Advantage
+    {{!-- 
+    Add this script to the BigCommerce Script Manager using the following settings:
+
+    Placement: Header
+    Location: All pages
+    Script category: Essential
+    Script type: Script
+    Script contents: this file, review any TODOs in the script and make modifications as needed
+    --}}
 */
 !function(w,t){
+
+    // TODO: Update the settings as required.
+
     var linkedinPartnerId = 'REPLACE_WITH_YOUR_ID';
 
     // create event based conversions you are interested in and enter their conversion IDs here
@@ -27,6 +40,8 @@
     var linkedinAccountCreatedConversionId = 0;
     var linkedinProductPageConversionId = 0;
     var linkedinPromotionClickedConversionId = 0; 
+
+    // End of settings --------
 
     w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
     

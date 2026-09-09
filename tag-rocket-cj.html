@@ -4,10 +4,20 @@
     CJ Advertiser Site Tracking with site-page and conversion support
     https://developers.cj.com/docs/advertiser-site-tracking/universal-tag-integration
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    https://github.com/Tiggerito/BigCommerce/blob/main/tag-rocket-cj.html
     Copyright (C) 2026 Web Site Advantage
+    {{!-- 
+    Add this script to the BigCommerce Script Manager using the following settings:
+
+    Placement: Header
+    Location: All pages
+    Script category: Essential
+    Script type: Script
+    Script contents: this file, review any TODOs in the script and make modifications as needed
+    --}}
 */
 !function(w,t){
-    // Update these settings to match your CJ account.
+    // TODO: Update these settings to match your CJ account.
     var cjTagId = 'REPLACE_WITH_YOUR_TAG_ID';
     var cjEnterpriseId = 0;
     var cjNewCustomerActionTrackerId = 0; // Action ID for new customers.

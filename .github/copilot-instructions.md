@@ -9,7 +9,7 @@ This repo contains Tag Rocket, SEO Rich Snppets and Page Lightning integration s
 - When MCP output conflicts with existing code/comments, treat bigcommerce-docs MCP as authoritative and update code accordingly, unless project-specific behavior explicitly requires otherwise.
 - If bigcommerce-docs MCP is unavailable, clearly note that limitation and fall back to official BigCommerce documentation links, then re-validate with MCP when available.
 
-> **Note:** Tag Rocket snippet conventions (files starting with `tag-rocket-`) live in [instructions/tag-rocket.instructions.md](instructions/tag-rocket.instructions.md).
+> **Note:** Tag Rocket API (TRAPI) snippet conventions (files starting with `tag-rocket-`) live in [instructions/tag-rocket.instructions.md](instructions/tag-rocket.instructions.md).
 
 ---
 

@@ -3,7 +3,17 @@
     Web Site Advantage: Tag Rocket GA4 Item Modifications [v1.3] 
     Modify the items/products sent to GA4
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    https://github.com/Tiggerito/BigCommerce/blob/main/tag-rocket-ga4-item-modifications.html
     Copyright (C) 2022 Web Site Advantage
+    {{!-- 
+    Add this script to the BigCommerce Script Manager using the following settings:
+
+    Placement: Header
+    Location: All pages
+    Script category: Essential
+    Script type: Script
+    Script contents: this file, review any TODOs in the script and make modifications as needed
+    --}}
 */
 !function(w,t){
     w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
@@ -144,6 +154,8 @@
 
             // change how categories are set
             var categories = productData.categories;
+
+            // TODO: choose how you want to modify the categories
 
             // pickCategoryPath(categories, // array of categories from productData.categories 
             // { 

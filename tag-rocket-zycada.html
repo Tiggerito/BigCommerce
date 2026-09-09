@@ -3,11 +3,25 @@
     Web Site Advantage: Tag Rocket Zycada [v1.0] 
     Record A/B tests in GA4 and GAEE
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    https://github.com/Tiggerito/BigCommerce/blob/main/tag-rocket-zycada.html
     Copyright (C) 2022 Web Site Advantage
+    {{!-- 
+    Add this script to the BigCommerce Script Manager using the following settings:
+
+    Placement: Header
+    Location: All pages
+    Script category: Essential
+    Script type: Script
+    Script contents: this file, review any TODOs in the script and make modifications as needed
+    --}}
 */
 !function(w,t){
+
+    // TODO: Update the GA Universal dimension and GA4 property to match your setup.
     var abTestGoogleAnalyticsUniversalDimension = "dimension1"; // set this to a dimension you have defined in GA Universal
     var abTestGoogleAnalyticsFourDimensionProperty = "zycada_ab_test"; // set this to a dimensions property you have defined in GA4
+
+    // End of settings --------
 
     // https://zycada-onboarding.webflow.io/ab-test
 

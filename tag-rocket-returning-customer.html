@@ -1,13 +1,26 @@
 <script data-cfasync="false">   
 {{#if page_type '===' 'orderconfirmation'}}
 /*
+*** THIS IS NOW SUPPORTED NATIVELY IN TAG ROCKET - USE THAT ***
     Web Site Advantage: Tag Rocket Returning Customer [v1.0] 
     Get the current users past orders to determine if they are a new or returning customer
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    https://github.com/Tiggerito/BigCommerce/blob/main/tag-rocket-returning-customer.html
     Copyright (C) 2023 Web Site Advantage
+    {{!-- 
+    Add this script to the BigCommerce Script Manager using the following settings:
+
+    Placement: Header
+    Location: Order confirmation
+    Script category: Essential
+    Script type: Script
+    Script contents: this file, review any TODOs in the script and make modifications as needed
+    --}}
 */
 !function(w,t){
     w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
+
+    // NOTE: This functionality is now built into Tag Rocket.
 
     // https://support.google.com/google-ads/answer/9918441
 
@@ -18,6 +31,7 @@
     // Maybe only send new_customer = true until code has been present for the lookBackDays days, then also send new_customer = false
     // App now support setting wsa-lo to the last order date. When first published with that code it sets AppSettings.StartedGatheringLastOrderDate so we know how long we have been setting the date.
     // once AppSettings.StartedGatheringLastOrderDate < now - lookBackDays, we can start sending new_customer = false
+    // TODO: update to the date you published this script
     var startedGatheringLastOrderDate = new Date("2022-11-05T23:50:02.1858483Z");
 
     //// Rest is NOT RIGHT - The number would need to be continually updated until we have dates for all orders within the period.

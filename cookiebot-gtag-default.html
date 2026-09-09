@@ -1,13 +1,24 @@
 
 <script data-cfasync="false" data-cookieconsent="ignore">
 /*
-    Web Site Advantage: CookieBot gtag default [v1.1] 
+    Web Site Advantage: CookieBot gtag default [v1.2] 
     Sets default consent states for manually added Coookiebot code. Don't use with GTM implementation
     https://bigcommerce.websiteadvantage.com.au/
+    https://github.com/Tiggerito/BigCommerce/blob/main/cookiebot-gtag-default.html
     Copyright (C) 2024 Web Site Advantage
+    {{!-- 
+    Add this script to the BigCommerce Script Manager using the following settings:
+
+    Placement: Header
+    Location: All pages
+    Script category: Essential
+    Script type: Script
+    Script contents: this file, review any TODOs in the script and make modifications as needed
+    --}}
 */
 !function(w){
 
+    // TODO: Update these settings as needed for your implementation
     var ads_data_redaction = true;
     var url_passthrough = true;
 
@@ -33,7 +44,7 @@
 
     w.gtag("consent", "default", defaultSettings);
     if (ads_data_redaction) w.gtag("set", "ads_data_redaction", true);
-    if (ads_data_redaction) w.gtag("set", "url_passthrough", true); 
+    if (url_passthrough) w.gtag("set", "url_passthrough", true); 
 
 }(window)
 </script>

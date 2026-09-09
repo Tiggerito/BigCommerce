@@ -1,9 +1,19 @@
 <script data-cfasync="false"> 
 /*
-    Web Site Advantage: Tag Rocket Disable ga conversion event Example [v1.0] 
-    Don't track a conversion if it has a payment method of Apply for finance
+    Web Site Advantage: Tag Rocket Disable order completed events [v1.0] 
+    Don't track an order if it has a payment method of 'Apply for finance'
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
+    https://github.com/Tiggerito/BigCommerce/blob/main/tag-rocket-stop-conversions-example.html
     Copyright (C) 2022 Web Site Advantage
+    {{!-- 
+    Add this script to the BigCommerce Script Manager using the following settings:
+
+    Placement: Header
+    Location: All pages
+    Script category: Essential
+    Script type: Script
+    Script contents: this file, review any TODOs in the script and make modifications as needed
+    --}}
 */  
     !function(w,t){
         w[t]=w[t]||{};var T=w[t];T.i=T.i||[];if(!T.init)T.init=function(f){T.i.push(f)};
@@ -11,43 +21,13 @@
         T.init(function() { 
        
             T.on('CheckoutStep5OrderCompleted',function(data, eventName){
+
+                // TODO: Update the payment method to match your setup if different.
+                
                 if (data.paymentMethod === "Apply for finance") {
                    data.cancelBuiltInEvents = true;
                 }               
             });
-
-            // GA is separate as is not powered by Tag Rocket
-            // this may work but is dependent on Tag Rocket getting the order (a request) before BC EE sends its events.
-            T.on('GaCommandPending',function(data, eventName){
-                if (T.order && T.order.paymentMethod === "Apply for finance") {
-                    if (data.arguments.length >=2) {
-                        var command = data.arguments[0];
-                        var event = data.arguments[1];
-
-                        switch (command) {
-                            case 'ec:addProduct':
-                                data.cancel = true; 
-                                break;
-                            case 'ec:setAction':
-                                if (event === 'purchase') {
-                                    data.cancel = true; 
-                                }
-                                break;
-                            case 'send':
-                                if (data.arguments.length >=4) {
-                                    var type = data.arguments[2];
-                                    var eventName = data.arguments[3];
-
-                                    if (event === 'event' && type === 'EnhancedEcommerce' && eventName === 'Order Completed') {
-                                        data.cancel = true;                                    
-                                    }
-                                }
-                                break;
-
-                        }
-                    } 
-                }            
-            })
         })
     }(window,"TagRocket")
 </script>

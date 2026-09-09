@@ -3,16 +3,28 @@
     Web Site Advantage: Advanced Shipping Services [v1.0] 
     Adds advanced shipping service rules to the product markup
     https://bigcommerce.websiteadvantage.com.au/rich-snippets/articles/advanced-google-shipping-information-via-javascript/
+    https://github.com/Tiggerito/BigCommerce/blob/main/advanced-shipping-services.html
     Copyright (C) 2023 Web Site Advantage
+    {{!-- 
+    Add this script to the BigCommerce Script Manager using the following settings:
+
+    Placement: Header
+    Location: All pages
+    Script category: Essential
+    Script type: Script
+    Script contents: this file, review any TODOs in the script and make modifications as needed
+    --}}
 */
 
 !function(){
 
+    // TODO: Update the offerId to match the @id of the Offer JSON-LD on your page
     var offerId = '#offer'; // This should be the @id for the Offer JSON-LD that the page already contains
 
     shippingItems = [];
 
-    // Add your shipping items here
+    // TODO: Add your shipping items here
+    // See: advanced-shipping-services-example-items.js
 
 
     // ---------------------------------------------------------------
