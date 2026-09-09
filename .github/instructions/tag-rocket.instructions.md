@@ -5,6 +5,8 @@ applyTo: "**/tag-rocket-*"
 
 All Tag Rocket scripts target the Tag Rocket API (TRAPI) documented at https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/.
 
+A local mirror of the TRAPI docs (events, data payloads, core functions and concepts) is kept at [docs/tag-rocket-api.md](../../docs/tag-rocket-api.md) for quick reference. It is a cached copy — the live URL above is authoritative if they disagree. Re-fetch and overwrite the mirror when doing TRAPI-related work. If the user asks "refresh the TRAPI mirror", update the local copy accordingly.
+
 ## File structure
 Every Tag Rocket snippet is a single `.html` file starting with `tag-rocket-` containing one `<script>` block. No wrapping HTML boilerplate.
 
