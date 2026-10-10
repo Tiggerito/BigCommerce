@@ -27,6 +27,8 @@ Every Tag Rocket snippet is a single `.html` file starting with `tag-rocket-` co
     Script category: Essential
     Script type: Script
     Script contents: this file, review any TODOs in the script and make modifications as needed
+
+    Also ensure that Tag Rocket->Global Settings->Tag Rocket API->Fire All Events is checked and published.
     --}}
 */
 !function(w,t){
