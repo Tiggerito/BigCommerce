@@ -1,6 +1,6 @@
 <script data-cfasync="false">  
 /*
-    Web Site Advantage: Tag Rocket Floodlight [v1.2] 
+    Web Site Advantage: Tag Rocket Floodlight [v1.3] 
     Base tag and conversion
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     https://github.com/Tiggerito/BigCommerce/blob/main/tag-rocket-floodlight.html
@@ -78,7 +78,7 @@
                     // https://support.google.com/campaignmanager/answer/14217426
                     if (T.userData) {
                         purchaseData.user_data = {address:{}};
-                        if(T.userData.email) purchaseData.user_data.email = T.userData.email;
+                        if(T.userData.email_normalized) purchaseData.user_data.email = T.userData.email_normalized;
                         if(T.userData.phone) purchaseData.user_data.phone_number = T.userData.phone;
                         if(T.userData.first_name) purchaseData.user_data.address.first_name = T.userData.first_name;
                         if(T.userData.last_name) purchaseData.user_data.address.last_name = T.userData.last_name;
