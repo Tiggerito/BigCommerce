@@ -1,6 +1,6 @@
 <script data-cfasync="false">   
 /*
-    Web Site Advantage: Tag Rocket Page Lightning [v1.2] 
+    Web Site Advantage: Tag Rocket Page Lightning [v1.3] 
     Enable Tag Rocket to tell Page Lightning when some needs are met, like consent
     https://bigcommerce.websiteadvantage.com.au/tag-rocket/articles/tag-rocket-api/
     https://github.com/Tiggerito/BigCommerce/blob/main/tag-rocket-page-lightning.html
@@ -28,8 +28,7 @@
         }
     }
 
-    var consentUpdate = function(consent) {
-        w[p].resetSpeculationRules();
+    var consentUpdate = function(consent) {       
         w[p].needsMet(            
             consentTypeUpdate('targetingAdvertising', consent.targetingAdvertising),
             consentTypeUpdate('analytics', consent.analytics),
@@ -48,6 +47,7 @@
         T.on(/.*/,function(data, eventName){
             switch(eventName) {
                 case "ConsentChanged":
+                    w[p].resetSpeculationRules();
                     consentUpdate(T.consent);
                     break;
             }
